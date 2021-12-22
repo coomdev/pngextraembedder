@@ -301,13 +301,8 @@ let buildInjection = async (container: File, inj: File) => {
     return { file: new Blob([ret]), name: container.name };
 }
 
-let embedded;
-
 const startup = async () => {
-    //await Promise.all(
-
-    let glow = [...document.querySelectorAll('.postContainer')].find(e => e.textContent?.includes("191 KB"));
-    await processPost(glow as any)
+    await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
 
     document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
         processPost(e.target as any);
