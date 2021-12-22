@@ -7173,8 +7173,7 @@
     return { file: new Blob([ret]), name: container.name };
   };
   var startup = async () => {
-    let glow = [...document.querySelectorAll(".postContainer")].find((e) => e.textContent?.includes("191 KB"));
-    await processPost(glow);
+    await Promise.all([...document.querySelectorAll(".postContainer")].map((e) => processPost(e)));
     document.addEventListener("PostsInserted", async (e) => {
       processPost(e.target);
     });
