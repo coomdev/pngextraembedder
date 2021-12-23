@@ -2,7 +2,7 @@ PNG Extra Embedder (PEE)
 ========================
 
 Can embed any file in a PNG and upload it through 4chanX.
-Requires 4chanX and tampermonkey.
+Requires 4chanX and violentmonkey.
 
 Notes: 4chan seems to limit the amount of embedded data to around 140kb files.
 
