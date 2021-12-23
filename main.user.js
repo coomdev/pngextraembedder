@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         PNGFileEmbed
-// @namespace    http://tampermonkey.net/
+// @namespace    https://tampermonkey.net/
 // @version      0.1
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/g/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @grant        GM_xmlhttpRequest
-// @run-at document-start
+// @require      https://greasyfork.org/scripts/421384-gm-fetch/code/GM_fetch.js?version=898562
+// @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
@@ -6986,74 +6987,18 @@
         ptr += length + 4;
       } while (!chunk.done);
     } catch (e) {
-      console.error(e);
       await reader.cancel();
       reader.releaseLock();
     }
   };
-  var TMFetch = GM_xmlhttpRequest || GM.xmlHttpRequest;
-  var getUrl = (u) => {
-    let xml;
-    let pos = 0;
-    let total = 0;
-    return new ReadableStream({
-      cancel() {
-        xml?.abort();
-      },
-      start(cont) {
-        return new Promise((reso) => {
-          const size = cont.desiredSize > 2 ** 17 ? cont.desiredSize : 2 ** 17;
-          const range = !total ? `bytes=${pos}-${pos + size - 1}` : `bytes=${pos}-${total - 1}`;
-          console.log(range, cont.desiredSize);
-          xml = TMFetch({
-            url: u,
-            fetch: true,
-            method: "GET",
-            binary: true,
-            responseType: "arraybuffer",
-            headers: {
-              range
-            },
-            onload(res) {
-              let hr = res.responseHeaders.split("\n").map((e) => e.split(":"));
-              let r = hr.find((e) => e[0] == "content-range");
-              let er = hr.find((e) => e[0] == "content-length");
-              cont.enqueue(import_buffer.Buffer.from(res.response));
-              pos += +er[1];
-              if (r) {
-                let m = r[1].match(/bytes 0-\d+\/(\d+)/);
-                if (m)
-                  total = +m[1];
-              }
-              if (pos >= total) {
-                cont.close();
-                reso();
-                return;
-              }
-              reso();
-            }
-          });
-        });
-      },
-      pull(cont) {
-        console.log("pulling");
-        return this.start(cont);
-      }
-    }, {
-      highWaterMark: 40,
-      size(c) {
-        return 1;
-      }
-    });
-  };
   var processImage = async (src) => {
     if (!src.match(/\.png$/))
       return;
-    let resp = getUrl(src);
-    let reader = resp?.getReader();
+    let resp = await GM_fetch(src);
+    let reader = (await resp.blob()).stream();
     if (!reader)
       return;
-    return await extractTextData(reader);
+    return await extractTextData(new ReadableStreamDefaultReader(reader));
   };
   var processPost = async (post) => {
     let thumb = post.querySelector(".fileThumb");

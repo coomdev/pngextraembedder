@@ -3,6 +3,7 @@
 import { Buffer } from "buffer";
 import { buf } from "crc-32";
 import { fileTypeFromBuffer } from 'file-type';
+import { Readable } from "stream";
 
 const IDAT = Buffer.from("IDAT");
 const IEND = Buffer.from("IEND");
@@ -68,93 +69,30 @@ let extractTextData = async (reader: ReadableStreamDefaultReader<Uint8Array>) =>
             ptr += length + 4; // skips over data section and crc
         } while (!chunk!.done);
     } catch (e) {
-        console.error(e);
+        //console.error(e);
         await reader.cancel();
         reader.releaseLock();
     }
 }
 
-let TMFetch = GM_xmlhttpRequest || GM.xmlHttpRequest;
-
-let getUrl = (u: string) => {
-    let xml: Tampermonkey.AbortHandle<void>;
-
-    let pos = 0;
-    let total = 0;
-    return new ReadableStream<Uint8Array>({
-        cancel() {
-            xml?.abort();
-        },
-
-        start(cont) {
-            /*
-                get a small 128k chunk first then get the rest if required
-            */
-            return new Promise<void>(reso => {
-                const size = (cont.desiredSize! > 2 ** 17 ? cont.desiredSize! : 2 ** 17);
-                const range = !total ? `bytes=${pos}-${pos + size - 1}` : `bytes=${pos}-${total - 1}`;
-                console.log(range, cont.desiredSize);
-                xml = TMFetch({
-                    url: u,
-                    fetch: true,
-                    method: "GET",
-                    binary: true,
-                    responseType: "arraybuffer",
-                    headers: {
-                        range
-                    },
-
-                    // a bit spagetthi
-                    onload(res) {
-                        let hr = res.responseHeaders.split('\n').map(e => e.split(':'));
-                        let r = hr.find(e => e[0] == "content-range")!;
-                        let er = hr.find(e => e[0] == "content-length")!;
-                        cont.enqueue(Buffer.from(res.response))
-                        pos += +er[1];
-                        if (r) {
-                            let m = r[1].match(/bytes 0-\d+\/(\d+)/)
-                            if (m)
-                                total = +m[1];
-                        }
-                        if (pos >= total) {
-                            cont.close()
-                            reso();
-                            return;
-                        }
-                        reso();
-                    }
-                });
-            })
-
-        },
-        pull(cont) {
-            console.log("pulling") // shouldn't ever happen
-            return this.start!(cont);
-        }
-    }, {
-        highWaterMark: 40,
-        size(c) {
-            return 1;
-        }
-    })
-}
-
 let processImage = async (src: string) => {
     if (!src.match(/\.png$/))
         return;
-    let resp = getUrl(src);
-    let reader = resp?.getReader();
+    let resp = await GM_fetch(src);
+    let reader = (await resp.blob()).stream();
     if (!reader)
         return;
-    return await extractTextData(reader);
+    return await extractTextData(new ReadableStreamDefaultReader(reader));
 };
 
 /* Used for debugging */
 let processImage2 = async (src: string) => {
     if (!src.match(/\.png$/))
         return;
-    let resp = getUrl(src);
-    let reader = resp.getReader();
+    let resp = await GM_fetch(src);
+    let reader = resp.body!.getReader();
+    if (!reader)
+        return;
 
     let data = Buffer.alloc(0);
     let chunk;
@@ -209,14 +147,14 @@ let processPost = async (post: HTMLDivElement) => {
     let contract = () => {
         cont.style.width = "auto";
         cont.style.height = "auto";
-        cont.style.maxWidth = "125px";    
+        cont.style.maxWidth = "125px";
         cont.style.maxHeight = "125px";
     }
 
     let expand = () => {
         cont.style.width = `${w}px`;
         cont.style.height = `${h}px`;
-        cont.style.maxWidth = "unset";    
+        cont.style.maxWidth = "unset";
         cont.style.maxHeight = "unset";
     }
 
@@ -303,6 +241,8 @@ let buildInjection = async (container: File, inj: File) => {
 
 const startup = async () => {
     await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
+
+    //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
         processPost(e.target as any);
