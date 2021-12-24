@@ -15,6 +15,16 @@ How to Install
 
 Or use the prebuilt main.user.js at the root of this repo.
 
+How to use
+==========
+
+Posts with an embedded image/video will have an eye icon next to it.
+Clicking the icon reveal the content.
+
+In the quick reply form, a magnet icon will appear.
+You need to select a png file to upload first, as you would normally (this is what the file will appear as), then click on the magnet to select a file to embed.
+
+![qr](screen.png)
 
 Format
 ======
