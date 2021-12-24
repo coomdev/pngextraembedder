@@ -7,7 +7,7 @@ import { concatAB, PNGDecoder, PNGEncoder } from "./png";
 const IDAT = Buffer.from("IDAT");
 const IEND = Buffer.from("IEND");
 const tEXt = Buffer.from("tEXt");
-const CUM0 = Buffer.from("CUM0\0IMGONNACOOMAAAAAAAAA");
+const CUM0 = Buffer.from("CUM\0" + "0");
 
 let extractEmbedded = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
     let magic = false;

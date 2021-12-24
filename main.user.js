@@ -6978,8 +6978,6 @@
       }
     }
     async dtor() {
-      this.reader.releaseLock();
-      await this.reader.cancel();
     }
   };
   var PNGEncoder = class {
@@ -6992,7 +6990,7 @@
       b.writeInt32BE(chunk[1].length - 4, 0);
       await this.writer.write(b);
       await this.writer.write(chunk[1]);
-      b.writeInt32BE((0, import_crc_32.buf)(chunk[1].slice(4)), 0);
+      b.writeInt32BE((0, import_crc_32.buf)(chunk[1]), 0);
       await this.writer.write(b);
     }
     async dtor() {
@@ -7005,35 +7003,40 @@
   var IDAT = import_buffer2.Buffer.from("IDAT");
   var IEND = import_buffer2.Buffer.from("IEND");
   var tEXt = import_buffer2.Buffer.from("tEXt");
-  var CUM0 = import_buffer2.Buffer.from("IMGONNACOOMAAAAAAAAA");
+  var CUM0 = import_buffer2.Buffer.from("CUM\x000");
   var extractEmbedded = async (reader) => {
     let magic = false;
     let sneed = new PNGDecoder(reader);
     try {
+      let lastIDAT = null;
       for await (let [name, chunk, crc, offset] of sneed.chunks()) {
         switch (name) {
-          case "CUM0":
-            magic = true;
+          case "tEXt":
+            if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
+              magic = true;
             break;
           case "IDAT":
             if (magic) {
-              let data = chunk.slice(4);
-              let fnsize = data.readUInt32LE(0);
-              let fn = data.slice(4, 4 + fnsize).toString();
-              data = data.slice(4 + fnsize);
-              return { filename: fn, data };
+              lastIDAT = chunk;
+              break;
             }
           case "IEND":
-            await sneed.dtor();
-            throw "Didn't find tExt Chunk";
+            if (!magic)
+              throw "Didn't find tExt Chunk";
           default:
             break;
         }
       }
+      if (lastIDAT) {
+        let data = lastIDAT.slice(4);
+        let fnsize = data.readUInt32LE(0);
+        let fn = data.slice(4, 4 + fnsize).toString();
+        data = data.slice(4 + fnsize);
+        return { filename: fn, data };
+      }
     } catch (e) {
+      console.error(e);
     } finally {
-      await sneed.dtor();
-      await reader.cancel();
       reader.releaseLock();
     }
   };
@@ -7139,17 +7142,20 @@
     let decoder = new PNGDecoder(container.stream().getReader());
     let magic = false;
     for await (let [name, chunk, crc, offset] of decoder.chunks()) {
+      if (magic && name != "IDAT")
+        break;
       if (!magic && name == "IDAT") {
-        encoder.insertchunk(["CUM0", buildChunk("CUM0", import_buffer2.Buffer.from([])), 0, 0]);
+        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
         magic = true;
       }
-      encoder.insertchunk([name, chunk, crc, offset]);
+      await encoder.insertchunk([name, chunk, crc, offset]);
     }
     let injb = import_buffer2.Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32BE(inj.name.length, 0);
+    injb.writeInt32LE(inj.name.length, 0);
     injb.write(inj.name, 4);
-    import_buffer2.Buffer.from(await inj.arrayBuffer()).copy(injb, 8);
-    encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    import_buffer2.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
+    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer2.Buffer.from([])), 0, 0]);
     return { file: new Blob([extract()]), name: container.name };
   };
   var startup = async () => {
@@ -7198,17 +7204,13 @@
       if (container.files?.length && injection.files?.length) {
         let res = await buildInjection(container.files[0], injection.files[0]);
         let result = document.getElementById("result");
+        let extracted = document.getElementById("extracted");
         result.src = URL.createObjectURL(res.file);
+        let embedded = await extractEmbedded(res.file.stream().getReader());
+        extracted.src = URL.createObjectURL(new Blob([embedded?.data]));
       }
     };
-    console.log("aaaa");
   };
-  function downloaddd() {
-    let result = document.getElementById("result");
-    let dlb = document.getElementById("dlb");
-    dlb.href = result.src;
-  }
-  window["downloaddd"] = downloaddd;
 })();
 /*!
  * The buffer module from node.js, for the browser.
