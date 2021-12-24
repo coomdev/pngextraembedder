@@ -250,18 +250,18 @@ const startup = async () => {
 document.addEventListener('4chanXInitFinished', startup);
 
 
-onload = () => {
-    let container = document.getElementById("container") as HTMLInputElement;
-    let injection = document.getElementById("injection") as HTMLInputElement;
+// onload = () => {
+//     let container = document.getElementById("container") as HTMLInputElement;
+//     let injection = document.getElementById("injection") as HTMLInputElement;
 
-    container.onchange = injection.onchange = async () => {
-        if (container.files?.length && injection.files?.length) {
-            let res = await buildInjection(container.files[0], injection.files[0]);
-            let result = document.getElementById("result") as HTMLImageElement;
-            let extracted = document.getElementById("extracted") as HTMLImageElement;
-            result.src = URL.createObjectURL(res.file);
-            let embedded = await extractEmbedded(res.file.stream().getReader());
-            extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
-        }
-    }
-}
+//     container.onchange = injection.onchange = async () => {
+//         if (container.files?.length && injection.files?.length) {
+//             let res = await buildInjection(container.files[0], injection.files[0]);
+//             let result = document.getElementById("result") as HTMLImageElement;
+//             let extracted = document.getElementById("extracted") as HTMLImageElement;
+//             result.src = URL.createObjectURL(res.file);
+//             let embedded = await extractEmbedded(res.file.stream().getReader());
+//             extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
+//         }
+//     }
+// }
