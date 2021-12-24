@@ -1,76 +1,49 @@
 /* eslint-disable */
 
 import { Buffer } from "buffer";
-import { buf } from "crc-32";
 import { fileTypeFromBuffer } from 'file-type';
-import { Readable } from "stream";
+import { concatAB, PNGDecoder, PNGEncoder } from "./png";
 
 const IDAT = Buffer.from("IDAT");
 const IEND = Buffer.from("IEND");
 const tEXt = Buffer.from("tEXt");
-const CUM0 = Buffer.from("CUM0");
+const CUM0 = Buffer.from("CUM0\0IMGONNACOOMAAAAAAAAA");
 
-let concatAB = (...bufs: Buffer[]) => {
-    let sz = bufs.map(e => e.byteLength).reduce((a, b) => a + b);
-    const ret = Buffer.alloc(sz);
-    let ptr = 0;
-    for (const b of bufs) {
-        b.copy(ret, ptr);
-        ptr += b.byteLength;
-    }
-    return ret;
-}
+let extractEmbedded = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
+    let magic = false;
 
-let extractTextData = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
-    let total = Buffer.from('');
-    let ptr = 8;
-    let req = 8; // required bytes: require the png signature
-
+    let sneed = new PNGDecoder(reader);
     try {
-        let chunk: ReadableStreamDefaultReadResult<Uint8Array>;
-
-        const catchup = async () => {
-            while (total.byteLength < req) {
-                chunk = await reader.read();
-                if (chunk.done)
-                    throw new Error("Unexpected EOF");
-                total = concatAB(total, Buffer.from(chunk.value));
+        let lastIDAT: Buffer | null = null;
+        for await (let [name, chunk, crc, offset] of sneed.chunks()) {
+            switch (name) {
+                case 'tEXt': // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
+                    if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
+                        magic = true;
+                    break;
+                case 'IDAT':
+                    if (magic) {
+                        lastIDAT = chunk;
+                        break;
+                    }
+                case 'IEND':
+                    if (!magic)
+                        throw "Didn't find tExt Chunk";
+                default:
+                    break;
             }
         }
-
-        do {
-            req += 8; // require the bytes that store the length of the next chunk and its name
-            await catchup();
-            // at this point, ptr pointing to length of current chunk
-            let length = total.readInt32BE(ptr);
-            // ptr pointing to type of current chunk
-            ptr += 4;
-            const name = total.slice(ptr, ptr + 4);
-            if (Buffer.compare(IDAT, name) == 0 ||
-                Buffer.compare(IEND, name) == 0) {
-                // reached idat or iend before finding a tEXt, bail out
-                throw new Error("Couldn't find tEXt chunk");
-            }
-            req += length + 4; // require the rest of the chunk + CRC
-            //let crc = total.readInt32BE(ptr + 4 + length); // dont really care
-            ptr += 4; // ptr now points to the chunk data
-            if (Buffer.compare(tEXt, name) == 0) {
-                // our specific format stores a single file, CUM0 stores it as Base64. Could be enhanced to use more characters (the whole printable ascii characters, ie base85, but we lack good encoders...)
-                // catchup because we need to know the type;
-                await catchup();
-                if (Buffer.compare(total.slice(ptr, ptr + 4), CUM0) == 0) {
-                    let data = Buffer.from(total.slice(ptr + 4, ptr + length - 4).toString(), 'base64');
-                    let fns = data.readUInt32LE(0);
-                    let filename = data.slice(4, 4 + fns).toString();
-                    return { data: data.slice(4 + fns), filename };
-                }
-                // Unknown tEXt format
-            }
-            ptr += length + 4; // skips over data section and crc
-        } while (!chunk!.done);
+        if (lastIDAT) {
+            let data = (lastIDAT as Buffer).slice(4);
+            let fnsize = data.readUInt32LE(0);
+            let fn = data.slice(4, 4 + fnsize).toString();
+            // Todo: xor the buffer to prevent scanning for file signatures (4chan embedded file detection)?
+            data = data.slice(4 + fnsize);
+            return { filename: fn, data };
+        }
     } catch (e) {
-        //console.error(e);
-        await reader.cancel();
+        console.error(e);
+    } finally {
         reader.releaseLock();
     }
 }
@@ -82,7 +55,7 @@ let processImage = async (src: string) => {
     let reader = (await resp.blob()).stream();
     if (!reader)
         return;
-    return await extractTextData(new ReadableStreamDefaultReader(reader));
+    return await extractEmbedded(reader.getReader());
 };
 
 /* Used for debugging */
@@ -189,54 +162,45 @@ let processPost = async (post: HTMLDivElement) => {
     fi.children[1].insertAdjacentElement('afterend', a);
 }
 
-let buildTextChunk = async (f: File) => {
-    let ab = await f.arrayBuffer();
-    let fns = Buffer.alloc(4);
-    fns.writeInt32LE(f.name.length, 0)
-    let fb = Buffer.from(await new Blob([fns, f.name, ab]).arrayBuffer()).toString('base64');
-    let buff = Buffer.alloc(4 /*Length storage*/ + 4 /*Chunk Type*/ + 4 /*Magic*/ + 1 /*Null separator*/ + fb.length + 4 /* CRC */);
-    let ptr = 0;
-    buff.writeInt32BE(buff.byteLength - 12, ptr); // doesn't count chunk type, lenght storage and crc
-    ptr += 4;
-    buff.write("tEXtCUM0\0", ptr); // Writes Chunktype+ Magic+null byte
-    ptr += 9;
-    buff.write(fb, ptr);
-    ptr += fb.length;
-    // CRC over the chunk name to the last piece of data
-    let checksum = buf(buff.slice(4, -4))
-    buff.writeInt32BE(checksum, ptr);
-    return buff;
+let buildChunk = (tag: string, data: Buffer) => {
+    let ret = Buffer.alloc(data.byteLength + 4);
+    ret.write(tag.substr(0, 4), 0);
+    data.copy(ret, 4);
+    return ret;
+}
+
+let BufferWriteStream = () => {
+    let b = Buffer.from([])
+    let ret = new WritableStream<Buffer>({
+        write(chunk) {
+            b = concatAB(b, chunk);
+        }
+    });
+    return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 }
 
 let buildInjection = async (container: File, inj: File) => {
-    let tEXtChunk = await buildTextChunk(inj);
-    let ogFile = Buffer.from(await container.arrayBuffer());
-    let ret = Buffer.alloc(tEXtChunk.byteLength + ogFile.byteLength);
-    let ptr = 8;
-    let wptr = 8;
-    let wrote = false;
-    ogFile.copy(ret, 0, 0, ptr);// copy PNG signature
-    // copy every chunk as is except inject the text chunk before the first IDAT or END
-    while (ptr < ogFile.byteLength) {
-        let len = ogFile.readInt32BE(ptr);
-        let name = ogFile.slice(ptr + 4, ptr + 8);
-        if (name.equals(IDAT) || name.equals(IEND)) {
-            if (!wrote) {
-                wrote = true;
-                tEXtChunk.copy(ret, wptr);
-                wptr += tEXtChunk.byteLength;
-            }
-        }
-        ret.writeInt32BE(len, wptr);
-        wptr += 4;
-        name.copy(ret, wptr);
-        wptr += 4;
-        ogFile.slice(ptr + 8, ptr + 8 + len + 4).copy(ret, wptr);
-        ptr += len + 8 + 4;
-        wptr += len + 4;
-    }
+    let [writestream, extract] = BufferWriteStream();
+    let encoder = new PNGEncoder(writestream);
+    let decoder = new PNGDecoder(container.stream().getReader());
 
-    return { file: new Blob([ret]), name: container.name };
+    let magic = false;
+    for await (let [name, chunk, crc, offset] of decoder.chunks()) {
+        if (magic && name != "IDAT")
+            break;
+        if (!magic && name == "IDAT") {
+            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
+            magic = true;
+        }
+        await encoder.insertchunk([name, chunk, crc, offset]);
+    }
+    let injb = Buffer.alloc(4 + inj.name.length + inj.size);
+    injb.writeInt32LE(inj.name.length, 0);
+    injb.write(inj.name, 4);
+    Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
+    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
+    return { file: new Blob([extract()]), name: container.name };
 }
 
 const startup = async () => {
@@ -279,9 +243,25 @@ const startup = async () => {
                     document.dispatchEvent(new CustomEvent('QRSetFile', { detail: await buildInjection(file, input.files[0]) }))
             })
             input.click();
-
         }
     }));
 };
 
 document.addEventListener('4chanXInitFinished', startup);
+
+
+onload = () => {
+    let container = document.getElementById("container") as HTMLInputElement;
+    let injection = document.getElementById("injection") as HTMLInputElement;
+
+    container.onchange = injection.onchange = async () => {
+        if (container.files?.length && injection.files?.length) {
+            let res = await buildInjection(container.files[0], injection.files[0]);
+            let result = document.getElementById("result") as HTMLImageElement;
+            let extracted = document.getElementById("extracted") as HTMLImageElement;
+            result.src = URL.createObjectURL(res.file);
+            let embedded = await extractEmbedded(res.file.stream().getReader());
+            extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
+        }
+    }
+}
