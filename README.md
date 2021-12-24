@@ -23,6 +23,7 @@ This works by appending the file in the last IDAT chunk.
 Metadata information is stored in a tEXt chunk, placed near the header so that a parser looking for that embedded information can bail out without having to parse the whole file.
 
 Metadata in the tEXt has the following meaning:
+
 CUM[null]0 -> The last IDAT chunk is formatted as [filename length[LE 4 bytes], filename, filedata]
 
 CUM[null]X is reserved for future extensions
