@@ -20,6 +20,7 @@ How to use
 
 Posts with an embedded image/video will have an eye icon next to it.
 Clicking the icon reveal the content.
+![eye](eye.png)
 
 In the quick reply form, a magnet icon will appear.
 You need to select a png file to upload first, as you would normally (this is what the file will appear as), then click on the magnet to select a file to embed.
