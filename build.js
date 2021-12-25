@@ -11,7 +11,6 @@ const extheader = `// ==UserScript==
 // @match        https://boards.4channel.org/g/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @grant        GM_xmlhttpRequest
-// @require      https://greasyfork.org/scripts/421384-gm-fetch/code/GM_fetch.js?version=898562
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org

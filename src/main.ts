@@ -9,6 +9,53 @@ const IEND = Buffer.from("IEND");
 const tEXt = Buffer.from("tEXt");
 const CUM0 = Buffer.from("CUM\0" + "0");
 
+type Awaited<T> = T extends PromiseLike<infer U> ? U : T
+
+const xmlhttprequest = GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+
+function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
+    function blobTo(to: string, blob: Blob) {
+        if (to == "arrayBuffer" && blob.arrayBuffer)
+            return blob.arrayBuffer()
+        return new Promise((resolve, reject) => {
+            var fileReader = new FileReader();
+            fileReader.onload = function (event) {
+                if (!event) return;
+                if (to == "base64")
+                    resolve(event.target!.result);
+                else
+                    resolve(event.target!.result)
+            }
+            if (to == "arrayBuffer") fileReader.readAsArrayBuffer(blob)
+            else if (to == "base64") fileReader.readAsDataURL(blob) // "data:*/*;base64,......"
+            else if (to == "text") fileReader.readAsText(blob, "utf-8")
+            else reject("unknown to")
+        })
+    }
+    return new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
+        // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
+        let gmopt: Tampermonkey.Request<any> = {
+            url: url.toString(),
+            data: opt?.body?.toString(),
+            responseType: "blob",
+            method: "GET",
+            onload: (resp) => {
+                let blob = resp.response as Blob;
+                const ref = resp as any as Awaited<ReturnType<typeof fetch>>;
+                ref.blob = () => Promise.resolve(blob)
+                ref.arrayBuffer = () => blobTo("arrayBuffer", blob) as Promise<ArrayBuffer>
+                ref.text = () => blobTo("text", blob) as Promise<string>
+                ref.json = async () => JSON.parse(await (blobTo("text", blob) as Promise<any>))
+                resolve(resp as any)
+            },
+            ontimeout: () => reject("fetch timeout"),
+            onerror: () => reject("fetch error"),
+            onabort: () => reject("fetch abort")
+        }
+        xmlhttprequest(gmopt)
+    })
+}
+
 let extractEmbedded = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
     let magic = false;
 

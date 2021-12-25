@@ -7,7 +7,6 @@
 // @match        https://boards.4channel.org/g/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @grant        GM_xmlhttpRequest
-// @require      https://greasyfork.org/scripts/421384-gm-fetch/code/GM_fetch.js?version=898562
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
@@ -7004,6 +7003,53 @@
   var IEND = import_buffer2.Buffer.from("IEND");
   var tEXt = import_buffer2.Buffer.from("tEXt");
   var CUM0 = import_buffer2.Buffer.from("CUM\x000");
+  var xmlhttprequest = GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+  function GM_fetch(...[url, opt]) {
+    function blobTo(to, blob) {
+      if (to == "arrayBuffer" && blob.arrayBuffer)
+        return blob.arrayBuffer();
+      return new Promise((resolve, reject) => {
+        var fileReader = new FileReader();
+        fileReader.onload = function(event) {
+          if (!event)
+            return;
+          if (to == "base64")
+            resolve(event.target.result);
+          else
+            resolve(event.target.result);
+        };
+        if (to == "arrayBuffer")
+          fileReader.readAsArrayBuffer(blob);
+        else if (to == "base64")
+          fileReader.readAsDataURL(blob);
+        else if (to == "text")
+          fileReader.readAsText(blob, "utf-8");
+        else
+          reject("unknown to");
+      });
+    }
+    return new Promise((resolve, reject) => {
+      let gmopt = {
+        url: url.toString(),
+        data: opt?.body?.toString(),
+        responseType: "blob",
+        method: "GET",
+        onload: (resp) => {
+          let blob = resp.response;
+          const ref = resp;
+          ref.blob = () => Promise.resolve(blob);
+          ref.arrayBuffer = () => blobTo("arrayBuffer", blob);
+          ref.text = () => blobTo("text", blob);
+          ref.json = async () => JSON.parse(await blobTo("text", blob));
+          resolve(resp);
+        },
+        ontimeout: () => reject("fetch timeout"),
+        onerror: () => reject("fetch error"),
+        onabort: () => reject("fetch abort")
+      };
+      xmlhttprequest(gmopt);
+    });
+  }
   var extractEmbedded = async (reader) => {
     let magic = false;
     let sneed = new PNGDecoder(reader);
