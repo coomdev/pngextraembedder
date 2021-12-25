@@ -7003,7 +7003,7 @@
   var IEND = import_buffer2.Buffer.from("IEND");
   var tEXt = import_buffer2.Buffer.from("tEXt");
   var CUM0 = import_buffer2.Buffer.from("CUM\x000");
-  var xmlhttprequest = GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+  var xmlhttprequest = GM_xmlhttpRequest ? GM_xmlhttpRequest : GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
   function GM_fetch(...[url, opt]) {
     function blobTo(to, blob) {
       if (to == "arrayBuffer" && blob.arrayBuffer)
