@@ -7096,6 +7096,9 @@
     return await extractEmbedded(reader.getReader());
   };
   var processPost = async (post) => {
+    if (post.hasAttribute("data-processed"))
+      return;
+    post.setAttribute("data-processed", "true");
     let thumb = post.querySelector(".fileThumb");
     if (!thumb)
       return;
@@ -7207,7 +7210,9 @@
   var startup = async () => {
     await Promise.all([...document.querySelectorAll(".postContainer")].map((e) => processPost(e)));
     document.addEventListener("PostsInserted", async (e) => {
-      processPost(e.target);
+      let threadelement = e.target;
+      let posts = [...threadelement.querySelectorAll("postContainer")].filter((e2) => e2.hasAttribute("data-processed"));
+      posts.map((e2) => processPost(e2));
     });
     let getSelectedFile = () => {
       return new Promise((res) => {

@@ -127,6 +127,9 @@ let processImage2 = async (src: string) => {
 };
 
 let processPost = async (post: HTMLDivElement) => {
+    if (post.hasAttribute('data-processed'))
+        return;
+    post.setAttribute('data-processed', "true");
     let thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
     if (!thumb)
         return;
@@ -256,7 +259,9 @@ const startup = async () => {
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
-        processPost(e.target as any);
+        let threadelement = e.target as HTMLDivElement
+        let posts = [...threadelement.querySelectorAll("postContainer")].filter(e => e.hasAttribute('data-processed'));
+        posts.map(e => processPost(e as any));
     }));
 
     let getSelectedFile = () => {
