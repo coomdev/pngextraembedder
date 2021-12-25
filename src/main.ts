@@ -11,7 +11,7 @@ const CUM0 = Buffer.from("CUM\0" + "0");
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
-const xmlhttprequest = GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+const xmlhttprequest = GM_xmlhttpRequest ? GM_xmlhttpRequest : (GM ? GM.xmlHttpRequest : GM_xmlhttpRequest);
 
 function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
     function blobTo(to: string, blob: Blob) {
