@@ -11,7 +11,7 @@ const CUM0 = Buffer.from("CUM\0" + "0");
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
-const xmlhttprequest = GM_xmlhttpRequest ? GM_xmlhttpRequest : (GM ? GM.xmlHttpRequest : GM_xmlhttpRequest);
+const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (GM ? GM.xmlHttpRequest : GM_xmlhttpRequest);
 
 function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
     function blobTo(to: string, blob: Blob) {
@@ -139,8 +139,10 @@ let processPost = async (post: HTMLDivElement) => {
         return;
     // add buttons
     let fi = post.querySelector(".file-info")!;
-    let a = document.createElement('a');
-    a.className = "fa fa-eye";
+    let cf = `
+    <a class="fa fa-eye">
+    </a>`
+    let a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
     let type = await fileTypeFromBuffer(res.data);
     let cont: HTMLImageElement | HTMLVideoElement;
     let w: number, h: number;
@@ -168,10 +170,7 @@ let processPost = async (post: HTMLDivElement) => {
     }
 
     let contract = () => {
-        cont.style.width = "auto";
-        cont.style.height = "auto";
-        cont.style.maxWidth = "125px";
-        cont.style.maxHeight = "125px";
+
     }
 
     let expand = () => {
@@ -301,6 +300,20 @@ const startup = async () => {
 
 document.addEventListener('4chanXInitFinished', startup);
 
+let customStyles = document.createElement('style'); 
+customStyles.appendChild(document.createTextNode(
+`
+.extractedImg {
+    width:auto;
+    height:auto;
+    max-width:125px;
+    max-height:125px;
+    cursor: pointer;
+    
+}
+`
+));
+document.documentElement.insertBefore(customStyles, null); 
 
 // onload = () => {
 //     let container = document.getElementById("container") as HTMLInputElement;
