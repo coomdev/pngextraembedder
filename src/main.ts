@@ -155,7 +155,6 @@ const processPost = async (post: HTMLDivElement) => {
 };
 
 const startup = async () => {
-    await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
 
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
@@ -173,6 +172,7 @@ const startup = async () => {
     };
 
     let injected = false;
+    debugger;
     document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
         if (injected)
             return;
@@ -196,14 +196,18 @@ const startup = async () => {
                     const proc = processors.find(e => file.name.match(e[0]));
                     if (!proc)
                         return;
+                    const buff = await proc[2](file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
-                        detail: await proc[2](file, input.files[0])
+                        detail: { file: new Blob([buff]), name: input.files[0].name }
                     }));
                 }
             });
             input.click();
         };
     }));
+
+    await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
+
 };
 
 document.addEventListener('4chanXInitFinished', startup);
