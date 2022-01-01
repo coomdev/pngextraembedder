@@ -1,13 +1,7 @@
-/* eslint-disable */
-
 import { Buffer } from "buffer";
 import { fileTypeFromBuffer } from 'file-type';
-import { concatAB, PNGDecoder, PNGEncoder } from "./png";
-
-const IDAT = Buffer.from("IDAT");
-const IEND = Buffer.from("IEND");
-const tEXt = Buffer.from("tEXt");
-const CUM0 = Buffer.from("CUM\0" + "0");
+import * as png from "./png";
+import * as webm from "./webm";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -16,136 +10,83 @@ const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpReque
 function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
     function blobTo(to: string, blob: Blob) {
         if (to == "arrayBuffer" && blob.arrayBuffer)
-            return blob.arrayBuffer()
+            return blob.arrayBuffer();
         return new Promise((resolve, reject) => {
-            var fileReader = new FileReader();
+            const fileReader = new FileReader();
             fileReader.onload = function (event) {
                 if (!event) return;
                 if (to == "base64")
                     resolve(event.target!.result);
                 else
-                    resolve(event.target!.result)
-            }
-            if (to == "arrayBuffer") fileReader.readAsArrayBuffer(blob)
-            else if (to == "base64") fileReader.readAsDataURL(blob) // "data:*/*;base64,......"
-            else if (to == "text") fileReader.readAsText(blob, "utf-8")
-            else reject("unknown to")
-        })
+                    resolve(event.target!.result);
+            };
+            if (to == "arrayBuffer") fileReader.readAsArrayBuffer(blob);
+            else if (to == "base64") fileReader.readAsDataURL(blob); // "data:*/*;base64,......"
+            else if (to == "text") fileReader.readAsText(blob, "utf-8");
+            else reject("unknown to");
+        });
     }
     return new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
         // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
-        let gmopt: Tampermonkey.Request<any> = {
+        const gmopt: Tampermonkey.Request<any> = {
             url: url.toString(),
             data: opt?.body?.toString(),
             responseType: "blob",
             method: "GET",
             onload: (resp) => {
-                let blob = resp.response as Blob;
+                const blob = resp.response as Blob;
                 const ref = resp as any as Awaited<ReturnType<typeof fetch>>;
-                ref.blob = () => Promise.resolve(blob)
-                ref.arrayBuffer = () => blobTo("arrayBuffer", blob) as Promise<ArrayBuffer>
-                ref.text = () => blobTo("text", blob) as Promise<string>
-                ref.json = async () => JSON.parse(await (blobTo("text", blob) as Promise<any>))
-                resolve(resp as any)
+                ref.blob = () => Promise.resolve(blob);
+                ref.arrayBuffer = () => blobTo("arrayBuffer", blob) as Promise<ArrayBuffer>;
+                ref.text = () => blobTo("text", blob) as Promise<string>;
+                ref.json = async () => JSON.parse(await (blobTo("text", blob) as Promise<any>));
+                resolve(resp as any);
             },
             ontimeout: () => reject("fetch timeout"),
             onerror: () => reject("fetch error"),
             onabort: () => reject("fetch abort")
-        }
-        xmlhttprequest(gmopt)
-    })
+        };
+        xmlhttprequest(gmopt);
+    });
 }
 
-let extractEmbedded = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
-    let magic = false;
+const processors: [RegExp,
+    (reader: ReadableStreamDefaultReader<Uint8Array>) => Promise<{ filename: string; data: Buffer } | undefined>,
+    (container: File, inj: File) => Promise<Buffer>][] = [
+        [/\.png$/, png.extract, png.inject],
+        [/\.webm$/, webm.extract, webm.inject]
+    ];
 
-    let sneed = new PNGDecoder(reader);
-    try {
-        let lastIDAT: Buffer | null = null;
-        for await (let [name, chunk, crc, offset] of sneed.chunks()) {
-            switch (name) {
-                case 'tEXt': // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
-                    if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
-                        magic = true;
-                    break;
-                case 'IDAT':
-                    if (magic) {
-                        lastIDAT = chunk;
-                        break;
-                    }
-                case 'IEND':
-                    if (!magic)
-                        throw "Didn't find tExt Chunk";
-                default:
-                    break;
-            }
-        }
-        if (lastIDAT) {
-            let data = (lastIDAT as Buffer).slice(4);
-            let fnsize = data.readUInt32LE(0);
-            let fn = data.slice(4, 4 + fnsize).toString();
-            // Todo: xor the buffer to prevent scanning for file signatures (4chan embedded file detection)?
-            data = data.slice(4 + fnsize);
-            return { filename: fn, data };
-        }
-    } catch (e) {
-        console.error(e);
-    } finally {
-        reader.releaseLock();
-    }
-}
-
-let processImage = async (src: string) => {
-    if (!src.match(/\.png$/))
+const processImage = async (src: string) => {
+    const proc = processors.find(e => src.match(e[0]));
+    if (!proc)
         return;
-    let resp = await GM_fetch(src);
-    let reader = (await resp.blob()).stream();
+    const resp = await GM_fetch(src);
+    const reader = (await resp.blob()).stream();
     if (!reader)
         return;
-    return await extractEmbedded(reader.getReader());
+    return await proc[1](reader.getReader());
 };
 
-/* Used for debugging */
-let processImage2 = async (src: string) => {
-    if (!src.match(/\.png$/))
-        return;
-    let resp = await GM_fetch(src);
-    let reader = resp.body!.getReader();
-    if (!reader)
-        return;
-
-    let data = Buffer.alloc(0);
-    let chunk;
-    while ((chunk = await reader.read()) && !chunk.done) {
-        data = concatAB(data, Buffer.from(chunk.value));
-    }
-
-    return {
-        filename: 'aaaa',
-        data
-    };
-};
-
-let processPost = async (post: HTMLDivElement) => {
+const processPost = async (post: HTMLDivElement) => {
     if (post.hasAttribute('data-processed'))
         return;
     post.setAttribute('data-processed', "true");
-    let thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
+    const thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
     if (!thumb)
         return;
-    console.log("Processing post", post)
-    let res = await processImage(thumb.href);
+    const res = await processImage(thumb.href);
     if (!res)
         return;
-    let replyBox = post.querySelector('.post');
+    const replyBox = post.querySelector('.post');
     replyBox?.classList.toggle('hasembed');
     // add buttons
-    let fi = post.querySelector(".file-info")!;
-    let cf = `
+    const fi = post.querySelector(".file-info")!;
+    const cf = `
     <a class="fa fa-eye">
-    </a>`
-    let a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
-    let type = await fileTypeFromBuffer(res.data);
+    </a>`;
+    const a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
+    const type = await fileTypeFromBuffer(res.data);
     let cont: HTMLImageElement | HTMLVideoElement;
     let w: number, h: number;
     if (type?.mime.startsWith("image")) {
@@ -171,19 +112,19 @@ let processPost = async (post: HTMLDivElement) => {
         h = cont.height;
     }
 
-    let contract = () => {
+    const contract = () => {
+        // ugh
+    };
 
-    }
-
-    let expand = () => {
+    const expand = () => {
         cont.style.width = `${w}px`;
         cont.style.height = `${h}px`;
         cont.style.maxWidth = "unset";
         cont.style.maxHeight = "unset";
-    }
+    };
 
-    let imgcont = document.createElement('div');
-    let p = thumb.parentElement!;
+    const imgcont = document.createElement('div');
+    const p = thumb.parentElement!;
     p.removeChild(thumb);
     imgcont.appendChild(thumb);
     p.appendChild(imgcont);
@@ -198,61 +139,20 @@ let processPost = async (post: HTMLDivElement) => {
         contracted = !contracted;
         (contracted) ? contract() : expand();
         e.stopPropagation();
-    }
+    };
 
     let visible = false;
     a.onclick = () => {
         visible = !visible;
         if (visible) {
-            imgcont.appendChild(cont)
+            imgcont.appendChild(cont);
         } else {
             imgcont.removeChild(cont);
         }
         a.classList.toggle("disabled");
-    }
+    };
     fi.children[1].insertAdjacentElement('afterend', a);
-}
-
-let buildChunk = (tag: string, data: Buffer) => {
-    let ret = Buffer.alloc(data.byteLength + 4);
-    ret.write(tag.substr(0, 4), 0);
-    data.copy(ret, 4);
-    return ret;
-}
-
-let BufferWriteStream = () => {
-    let b = Buffer.from([])
-    let ret = new WritableStream<Buffer>({
-        write(chunk) {
-            b = concatAB(b, chunk);
-        }
-    });
-    return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
-}
-
-let buildInjection = async (container: File, inj: File) => {
-    let [writestream, extract] = BufferWriteStream();
-    let encoder = new PNGEncoder(writestream);
-    let decoder = new PNGDecoder(container.stream().getReader());
-
-    let magic = false;
-    for await (let [name, chunk, crc, offset] of decoder.chunks()) {
-        if (magic && name != "IDAT")
-            break;
-        if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
-            magic = true;
-        }
-        await encoder.insertchunk([name, chunk, crc, offset]);
-    }
-    let injb = Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32LE(inj.name.length, 0);
-    injb.write(inj.name, 4);
-    Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
-    await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
-    return { file: new Blob([extract()]), name: container.name };
-}
+};
 
 const startup = async () => {
     await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
@@ -260,51 +160,57 @@ const startup = async () => {
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
-        let threadelement = e.target as HTMLDivElement
-        let posts = [...threadelement.querySelectorAll("postContainer")].filter(e => e.hasAttribute('data-processed'));
+        const threadelement = e.target as HTMLDivElement;
+        const posts = [...threadelement.querySelectorAll("postContainer")].filter(e => e.hasAttribute('data-processed'));
         posts.map(e => processPost(e as any));
     }));
 
-    let getSelectedFile = () => {
+    const getSelectedFile = () => {
         return new Promise<File>(res => {
             document.addEventListener('QRFile', e => res((e as any).detail), { once: true });
             document.dispatchEvent(new CustomEvent('QRGetFile'));
-        })
-    }
+        });
+    };
 
     let injected = false;
     document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
         if (injected)
             return;
         injected = true;
-        let target = e.target as HTMLDivElement;
-        let bts = target.querySelector('#qr-filename-container')
-        let i = document.createElement('i');
+        const target = e.target as HTMLDivElement;
+        const bts = target.querySelector('#qr-filename-container');
+        const i = document.createElement('i');
         i.className = "fa fa-magnet";
-        let a = document.createElement('a')
+        const a = document.createElement('a');
         a.appendChild(i);
         a.title = "Embed File (Select a file before...)";
         bts?.appendChild(a);
         a.onclick = async (e) => {
-            let file = await getSelectedFile();
+            const file = await getSelectedFile();
             if (!file)
                 return;
-            let input = document.createElement('input') as HTMLInputElement;
+            const input = document.createElement('input') as HTMLInputElement;
             input.setAttribute("type", "file");
             input.onchange = (async ev => {
-                if (input.files)
-                    document.dispatchEvent(new CustomEvent('QRSetFile', { detail: await buildInjection(file, input.files[0]) }))
-            })
+                if (input.files) {
+                    const proc = processors.find(e => file.name.match(e[0]));
+                    if (!proc)
+                        return;
+                    document.dispatchEvent(new CustomEvent('QRSetFile', {
+                        detail: await proc[2](file, input.files[0])
+                    }));
+                }
+            });
             input.click();
-        }
+        };
     }));
 };
 
 document.addEventListener('4chanXInitFinished', startup);
 
-let customStyles = document.createElement('style'); 
+const customStyles = document.createElement('style');
 customStyles.appendChild(document.createTextNode(
-`
+    `
 .extractedImg {
     width:auto;
     height:auto;
@@ -318,7 +224,7 @@ customStyles.appendChild(document.createTextNode(
 }
 `
 ));
-document.documentElement.insertBefore(customStyles, null); 
+document.documentElement.insertBefore(customStyles, null);
 
 // onload = () => {
 //     let container = document.getElementById("container") as HTMLInputElement;

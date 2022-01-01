@@ -1911,7 +1911,7 @@
       });
       EventEmitter.init = function() {
         if (this._events === void 0 || this._events === Object.getPrototypeOf(this)._events) {
-          this._events = Object.create(null);
+          this._events = /* @__PURE__ */ Object.create(null);
           this._eventsCount = 0;
         }
         this._maxListeners = this._maxListeners || void 0;
@@ -1972,7 +1972,7 @@
         checkListener(listener);
         events = target._events;
         if (events === void 0) {
-          events = target._events = Object.create(null);
+          events = target._events = /* @__PURE__ */ Object.create(null);
           target._eventsCount = 0;
         } else {
           if (events.newListener !== void 0) {
@@ -2049,7 +2049,7 @@
           return this;
         if (list === listener || list.listener === listener) {
           if (--this._eventsCount === 0)
-            this._events = Object.create(null);
+            this._events = /* @__PURE__ */ Object.create(null);
           else {
             delete events[type];
             if (events.removeListener)
@@ -2086,11 +2086,11 @@
           return this;
         if (events.removeListener === void 0) {
           if (arguments.length === 0) {
-            this._events = Object.create(null);
+            this._events = /* @__PURE__ */ Object.create(null);
             this._eventsCount = 0;
           } else if (events[type] !== void 0) {
             if (--this._eventsCount === 0)
-              this._events = Object.create(null);
+              this._events = /* @__PURE__ */ Object.create(null);
             else
               delete events[type];
           }
@@ -2106,7 +2106,7 @@
             this.removeAllListeners(key);
           }
           this.removeAllListeners("removeListener");
-          this._events = Object.create(null);
+          this._events = /* @__PURE__ */ Object.create(null);
           this._eventsCount = 0;
           return this;
         }
@@ -5134,8 +5134,5285 @@
     }
   });
 
-  // src/main.ts
-  var import_buffer2 = __toESM(require_buffer());
+  // node_modules/int64-buffer/int64-buffer.js
+  var require_int64_buffer = __commonJS({
+    "node_modules/int64-buffer/int64-buffer.js"(exports) {
+      var Uint64BE;
+      var Int64BE;
+      var Uint64LE;
+      var Int64LE;
+      !function(exports2) {
+        var UNDEFINED = "undefined";
+        var BUFFER = UNDEFINED !== typeof Buffer && Buffer;
+        var UINT8ARRAY = UNDEFINED !== typeof Uint8Array && Uint8Array;
+        var ARRAYBUFFER = UNDEFINED !== typeof ArrayBuffer && ArrayBuffer;
+        var ZERO = [0, 0, 0, 0, 0, 0, 0, 0];
+        var isArray = Array.isArray || _isArray;
+        var BIT32 = 4294967296;
+        var BIT24 = 16777216;
+        var storage;
+        Uint64BE = factory("Uint64BE", true, true);
+        Int64BE = factory("Int64BE", true, false);
+        Uint64LE = factory("Uint64LE", false, true);
+        Int64LE = factory("Int64LE", false, false);
+        function factory(name, bigendian, unsigned) {
+          var posH = bigendian ? 0 : 4;
+          var posL = bigendian ? 4 : 0;
+          var pos0 = bigendian ? 0 : 3;
+          var pos1 = bigendian ? 1 : 2;
+          var pos2 = bigendian ? 2 : 1;
+          var pos3 = bigendian ? 3 : 0;
+          var fromPositive = bigendian ? fromPositiveBE : fromPositiveLE;
+          var fromNegative = bigendian ? fromNegativeBE : fromNegativeLE;
+          var proto = Int64.prototype;
+          var isName = "is" + name;
+          var _isInt64 = "_" + isName;
+          proto.buffer = void 0;
+          proto.offset = 0;
+          proto[_isInt64] = true;
+          proto.toNumber = toNumber;
+          proto.toString = toString;
+          proto.toJSON = toNumber;
+          proto.toArray = toArray;
+          if (BUFFER)
+            proto.toBuffer = toBuffer;
+          if (UINT8ARRAY)
+            proto.toArrayBuffer = toArrayBuffer;
+          Int64[isName] = isInt64;
+          exports2[name] = Int64;
+          return Int64;
+          function Int64(buffer, offset, value, raddix) {
+            if (!(this instanceof Int64))
+              return new Int64(buffer, offset, value, raddix);
+            return init(this, buffer, offset, value, raddix);
+          }
+          function isInt64(b) {
+            return !!(b && b[_isInt64]);
+          }
+          function init(that, buffer, offset, value, raddix) {
+            if (UINT8ARRAY && ARRAYBUFFER) {
+              if (buffer instanceof ARRAYBUFFER)
+                buffer = new UINT8ARRAY(buffer);
+              if (value instanceof ARRAYBUFFER)
+                value = new UINT8ARRAY(value);
+            }
+            if (!buffer && !offset && !value && !storage) {
+              that.buffer = newArray(ZERO, 0);
+              return;
+            }
+            if (!isValidBuffer(buffer, offset)) {
+              var _storage = storage || Array;
+              raddix = offset;
+              value = buffer;
+              offset = 0;
+              buffer = new _storage(8);
+            }
+            that.buffer = buffer;
+            that.offset = offset |= 0;
+            if (UNDEFINED === typeof value)
+              return;
+            if (typeof value === "string") {
+              fromString(buffer, offset, value, raddix || 10);
+            } else if (isValidBuffer(value, raddix)) {
+              fromArray(buffer, offset, value, raddix);
+            } else if (typeof raddix === "number") {
+              writeInt32(buffer, offset + posH, value);
+              writeInt32(buffer, offset + posL, raddix);
+            } else if (value > 0) {
+              fromPositive(buffer, offset, value);
+            } else if (value < 0) {
+              fromNegative(buffer, offset, value);
+            } else {
+              fromArray(buffer, offset, ZERO, 0);
+            }
+          }
+          function fromString(buffer, offset, str, raddix) {
+            var pos = 0;
+            var len = str.length;
+            var high = 0;
+            var low = 0;
+            if (str[0] === "-")
+              pos++;
+            var sign = pos;
+            while (pos < len) {
+              var chr = parseInt(str[pos++], raddix);
+              if (!(chr >= 0))
+                break;
+              low = low * raddix + chr;
+              high = high * raddix + Math.floor(low / BIT32);
+              low %= BIT32;
+            }
+            if (sign) {
+              high = ~high;
+              if (low) {
+                low = BIT32 - low;
+              } else {
+                high++;
+              }
+            }
+            writeInt32(buffer, offset + posH, high);
+            writeInt32(buffer, offset + posL, low);
+          }
+          function toNumber() {
+            var buffer = this.buffer;
+            var offset = this.offset;
+            var high = readInt32(buffer, offset + posH);
+            var low = readInt32(buffer, offset + posL);
+            if (!unsigned)
+              high |= 0;
+            return high ? high * BIT32 + low : low;
+          }
+          function toString(radix) {
+            var buffer = this.buffer;
+            var offset = this.offset;
+            var high = readInt32(buffer, offset + posH);
+            var low = readInt32(buffer, offset + posL);
+            var str = "";
+            var sign = !unsigned && high & 2147483648;
+            if (sign) {
+              high = ~high;
+              low = BIT32 - low;
+            }
+            radix = radix || 10;
+            while (1) {
+              var mod = high % radix * BIT32 + low;
+              high = Math.floor(high / radix);
+              low = Math.floor(mod / radix);
+              str = (mod % radix).toString(radix) + str;
+              if (!high && !low)
+                break;
+            }
+            if (sign) {
+              str = "-" + str;
+            }
+            return str;
+          }
+          function writeInt32(buffer, offset, value) {
+            buffer[offset + pos3] = value & 255;
+            value = value >> 8;
+            buffer[offset + pos2] = value & 255;
+            value = value >> 8;
+            buffer[offset + pos1] = value & 255;
+            value = value >> 8;
+            buffer[offset + pos0] = value & 255;
+          }
+          function readInt32(buffer, offset) {
+            return buffer[offset + pos0] * BIT24 + (buffer[offset + pos1] << 16) + (buffer[offset + pos2] << 8) + buffer[offset + pos3];
+          }
+        }
+        function toArray(raw) {
+          var buffer = this.buffer;
+          var offset = this.offset;
+          storage = null;
+          if (raw !== false && offset === 0 && buffer.length === 8 && isArray(buffer))
+            return buffer;
+          return newArray(buffer, offset);
+        }
+        function toBuffer(raw) {
+          var buffer = this.buffer;
+          var offset = this.offset;
+          storage = BUFFER;
+          if (raw !== false && offset === 0 && buffer.length === 8 && Buffer.isBuffer(buffer))
+            return buffer;
+          var dest = new BUFFER(8);
+          fromArray(dest, 0, buffer, offset);
+          return dest;
+        }
+        function toArrayBuffer(raw) {
+          var buffer = this.buffer;
+          var offset = this.offset;
+          var arrbuf = buffer.buffer;
+          storage = UINT8ARRAY;
+          if (raw !== false && offset === 0 && arrbuf instanceof ARRAYBUFFER && arrbuf.byteLength === 8)
+            return arrbuf;
+          var dest = new UINT8ARRAY(8);
+          fromArray(dest, 0, buffer, offset);
+          return dest.buffer;
+        }
+        function isValidBuffer(buffer, offset) {
+          var len = buffer && buffer.length;
+          offset |= 0;
+          return len && offset + 8 <= len && typeof buffer[offset] !== "string";
+        }
+        function fromArray(destbuf, destoff, srcbuf, srcoff) {
+          destoff |= 0;
+          srcoff |= 0;
+          for (var i = 0; i < 8; i++) {
+            destbuf[destoff++] = srcbuf[srcoff++] & 255;
+          }
+        }
+        function newArray(buffer, offset) {
+          return Array.prototype.slice.call(buffer, offset, offset + 8);
+        }
+        function fromPositiveBE(buffer, offset, value) {
+          var pos = offset + 8;
+          while (pos > offset) {
+            buffer[--pos] = value & 255;
+            value /= 256;
+          }
+        }
+        function fromNegativeBE(buffer, offset, value) {
+          var pos = offset + 8;
+          value++;
+          while (pos > offset) {
+            buffer[--pos] = -value & 255 ^ 255;
+            value /= 256;
+          }
+        }
+        function fromPositiveLE(buffer, offset, value) {
+          var end = offset + 8;
+          while (offset < end) {
+            buffer[offset++] = value & 255;
+            value /= 256;
+          }
+        }
+        function fromNegativeLE(buffer, offset, value) {
+          var end = offset + 8;
+          value++;
+          while (offset < end) {
+            buffer[offset++] = -value & 255 ^ 255;
+            value /= 256;
+          }
+        }
+        function _isArray(val) {
+          return !!val && Object.prototype.toString.call(val) == "[object Array]";
+        }
+      }(typeof exports === "object" && typeof exports.nodeName !== "string" ? exports : exports || {});
+    }
+  });
+
+  // node_modules/matroska/lib/schema.js
+  var require_schema = __commonJS({
+    "node_modules/matroska/lib/schema.js"(exports, module) {
+      "use strict";
+      var byEbmlID = {
+        128: {
+          name: "ChapterDisplay",
+          level: 4,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: true,
+          description: "Contains all possible strings to use for the chapter display."
+        },
+        131: {
+          name: "TrackType",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "1-254",
+          description: "A set of track types coded on 8 bits (1: video, 2: audio, 3: complex, 0x10: logo, 0x11: subtitle, 0x12: buttons, 0x20: control)."
+        },
+        133: {
+          name: "ChapString",
+          cppname: "ChapterString",
+          level: 5,
+          type: "8",
+          mandatory: true,
+          minver: 1,
+          webm: true,
+          description: "Contains the string to use as the chapter atom."
+        },
+        134: {
+          name: "CodecID",
+          level: 3,
+          type: "s",
+          mandatory: true,
+          minver: 1,
+          description: "An ID corresponding to the codec, see the codec page for more info."
+        },
+        136: {
+          name: "FlagDefault",
+          cppname: "TrackFlagDefault",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          "default": 1,
+          range: "0-1",
+          description: "Set if that track (audio, video or subs) SHOULD be active if no language found matches the user preference. (1 bit)"
+        },
+        137: {
+          name: "ChapterTrackNumber",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          description: "UID of the Track to apply this chapter too. In the absense of a control track, choosing this chapter will select the listed Tracks and deselect unlisted tracks. Absense of this element indicates that the Chapter should be applied to any currently used Tracks."
+        },
+        145: {
+          name: "ChapterTimeStart",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: true,
+          description: "Timestamp of the start of Chapter (not scaled)."
+        },
+        146: {
+          name: "ChapterTimeEnd",
+          level: 4,
+          type: "u",
+          minver: 1,
+          webm: false,
+          description: "Timestamp of the end of Chapter (timestamp excluded, not scaled)."
+        },
+        150: {
+          name: "CueRefTime",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 2,
+          webm: false,
+          description: "Timestamp of the referenced Block."
+        },
+        151: {
+          name: "CueRefCluster",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          webm: false,
+          description: "The Position of the Cluster containing the referenced Block."
+        },
+        152: {
+          name: "ChapterFlagHidden",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          range: "0-1",
+          description: "If a chapter is hidden (1), it should not be available to the user interface (but still to Control Tracks; see flag notes). (1 bit)"
+        },
+        16980: {
+          name: "ContentCompAlgo",
+          level: 6,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The compression algorithm used. Algorithms that have been specified so far are: 0 - zlib,   3 - Header Stripping"
+        },
+        16981: {
+          name: "ContentCompSettings",
+          level: 6,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "Settings that might be needed by the decompressor. For Header Stripping (ContentCompAlgo=3), the bytes that were removed from the beggining of each frames of the track."
+        },
+        17026: {
+          name: "DocType",
+          level: 1,
+          type: "s",
+          mandatory: true,
+          "default": "matroska",
+          minver: 1,
+          description: "A string that describes the type of document that follows this EBML header. 'matroska' in our case or 'webm' for webm files."
+        },
+        17029: {
+          name: "DocTypeReadVersion",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 1,
+          minver: 1,
+          description: "The minimum DocType version an interpreter has to support to read this file."
+        },
+        17030: {
+          name: "EBMLVersion",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 1,
+          minver: 1,
+          description: "The version of EBML parser used to create the file."
+        },
+        17031: {
+          name: "DocTypeVersion",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 1,
+          minver: 1,
+          description: "The version of DocType interpreter used to create the file."
+        },
+        17476: {
+          name: "SegmentFamily",
+          level: 2,
+          type: "b",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          bytesize: 16,
+          description: "A randomly generated unique ID that all segments related to each other must use (128 bits)."
+        },
+        17505: {
+          name: "DateUTC",
+          level: 2,
+          type: "d",
+          minver: 1,
+          description: "Date of the origin of timestamp (value 0), i.e. production date."
+        },
+        17540: {
+          name: "TagDefault",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 1,
+          range: "0-1",
+          description: "Indication to know if this is the default/original language to use for the given tag. (1 bit)"
+        },
+        17541: {
+          name: "TagBinary",
+          level: 4,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "The values of the Tag if it is binary. Note that this cannot be used in the same SimpleTag as TagString."
+        },
+        17543: {
+          name: "TagString",
+          level: 4,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "The value of the Element."
+        },
+        17545: {
+          name: "Duration",
+          level: 2,
+          type: "f",
+          minver: 1,
+          range: "> 0",
+          description: "Duration of the segment (based on TimecodeScale)."
+        },
+        17816: {
+          name: "ChapterFlagEnabled",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 1,
+          range: "0-1",
+          description: "Specify wether the chapter is enabled. It can be enabled/disabled by a Control Track. When disabled, the movie should skip all the content between the TimeStart and TimeEnd of this chapter (see flag notes). (1 bit)"
+        },
+        18016: {
+          name: "FileMimeType",
+          level: 3,
+          type: "s",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "MIME type of the file."
+        },
+        18017: {
+          name: "FileUsedStartTime",
+          level: 3,
+          type: "u",
+          divx: true,
+          description: "DivX font extension"
+        },
+        18018: {
+          name: "FileUsedEndTime",
+          level: 3,
+          type: "u",
+          divx: true,
+          description: "DivX font extension"
+        },
+        18037: {
+          name: "FileReferral",
+          level: 3,
+          type: "b",
+          webm: false,
+          description: "A binary value that a track/codec can refer to when the attachment is needed."
+        },
+        20529: {
+          name: "ContentEncodingOrder",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "Tells when this modification was used during encoding/muxing starting with 0 and counting upwards. The decoder/demuxer has to start with the highest order number it finds and work its way down. This value has to be unique over all ContentEncodingOrder elements in the segment."
+        },
+        20530: {
+          name: "ContentEncodingScope",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 1,
+          range: "not 0",
+          description: "A bit field that describes which elements have been modified in this way. Values (big endian) can be OR'ed. Possible values: 1 - all frame contents, 2 - the track's private data, 4 - the next ContentEncoding (next ContentEncodingOrder. Either the data inside ContentCompression and/or ContentEncryption)"
+        },
+        20531: {
+          name: "ContentEncodingType",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "A value describing what kind of transformation has been done. Possible values: 0 - compression, 1 - encryption"
+        },
+        20532: {
+          name: "ContentCompression",
+          level: 5,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "Settings describing the compression used. Must be present if the value of ContentEncodingType is 0 and absent otherwise. Each block must be decompressable even if no previous block is available in order not to prevent seeking."
+        },
+        20533: {
+          name: "ContentEncryption",
+          level: 5,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "Settings describing the encryption used. Must be present if the value of ContentEncodingType is 1 and absent otherwise."
+        },
+        21368: {
+          name: "CueBlockNumber",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 1,
+          range: "not 0",
+          description: "Number of the Block in the specified Cluster."
+        },
+        22100: {
+          name: "ChapterStringUID",
+          level: 4,
+          type: "8",
+          mandatory: false,
+          minver: 3,
+          webm: true,
+          description: "A unique string ID to identify the Chapter. Use for WebVTT cue identifier storage."
+        },
+        22337: {
+          name: "WritingApp",
+          level: 2,
+          type: "8",
+          mandatory: true,
+          minver: 1,
+          description: 'Writing application ("mkvmerge-0.3.3").'
+        },
+        22612: {
+          name: "SilentTracks",
+          cppname: "ClusterSilentTracks",
+          level: 2,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "The list of tracks that are not used in that part of the stream. It is useful when using overlay tracks on seeking. Then you should decide what track to use."
+        },
+        25152: {
+          name: "ContentEncoding",
+          level: 4,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Settings for one content encoding like compression or encryption."
+        },
+        25188: {
+          name: "BitDepth",
+          cppname: "AudioBitDepth",
+          level: 4,
+          type: "u",
+          minver: 1,
+          range: "not 0",
+          description: "Bits per sample, mostly used for PCM."
+        },
+        25906: {
+          name: "SignedElement",
+          level: 3,
+          type: "b",
+          multiple: true,
+          webm: false,
+          description: "An element ID whose data will be used to compute the signature."
+        },
+        26148: {
+          name: "TrackTranslate",
+          level: 3,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "The track identification for the given Chapter Codec."
+        },
+        26897: {
+          name: "ChapProcessCommand",
+          cppname: "ChapterProcessCommand",
+          level: 5,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Contains all the commands associated to the Atom."
+        },
+        26914: {
+          name: "ChapProcessTime",
+          cppname: "ChapterProcessTime",
+          level: 6,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "Defines when the process command should be handled (0: during the whole chapter, 1: before starting playback, 2: after playback of the chapter)."
+        },
+        26916: {
+          name: "ChapterTranslate",
+          level: 2,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "A tuple of corresponding ID used by chapter codecs to represent this segment."
+        },
+        26931: {
+          name: "ChapProcessData",
+          cppname: "ChapterProcessData",
+          level: 6,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "Contains the command information. The data should be interpreted depending on the ChapProcessCodecID value. For ChapProcessCodecID = 1, the data correspond to the binary DVD cell pre/post commands."
+        },
+        26948: {
+          name: "ChapProcess",
+          cppname: "ChapterProcess",
+          level: 4,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Contains all the commands associated to the Atom."
+        },
+        26965: {
+          name: "ChapProcessCodecID",
+          cppname: "ChapterProcessCodecID",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "Contains the type of the codec used for the processing. A value of 0 means native Matroska processing (to be defined), a value of 1 means the DVD command set is used. More codec IDs can be added later."
+        },
+        29555: {
+          name: "Tag",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Element containing elements specific to Tracks/Chapters."
+        },
+        29572: {
+          name: "SegmentFilename",
+          level: 2,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "A filename corresponding to this segment."
+        },
+        29766: {
+          name: "AttachmentLink",
+          cppname: "TrackAttachmentLink",
+          level: 3,
+          type: "u",
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          description: "The UID of an attachment that is used by this codec."
+        },
+        2459272: {
+          name: "CodecName",
+          level: 3,
+          type: "8",
+          minver: 1,
+          description: "A human-readable string specifying the codec."
+        },
+        408125543: {
+          name: "Segment",
+          level: "0",
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "This element contains all other top-level (level 1) elements. Typically a Matroska file is composed of 1 segment."
+        },
+        17530: {
+          name: "TagLanguage",
+          level: 4,
+          type: "s",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": "und",
+          description: "Specifies the language of the tag specified, in the Matroska languages form."
+        },
+        17827: {
+          name: "TagName",
+          level: 4,
+          type: "8",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The name of the Tag that is going to be stored."
+        },
+        26568: {
+          name: "SimpleTag",
+          cppname: "TagSimple",
+          level: 3,
+          "recursive": "1",
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Contains general information about the target."
+        },
+        25542: {
+          name: "TagAttachmentUID",
+          level: 4,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "A unique ID to identify the Attachment(s) the tags belong to. If the value is 0 at this level, the tags apply to all the attachments in the Segment."
+        },
+        25540: {
+          name: "TagChapterUID",
+          level: 4,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "A unique ID to identify the Chapter(s) the tags belong to. If the value is 0 at this level, the tags apply to all chapters in the Segment."
+        },
+        25545: {
+          name: "TagEditionUID",
+          level: 4,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "A unique ID to identify the EditionEntry(s) the tags belong to. If the value is 0 at this level, the tags apply to all editions in the Segment."
+        },
+        25541: {
+          name: "TagTrackUID",
+          level: 4,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "A unique ID to identify the Track(s) the tags belong to. If the value is 0 at this level, the tags apply to all tracks in the Segment."
+        },
+        25546: {
+          name: "TargetType",
+          cppname: "TagTargetType",
+          level: 4,
+          type: "s",
+          minver: 1,
+          webm: false,
+          "strong": "informational",
+          description: 'An  string that can be used to display the logical level of the target like "ALBUM", "TRACK", "MOVIE", "CHAPTER", etc (see TargetType).'
+        },
+        26826: {
+          name: "TargetTypeValue",
+          cppname: "TagTargetTypeValue",
+          level: 4,
+          type: "u",
+          minver: 1,
+          webm: false,
+          "default": 50,
+          description: "A number to indicate the logical level of the target (see TargetType)."
+        },
+        25536: {
+          name: "Targets",
+          cppname: "TagTargets",
+          level: 3,
+          type: "m",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "Contain all UIDs where the specified meta data apply. It is empty to describe everything in the segment."
+        },
+        307544935: {
+          name: "Tags",
+          level: 1,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Element containing elements specific to Tracks/Chapters. A list of valid tags can be found here."
+        },
+        17677: {
+          name: "ChapProcessPrivate",
+          cppname: "ChapterProcessPrivate",
+          level: 5,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: 'Some optional data attached to the ChapProcessCodecID information. For ChapProcessCodecID = 1, it is the "DVD level" equivalent.'
+        },
+        17278: {
+          name: "ChapCountry",
+          cppname: "ChapterCountry",
+          level: 5,
+          type: "s",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "The countries corresponding to the string, same 2 octets as in Internet domains."
+        },
+        17276: {
+          name: "ChapLanguage",
+          cppname: "ChapterLanguage",
+          level: 5,
+          type: "s",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: true,
+          "default": "eng",
+          description: "The languages corresponding to the string, in the bibliographic ISO-639-2 form."
+        },
+        143: {
+          name: "ChapterTrack",
+          level: 4,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "List of tracks on which the chapter applies. If this element is not present, all tracks apply"
+        },
+        25539: {
+          name: "ChapterPhysicalEquiv",
+          level: 4,
+          type: "u",
+          minver: 1,
+          webm: false,
+          description: 'Specify the physical equivalent of this ChapterAtom like "DVD" (60) or "SIDE" (50), see complete list of values.'
+        },
+        28348: {
+          name: "ChapterSegmentEditionUID",
+          level: 4,
+          type: "u",
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          description: "The EditionUID to play from the segment linked in ChapterSegmentUID."
+        },
+        28263: {
+          name: "ChapterSegmentUID",
+          level: 4,
+          type: "b",
+          minver: 1,
+          webm: false,
+          range: ">0",
+          bytesize: 16,
+          description: "A segment to play in place of this chapter. Edition ChapterSegmentEditionUID should be used for this segment, otherwise no edition is used."
+        },
+        29636: {
+          name: "ChapterUID",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: true,
+          range: "not 0",
+          description: "A unique ID to identify the Chapter."
+        },
+        182: {
+          name: "ChapterAtom",
+          level: 3,
+          "recursive": "1",
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: true,
+          description: "Contains the atom information to use as the chapter atom (apply to all tracks)."
+        },
+        17885: {
+          name: "EditionFlagOrdered",
+          level: 3,
+          type: "u",
+          minver: 1,
+          webm: false,
+          "default": 0,
+          range: "0-1",
+          description: "Specify if the chapters can be defined multiple times and the order to play them is enforced. (1 bit)"
+        },
+        17883: {
+          name: "EditionFlagDefault",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          range: "0-1",
+          description: "If a flag is set (1) the edition should be used as the default one. (1 bit)"
+        },
+        17853: {
+          name: "EditionFlagHidden",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          range: "0-1",
+          description: "If an edition is hidden (1), it should not be available to the user interface (but still to Control Tracks; see flag notes). (1 bit)"
+        },
+        17852: {
+          name: "EditionUID",
+          level: 3,
+          type: "u",
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          description: "A unique ID to identify the edition. It's useful for tagging an edition."
+        },
+        17849: {
+          name: "EditionEntry",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: true,
+          description: "Contains all information about a segment edition."
+        },
+        272869232: {
+          name: "Chapters",
+          level: 1,
+          type: "m",
+          minver: 1,
+          webm: true,
+          description: "A system to define basic menus and partition data. For more detailed information, look at the Chapters Explanation."
+        },
+        18094: {
+          name: "FileUID",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          description: "Unique ID representing the file, as random as possible."
+        },
+        18012: {
+          name: "FileData",
+          level: 3,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The data of the file."
+        },
+        18030: {
+          name: "FileName",
+          level: 3,
+          type: "8",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "Filename of the attached file."
+        },
+        18046: {
+          name: "FileDescription",
+          level: 3,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "A human-friendly name for the attached file."
+        },
+        24999: {
+          name: "AttachedFile",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "An attached file."
+        },
+        423732329: {
+          name: "Attachments",
+          level: 1,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "Contain attached files."
+        },
+        235: {
+          name: "CueRefCodecState",
+          level: 5,
+          type: "u",
+          webm: false,
+          "default": 0,
+          description: "The position of the Codec State corresponding to this referenced element. 0 means that the data is taken from the initial Track Entry."
+        },
+        21343: {
+          name: "CueRefNumber",
+          level: 5,
+          type: "u",
+          webm: false,
+          "default": 1,
+          range: "not 0",
+          description: "Number of the referenced Block of Track X in the specified Cluster."
+        },
+        219: {
+          name: "CueReference",
+          level: 4,
+          type: "m",
+          multiple: true,
+          minver: 2,
+          webm: false,
+          description: "The Clusters containing the required referenced Blocks."
+        },
+        234: {
+          name: "CueCodecState",
+          level: 4,
+          type: "u",
+          minver: 2,
+          webm: false,
+          "default": 0,
+          description: "The position of the Codec State corresponding to this Cue element. 0 means that the data is taken from the initial Track Entry."
+        },
+        178: {
+          name: "CueDuration",
+          level: 4,
+          type: "u",
+          mandatory: false,
+          minver: 4,
+          webm: false,
+          description: "The duration of the block according to the segment time base. If missing the track's DefaultDuration does not apply and no duration information is available in terms of the cues."
+        },
+        240: {
+          name: "CueRelativePosition",
+          level: 4,
+          type: "u",
+          mandatory: false,
+          minver: 4,
+          webm: false,
+          description: "The relative position of the referenced block inside the cluster with 0 being the first possible position for an element inside that cluster.",
+          position: "clusterRelative"
+        },
+        241: {
+          name: "CueClusterPosition",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          description: "The position of the Cluster containing the required Block.",
+          position: "segment"
+        },
+        247: {
+          name: "CueTrack",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "not 0",
+          description: "The track for which a position is given."
+        },
+        183: {
+          name: "CueTrackPositions",
+          level: 3,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Contain positions for different tracks corresponding to the timestamp."
+        },
+        179: {
+          name: "CueTime",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          description: "Absolute timestamp according to the segment time base."
+        },
+        187: {
+          name: "CuePoint",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Contains all information relative to a seek point in the segment."
+        },
+        475249515: {
+          name: "Cues",
+          level: 1,
+          type: "m",
+          minver: 1,
+          description: 'A top-level element to speed seeking access. All entries are local to the segment. Should be mandatory for non "live" streams.'
+        },
+        18406: {
+          name: "ContentSigHashAlgo",
+          level: 6,
+          type: "u",
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The hash algorithm used for the signature. A value of '0' means that the contents have not been signed but only encrypted. Predefined values: 1 - SHA1-160 2 - MD5"
+        },
+        18405: {
+          name: "ContentSigAlgo",
+          level: 6,
+          type: "u",
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The algorithm used for the signature. A value of '0' means that the contents have not been signed but only encrypted. Predefined values: 1 - RSA"
+        },
+        18404: {
+          name: "ContentSigKeyID",
+          level: 6,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "This is the ID of the private key the data was signed with."
+        },
+        18403: {
+          name: "ContentSignature",
+          level: 6,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "A cryptographic signature of the contents."
+        },
+        18402: {
+          name: "ContentEncKeyID",
+          level: 6,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "For public key algorithms this is the ID of the public key the the data was encrypted with."
+        },
+        18401: {
+          name: "ContentEncAlgo",
+          level: 6,
+          type: "u",
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The encryption algorithm used. The value '0' means that the contents have not been encrypted but only signed. Predefined values: 1 - DES, 2 - 3DES, 3 - Twofish, 4 - Blowfish, 5 - AES"
+        },
+        28032: {
+          name: "ContentEncodings",
+          level: 3,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "Settings for several content encoding mechanisms like compression or encryption."
+        },
+        196: {
+          name: "TrickMasterTrackSegmentUID",
+          level: 3,
+          type: "b",
+          divx: true,
+          bytesize: 16,
+          description: "DivX trick track extenstions"
+        },
+        199: {
+          name: "TrickMasterTrackUID",
+          level: 3,
+          type: "u",
+          divx: true,
+          description: "DivX trick track extenstions"
+        },
+        198: {
+          name: "TrickTrackFlag",
+          level: 3,
+          type: "u",
+          divx: true,
+          "default": 0,
+          description: "DivX trick track extenstions"
+        },
+        193: {
+          name: "TrickTrackSegmentUID",
+          level: 3,
+          type: "b",
+          divx: true,
+          bytesize: 16,
+          description: "DivX trick track extenstions"
+        },
+        192: {
+          name: "TrickTrackUID",
+          level: 3,
+          type: "u",
+          divx: true,
+          description: "DivX trick track extenstions"
+        },
+        237: {
+          name: "TrackJoinUID",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          multiple: true,
+          minver: 3,
+          webm: false,
+          range: "not 0",
+          description: "The trackUID number of a track whose blocks are used to create this virtual track."
+        },
+        233: {
+          name: "TrackJoinBlocks",
+          level: 4,
+          type: "m",
+          minver: 3,
+          webm: false,
+          description: "Contains the list of all tracks whose Blocks need to be combined to create this virtual track"
+        },
+        230: {
+          name: "TrackPlaneType",
+          level: 6,
+          type: "u",
+          mandatory: true,
+          minver: 3,
+          webm: false,
+          description: "The kind of plane this track corresponds to (0: left eye, 1: right eye, 2: background)."
+        },
+        229: {
+          name: "TrackPlaneUID",
+          level: 6,
+          type: "u",
+          mandatory: true,
+          minver: 3,
+          webm: false,
+          range: "not 0",
+          description: "The trackUID number of the track representing the plane."
+        },
+        228: {
+          name: "TrackPlane",
+          level: 5,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 3,
+          webm: false,
+          description: "Contains a video plane track that need to be combined to create this 3D track"
+        },
+        227: {
+          name: "TrackCombinePlanes",
+          level: 4,
+          type: "m",
+          minver: 3,
+          webm: false,
+          description: "Contains the list of all video plane tracks that need to be combined to create this 3D track"
+        },
+        226: {
+          name: "TrackOperation",
+          level: 3,
+          type: "m",
+          minver: 3,
+          webm: false,
+          description: "Operation that needs to be applied on tracks to create this virtual track. For more details look at the Specification Notes on the subject."
+        },
+        32123: {
+          name: "ChannelPositions",
+          cppname: "AudioPosition",
+          level: 4,
+          type: "b",
+          webm: false,
+          description: "Table of horizontal angles for each successive channel, see appendix."
+        },
+        159: {
+          name: "Channels",
+          cppname: "AudioChannels",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          "default": 1,
+          range: "not 0",
+          description: "Numbers of channels in the track."
+        },
+        30901: {
+          name: "OutputSamplingFrequency",
+          cppname: "AudioOutputSamplingFreq",
+          level: 4,
+          type: "f",
+          minver: 1,
+          "default": "Sampling Frequency",
+          range: "> 0",
+          description: "Real output sampling frequency in Hz (used for SBR techniques)."
+        },
+        181: {
+          name: "SamplingFrequency",
+          cppname: "AudioSamplingFreq",
+          level: 4,
+          type: "f",
+          mandatory: true,
+          minver: 1,
+          "default": 8e3,
+          range: "> 0",
+          description: "Sampling frequency in Hz."
+        },
+        225: {
+          name: "Audio",
+          cppname: "TrackAudio",
+          level: 3,
+          type: "m",
+          minver: 1,
+          description: "Audio settings."
+        },
+        2327523: {
+          name: "FrameRate",
+          cppname: "VideoFrameRate",
+          level: 4,
+          type: "f",
+          range: "> 0",
+          "strong": "Informational",
+          description: "Number of frames per second.  only."
+        },
+        3126563: {
+          name: "GammaValue",
+          cppname: "VideoGamma",
+          level: 4,
+          type: "f",
+          webm: false,
+          range: "> 0",
+          description: "Gamma Value."
+        },
+        3061028: {
+          name: "ColourSpace",
+          cppname: "VideoColourSpace",
+          level: 4,
+          type: "b",
+          minver: 1,
+          webm: false,
+          bytesize: 4,
+          description: "Same value as in AVI (32 bits)."
+        },
+        21683: {
+          name: "AspectRatioType",
+          cppname: "VideoAspectRatio",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "Specify the possible modifications to the aspect ratio (0: free resizing, 1: keep aspect ratio, 2: fixed)."
+        },
+        21682: {
+          name: "DisplayUnit",
+          cppname: "VideoDisplayUnit",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "How DisplayWidth & DisplayHeight should be interpreted (0: pixels, 1: centimeters, 2: inches, 3: Display Aspect Ratio)."
+        },
+        21690: {
+          name: "DisplayHeight",
+          cppname: "VideoDisplayHeight",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": "PixelHeight",
+          range: "not 0",
+          description: "Height of the video frames to display. The default value is only valid when DisplayUnit is 0."
+        },
+        21680: {
+          name: "DisplayWidth",
+          cppname: "VideoDisplayWidth",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": "PixelWidth",
+          range: "not 0",
+          description: "Width of the video frames to display. The default value is only valid when DisplayUnit is 0."
+        },
+        21725: {
+          name: "PixelCropRight",
+          cppname: "VideoPixelCropRight",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "The number of video pixels to remove on the right of the image."
+        },
+        21708: {
+          name: "PixelCropLeft",
+          cppname: "VideoPixelCropLeft",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "The number of video pixels to remove on the left of the image."
+        },
+        21691: {
+          name: "PixelCropTop",
+          cppname: "VideoPixelCropTop",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "The number of video pixels to remove at the top of the image."
+        },
+        21674: {
+          name: "PixelCropBottom",
+          cppname: "VideoPixelCropBottom",
+          level: 4,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          description: "The number of video pixels to remove at the bottom of the image (for HDTV content)."
+        },
+        186: {
+          name: "PixelHeight",
+          cppname: "VideoPixelHeight",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "not 0",
+          description: "Height of the encoded video frames in pixels."
+        },
+        176: {
+          name: "PixelWidth",
+          cppname: "VideoPixelWidth",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "not 0",
+          description: "Width of the encoded video frames in pixels."
+        },
+        21433: {
+          name: "OldStereoMode",
+          level: 4,
+          type: "u",
+          "maxver": "0",
+          webm: false,
+          divx: false,
+          description: "DEPRECATED, DO NOT USE. Bogus StereoMode value used in old versions of libmatroska. (0: mono, 1: right eye, 2: left eye, 3: both eyes)."
+        },
+        21440: {
+          name: "AlphaMode",
+          cppname: "VideoAlphaMode",
+          level: 4,
+          type: "u",
+          minver: 3,
+          webm: true,
+          "default": 0,
+          description: "Alpha Video Mode. Presence of this element indicates that the BlockAdditional element could contain Alpha data."
+        },
+        21432: {
+          name: "StereoMode",
+          cppname: "VideoStereoMode",
+          level: 4,
+          type: "u",
+          minver: 3,
+          webm: true,
+          "default": 0,
+          description: "Stereo-3D video mode (0: mono, 1: side by side (left eye is first), 2: top-bottom (right eye is first), 3: top-bottom (left eye is first), 4: checkboard (right is first), 5: checkboard (left is first), 6: row interleaved (right is first), 7: row interleaved (left is first), 8: column interleaved (right is first), 9: column interleaved (left is first), 10: anaglyph (cyan/red), 11: side by side (right eye is first), 12: anaglyph (green/magenta), 13 both eyes laced in one Block (left eye is first), 14 both eyes laced in one Block (right eye is first)) . There are some more details on 3D support in the Specification Notes."
+        },
+        154: {
+          name: "FlagInterlaced",
+          cppname: "VideoFlagInterlaced",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 2,
+          webm: true,
+          "default": 0,
+          range: "0-1",
+          description: "Set if the video is interlaced. (1 bit)"
+        },
+        224: {
+          name: "Video",
+          cppname: "TrackVideo",
+          level: 3,
+          type: "m",
+          minver: 1,
+          description: "Video settings."
+        },
+        26277: {
+          name: "TrackTranslateTrackID",
+          level: 4,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The binary value used to represent this track in the chapter codec data. The format depends on the ChapProcessCodecID used."
+        },
+        26303: {
+          name: "TrackTranslateCodec",
+          level: 4,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The chapter codec using this ID (0: Matroska Script, 1: DVD-menu)."
+        },
+        26364: {
+          name: "TrackTranslateEditionUID",
+          level: 4,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Specify an edition UID on which this translation applies. When not specified, it means for all editions found in the segment."
+        },
+        22203: {
+          name: "SeekPreRoll",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          multiple: false,
+          "default": 0,
+          minver: 4,
+          webm: true,
+          description: "After a discontinuity, SeekPreRoll is the duration in nanoseconds of the data the decoder must decode before the decoded data is valid."
+        },
+        22186: {
+          name: "CodecDelay",
+          level: 3,
+          type: "u",
+          multiple: false,
+          "default": 0,
+          minver: 4,
+          webm: true,
+          description: "CodecDelay is The codec-built-in delay in nanoseconds. This value must be subtracted from each block timestamp in order to get the actual timestamp. The value should be small so the muxing of tracks with the same actual timestamp are in the same Cluster."
+        },
+        28587: {
+          name: "TrackOverlay",
+          level: 3,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Specify that this track is an overlay track for the Track specified (in the u-integer). That means when this track has a gap (see SilentTracks) the overlay track should be used instead. The order of multiple TrackOverlay matters, the first one is the one that should be used. If not found it should be the second, etc."
+        },
+        170: {
+          name: "CodecDecodeAll",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 2,
+          webm: false,
+          "default": 1,
+          range: "0-1",
+          description: "The codec can decode potentially damaged data (1 bit)."
+        },
+        2536e3: {
+          name: "CodecDownloadURL",
+          level: 3,
+          type: "s",
+          multiple: true,
+          webm: false,
+          description: "A URL to download about the codec used."
+        },
+        3883072: {
+          name: "CodecInfoURL",
+          level: 3,
+          type: "s",
+          multiple: true,
+          webm: false,
+          description: "A URL to find information about the codec used."
+        },
+        3839639: {
+          name: "CodecSettings",
+          level: 3,
+          type: "8",
+          webm: false,
+          description: "A string describing the encoding setting used."
+        },
+        25506: {
+          name: "CodecPrivate",
+          level: 3,
+          type: "b",
+          minver: 1,
+          description: "Private data only known to the codec."
+        },
+        2274716: {
+          name: "Language",
+          cppname: "TrackLanguage",
+          level: 3,
+          type: "s",
+          minver: 1,
+          "default": "eng",
+          description: "Specifies the language of the track in the Matroska languages form."
+        },
+        21358: {
+          name: "Name",
+          cppname: "TrackName",
+          level: 3,
+          type: "8",
+          minver: 1,
+          description: "A human-readable track name."
+        },
+        21998: {
+          name: "MaxBlockAdditionID",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The maximum value of BlockAdditions for this track."
+        },
+        21375: {
+          name: "TrackOffset",
+          level: 3,
+          type: "i",
+          webm: false,
+          "default": 0,
+          description: "A value to add to the Block's Timestamp. This can be used to adjust the playback offset of a track."
+        },
+        2306383: {
+          name: "TrackTimecodeScale",
+          level: 3,
+          type: "f",
+          mandatory: true,
+          minver: 1,
+          "maxver": "3",
+          webm: false,
+          "default": 1,
+          range: "> 0",
+          description: "DEPRECATED, DO NOT USE. The scale to apply on this track to work at normal speed in relation with other tracks (mostly used to adjust video speed when the audio length differs)."
+        },
+        2313850: {
+          name: "DefaultDecodedFieldDuration",
+          cppname: "TrackDefaultDecodedFieldDuration",
+          level: 3,
+          type: "u",
+          minver: 4,
+          range: "not 0",
+          description: "The period in nanoseconds (not scaled by TimcodeScale)\nbetween two successive fields at the output of the decoding process (see the notes)"
+        },
+        2352003: {
+          name: "DefaultDuration",
+          cppname: "TrackDefaultDuration",
+          level: 3,
+          type: "u",
+          minver: 1,
+          range: "not 0",
+          description: "Number of nanoseconds (not scaled via TimecodeScale) per frame ('frame' in the Matroska sense -- one element put into a (Simple)Block)."
+        },
+        28152: {
+          name: "MaxCache",
+          cppname: "TrackMaxCache",
+          level: 3,
+          type: "u",
+          minver: 1,
+          webm: false,
+          description: "The maximum cache size required to store referenced frames in and the current frame. 0 means no cache is needed."
+        },
+        28135: {
+          name: "MinCache",
+          cppname: "TrackMinCache",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "The minimum number of frames a player should be able to cache during playback. If set to 0, the reference pseudo-cache system is not used."
+        },
+        156: {
+          name: "FlagLacing",
+          cppname: "TrackFlagLacing",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          "default": 1,
+          range: "0-1",
+          description: "Set if the track may contain blocks using lacing. (1 bit)"
+        },
+        21930: {
+          name: "FlagForced",
+          cppname: "TrackFlagForced",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          "default": 0,
+          range: "0-1",
+          description: "Set if that track MUST be active during playback. There can be many forced track for a kind (audio, video or subs), the player should select the one which language matches the user preference or the default + forced track. Overlay MAY happen between a forced and non-forced track of the same kind. (1 bit)"
+        },
+        185: {
+          name: "FlagEnabled",
+          cppname: "TrackFlagEnabled",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 2,
+          webm: true,
+          "default": 1,
+          range: "0-1",
+          description: "Set if the track is usable. (1 bit)"
+        },
+        29637: {
+          name: "TrackUID",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "not 0",
+          description: "A unique ID to identify the Track. This should be kept the same when making a direct stream copy of the Track to another file."
+        },
+        215: {
+          name: "TrackNumber",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          range: "not 0",
+          description: "The track number as used in the Block Header (using more than 127 tracks is not encouraged, though the design allows an unlimited number)."
+        },
+        174: {
+          name: "TrackEntry",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Describes a track with all elements."
+        },
+        374648427: {
+          name: "Tracks",
+          level: 1,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          description: "A top-level block of information with many tracks described."
+        },
+        175: {
+          name: "EncryptedBlock",
+          level: 2,
+          type: "b",
+          multiple: true,
+          webm: false,
+          description: "Similar to EncryptedBlock Structure)"
+        },
+        202: {
+          name: "ReferenceTimeCode",
+          level: 4,
+          type: "u",
+          multiple: false,
+          mandatory: true,
+          minver: 0,
+          webm: false,
+          divx: true,
+          description: "DivX trick track extenstions"
+        },
+        201: {
+          name: "ReferenceOffset",
+          level: 4,
+          type: "u",
+          multiple: false,
+          mandatory: true,
+          minver: 0,
+          webm: false,
+          divx: true,
+          description: "DivX trick track extenstions"
+        },
+        200: {
+          name: "ReferenceFrame",
+          level: 3,
+          type: "m",
+          multiple: false,
+          minver: 0,
+          webm: false,
+          divx: true,
+          description: "DivX trick track extenstions"
+        },
+        207: {
+          name: "SliceDuration",
+          level: 5,
+          type: "u",
+          "default": 0,
+          description: "The (scaled) duration to apply to the element."
+        },
+        206: {
+          name: "Delay",
+          cppname: "SliceDelay",
+          level: 5,
+          type: "u",
+          "default": 0,
+          description: "The (scaled) delay to apply to the element."
+        },
+        203: {
+          name: "BlockAdditionID",
+          cppname: "SliceBlockAddID",
+          level: 5,
+          type: "u",
+          "default": 0,
+          description: "The ID of the BlockAdditional element (0 is the main Block)."
+        },
+        205: {
+          name: "FrameNumber",
+          cppname: "SliceFrameNumber",
+          level: 5,
+          type: "u",
+          "default": 0,
+          description: "The number of the frame to generate from this lace with this delay (allow you to generate many frames from the same Block/Frame)."
+        },
+        204: {
+          name: "LaceNumber",
+          cppname: "SliceLaceNumber",
+          level: 5,
+          type: "u",
+          minver: 1,
+          "default": 0,
+          divx: false,
+          description: "The reverse number of the frame in the lace (0 is the last frame, 1 is the next to last, etc). While there are a few files in the wild with this element, it is no longer in use and has been deprecated. Being able to interpret this element is not required for playback."
+        },
+        232: {
+          name: "TimeSlice",
+          level: 4,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          divx: false,
+          description: "Contains extra time information about the data contained in the Block. While there are a few files in the wild with this element, it is no longer in use and has been deprecated. Being able to interpret this element is not required for playback."
+        },
+        142: {
+          name: "Slices",
+          level: 3,
+          type: "m",
+          minver: 1,
+          divx: false,
+          description: "Contains slices description."
+        },
+        30114: {
+          name: "DiscardPadding",
+          level: 3,
+          type: "i",
+          minver: 4,
+          webm: true,
+          description: "Duration in nanoseconds of the silent data added to the Block (padding at the end of the Block for positive value, at the beginning of the Block for negative value). The duration of DiscardPadding is not calculated in the duration of the TrackEntry and should be discarded during playback."
+        },
+        164: {
+          name: "CodecState",
+          level: 3,
+          type: "b",
+          minver: 2,
+          webm: false,
+          description: "The new codec state to use. Data interpretation is private to the codec. This information should always be referenced by a seek entry."
+        },
+        253: {
+          name: "ReferenceVirtual",
+          level: 3,
+          type: "i",
+          webm: false,
+          description: "Relative position of the data that should be in position of the virtual block."
+        },
+        251: {
+          name: "ReferenceBlock",
+          level: 3,
+          type: "i",
+          multiple: true,
+          minver: 1,
+          description: "Timestamp of another frame used as a reference (ie: B or P frame). The timestamp is relative to the block it's attached to."
+        },
+        250: {
+          name: "ReferencePriority",
+          cppname: "FlagReferenced",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 0,
+          description: "This frame is referenced and has the specified cache priority. In cache only a frame of the same or higher priority can replace this frame. A value of 0 means the frame is not referenced."
+        },
+        155: {
+          name: "BlockDuration",
+          level: 3,
+          type: "u",
+          minver: 1,
+          "default": "TrackDuration",
+          description: 'The duration of the Block (based on TimecodeScale). This element is mandatory when DefaultDuration is set for the track (but can be omitted as other default values). When not written and with no DefaultDuration, the value is assumed to be the difference between the timestamp of this Block and the timestamp of the next Block in "display" order (not coding order). This element can be useful at the end of a Track (as there is not other Block available), or when there is a break in a track like for subtitle tracks. When set to 0 that means the frame is not a keyframe.'
+        },
+        165: {
+          name: "BlockAdditional",
+          level: 5,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "Interpreted by the codec as it wishes (using the BlockAddID)."
+        },
+        238: {
+          name: "BlockAddID",
+          level: 5,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          "default": 1,
+          range: "not 0",
+          description: "An ID to identify the BlockAdditional level."
+        },
+        166: {
+          name: "BlockMore",
+          level: 4,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Contain the BlockAdditional and some parameters."
+        },
+        30113: {
+          name: "BlockAdditions",
+          level: 3,
+          type: "m",
+          minver: 1,
+          webm: false,
+          description: "Contain additional blocks to complete the main one. An EBML parser that has no knowledge of the Block structure could still see and use/skip these data."
+        },
+        162: {
+          name: "BlockVirtual",
+          level: 3,
+          type: "b",
+          webm: false,
+          description: "A Block with no data. It must be stored in the stream at the place the real Block should be in display order. (see Block Virtual)"
+        },
+        161: {
+          name: "Block",
+          level: 3,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          description: "Block containing the actual data to be rendered and a timestamp relative to the Cluster Timecode. (see Block Structure)"
+        },
+        160: {
+          name: "BlockGroup",
+          level: 2,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          description: "Basic container of information containing a single Block or BlockVirtual, and information specific to that Block/VirtualBlock."
+        },
+        163: {
+          name: "SimpleBlock",
+          level: 2,
+          type: "b",
+          multiple: true,
+          minver: 2,
+          webm: true,
+          divx: true,
+          description: "Similar to SimpleBlock Structure"
+        },
+        171: {
+          name: "PrevSize",
+          cppname: "ClusterPrevSize",
+          level: 2,
+          type: "u",
+          minver: 1,
+          description: "Size of the previous Cluster, in octets. Can be useful for backward playing.",
+          position: "prevCluster"
+        },
+        167: {
+          name: "Position",
+          cppname: "ClusterPosition",
+          level: 2,
+          type: "u",
+          minver: 1,
+          webm: false,
+          description: "The Position of the Cluster in the segment (0 in live broadcast streams). It might help to resynchronise offset on damaged streams.",
+          position: "segment"
+        },
+        22743: {
+          name: "SilentTrackNumber",
+          cppname: "ClusterSilentTrackNumber",
+          level: 3,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "One of the track number that are not used from now on in the stream. It could change later if not specified as silent in a further Cluster."
+        },
+        231: {
+          name: "Timecode",
+          cppname: "ClusterTimecode",
+          level: 2,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          description: "Absolute timestamp of the cluster (based on TimecodeScale)."
+        },
+        524531317: {
+          name: "Cluster",
+          level: 1,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          description: "The lower level element containing the (monolithic) Block structure."
+        },
+        19840: {
+          name: "MuxingApp",
+          level: 2,
+          type: "8",
+          mandatory: true,
+          minver: 1,
+          description: 'Muxing application or library ("libmatroska-0.4.3").'
+        },
+        31657: {
+          name: "Title",
+          level: 2,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "General name of the segment."
+        },
+        2807730: {
+          name: "TimecodeScaleDenominator",
+          level: 2,
+          type: "u",
+          mandatory: true,
+          minver: 4,
+          "default": "1000000000",
+          description: "Timestamp scale numerator, see TimecodeScale."
+        },
+        2807729: {
+          name: "TimecodeScale",
+          level: 2,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          "default": "1000000",
+          description: "Timestamp scale in nanoseconds (1.000.000 means all timestamps in the segment are expressed in milliseconds)."
+        },
+        27045: {
+          name: "ChapterTranslateID",
+          level: 3,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The binary value used to represent this segment in the chapter codec data. The format depends on the ChapProcessCodecID used."
+        },
+        27071: {
+          name: "ChapterTranslateCodec",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          webm: false,
+          description: "The chapter codec using this ID (0: Matroska Script, 1: DVD-menu)."
+        },
+        27132: {
+          name: "ChapterTranslateEditionUID",
+          level: 3,
+          type: "u",
+          multiple: true,
+          minver: 1,
+          webm: false,
+          description: "Specify an edition UID on which this correspondance applies. When not specified, it means for all editions found in the segment."
+        },
+        4096955: {
+          name: "NextFilename",
+          level: 2,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "An escaped filename corresponding to the next segment."
+        },
+        4110627: {
+          name: "NextUID",
+          level: 2,
+          type: "b",
+          minver: 1,
+          webm: false,
+          bytesize: 16,
+          description: "A unique ID to identify the next chained segment (128 bits)."
+        },
+        3965867: {
+          name: "PrevFilename",
+          level: 2,
+          type: "8",
+          minver: 1,
+          webm: false,
+          description: "An escaped filename corresponding to the previous segment."
+        },
+        3979555: {
+          name: "PrevUID",
+          level: 2,
+          type: "b",
+          minver: 1,
+          webm: false,
+          bytesize: 16,
+          description: "A unique ID to identify the previous chained segment (128 bits)."
+        },
+        29604: {
+          name: "SegmentUID",
+          level: 2,
+          type: "b",
+          minver: 1,
+          webm: false,
+          range: "not 0",
+          bytesize: 16,
+          description: "A randomly generated unique ID to identify the current segment between many others (128 bits)."
+        },
+        357149030: {
+          name: "Info",
+          level: 1,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Contains miscellaneous general information and statistics on the file."
+        },
+        21420: {
+          name: "SeekPosition",
+          level: 3,
+          type: "u",
+          mandatory: true,
+          minver: 1,
+          description: "The position of the element in the segment in octets (0 = first level 1 element).",
+          position: "segment"
+        },
+        21419: {
+          name: "SeekID",
+          level: 3,
+          type: "b",
+          mandatory: true,
+          minver: 1,
+          description: "The binary ID corresponding to the element name.",
+          type2: "ebmlID"
+        },
+        19899: {
+          name: "Seek",
+          cppname: "SeekPoint",
+          level: 2,
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Contains a single seek entry to an EBML element."
+        },
+        290298740: {
+          name: "SeekHead",
+          cppname: "SeekHeader",
+          level: 1,
+          type: "m",
+          multiple: true,
+          minver: 1,
+          description: "Contains the position of other level 1 elements."
+        },
+        32379: {
+          name: "SignatureElementList",
+          level: 2,
+          type: "m",
+          multiple: true,
+          webm: false,
+          i: "Cluster|Block|BlockAdditional",
+          description: "A list consists of a number of consecutive elements that represent one case where data is used in signature. Ex:  means that the BlockAdditional of all Blocks in all Clusters is used for encryption."
+        },
+        32347: {
+          name: "SignatureElements",
+          level: 1,
+          type: "m",
+          webm: false,
+          description: "Contains elements that will be used to compute the signature."
+        },
+        32437: {
+          name: "Signature",
+          level: 1,
+          type: "b",
+          webm: false,
+          description: "The signature of the data (until a new."
+        },
+        32421: {
+          name: "SignaturePublicKey",
+          level: 1,
+          type: "b",
+          webm: false,
+          description: "The public key to use with the algorithm (in the case of a PKI-based signature)."
+        },
+        32410: {
+          name: "SignatureHash",
+          level: 1,
+          type: "u",
+          webm: false,
+          description: "Hash algorithm used (1=SHA1-160, 2=MD5)."
+        },
+        32394: {
+          name: "SignatureAlgo",
+          level: 1,
+          type: "u",
+          webm: false,
+          description: "Signature algorithm used (1=RSA, 2=elliptic)."
+        },
+        458458727: {
+          name: "SignatureSlot",
+          level: -1,
+          type: "m",
+          multiple: true,
+          webm: false,
+          description: "Contain signature of some (coming) elements in the stream."
+        },
+        191: {
+          name: "CRC-32",
+          level: -1,
+          type: "b",
+          minver: 1,
+          webm: false,
+          description: "The CRC is computed on all the data of the Master element it's in. The CRC element should be the first in it's parent master for easier reading. All level 1 elements should include a CRC-32. The CRC in use is the IEEE CRC32 Little Endian",
+          crc: true
+        },
+        236: {
+          name: "Void",
+          level: -1,
+          type: "b",
+          minver: 1,
+          description: "Used to void damaged data, to avoid unexpected behaviors when using damaged data. The content is discarded. Also used to reserve space in a sub-element for later use."
+        },
+        17139: {
+          name: "EBMLMaxSizeLength",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 8,
+          minver: 1,
+          description: "The maximum length of the sizes you'll find in this file (8 or less in Matroska). This does not override the element size indicated at the beginning of an element. Elements that have an indicated size which is larger than what is allowed by EBMLMaxSizeLength shall be considered invalid."
+        },
+        17138: {
+          name: "EBMLMaxIDLength",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 4,
+          minver: 1,
+          description: "The maximum length of the IDs you'll find in this file (4 or less in Matroska)."
+        },
+        17143: {
+          name: "EBMLReadVersion",
+          level: 1,
+          type: "u",
+          mandatory: true,
+          "default": 1,
+          minver: 1,
+          description: "The minimum EBML version a parser has to support to read this file."
+        },
+        440786851: {
+          name: "EBML",
+          level: "0",
+          type: "m",
+          mandatory: true,
+          multiple: true,
+          minver: 1,
+          description: "Set the EBML characteristics of the data to follow. Each EBML document has to start with this."
+        }
+      };
+      var byName = {};
+      var schema = {
+        byEbmlID,
+        byName
+      };
+      for (ebmlID in byEbmlID) {
+        desc = byEbmlID[ebmlID];
+        byName[desc.name.replace("-", "_")] = parseInt(ebmlID, 10);
+      }
+      var desc;
+      var ebmlID;
+      module.exports = schema;
+    }
+  });
+
+  // node_modules/ts-ebml/lib/EBMLEncoder.js
+  var require_EBMLEncoder = __commonJS({
+    "node_modules/ts-ebml/lib/EBMLEncoder.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      var tools = require_tools2();
+      var tools_1 = require_tools2();
+      var schema = require_schema();
+      var byEbmlID = schema.byEbmlID;
+      var EBMLEncoder = function() {
+        function EBMLEncoder2() {
+          this._schema = byEbmlID;
+          this._buffers = [];
+          this._stack = [];
+        }
+        EBMLEncoder2.prototype.encode = function(elms) {
+          var _this = this;
+          return tools.concat(elms.reduce(function(lst, elm) {
+            return lst.concat(_this.encodeChunk(elm));
+          }, [])).buffer;
+        };
+        EBMLEncoder2.prototype.encodeChunk = function(elm) {
+          if (elm.type === "m") {
+            if (!elm.isEnd) {
+              this.startTag(elm);
+            } else {
+              this.endTag(elm);
+            }
+          } else {
+            this.writeTag(elm);
+          }
+          return this.flush();
+        };
+        EBMLEncoder2.prototype.flush = function() {
+          var ret = this._buffers;
+          this._buffers = [];
+          return ret;
+        };
+        EBMLEncoder2.prototype.getSchemaInfo = function(tagName) {
+          var tagNums = Object.keys(this._schema).map(Number);
+          for (var i = 0; i < tagNums.length; i++) {
+            var tagNum = tagNums[i];
+            if (this._schema[tagNum].name === tagName) {
+              return new tools_1.Buffer(tagNum.toString(16), "hex");
+            }
+          }
+          return null;
+        };
+        EBMLEncoder2.prototype.writeTag = function(elm) {
+          var tagName = elm.name;
+          var tagId = this.getSchemaInfo(tagName);
+          var tagData = elm.data;
+          if (tagId == null) {
+            throw new Error("No schema entry found for " + tagName);
+          }
+          var data = tools.encodeTag(tagId, tagData);
+          if (this._stack.length > 0) {
+            var last = this._stack[this._stack.length - 1];
+            last.children.push({
+              tagId,
+              elm,
+              children: [],
+              data
+            });
+            return;
+          }
+          this._buffers = this._buffers.concat(data);
+          return;
+        };
+        EBMLEncoder2.prototype.startTag = function(elm) {
+          var tagName = elm.name;
+          var tagId = this.getSchemaInfo(tagName);
+          if (tagId == null) {
+            throw new Error("No schema entry found for " + tagName);
+          }
+          if (elm.unknownSize) {
+            var data = tools.encodeTag(tagId, new tools_1.Buffer(0), elm.unknownSize);
+            this._buffers = this._buffers.concat(data);
+            return;
+          }
+          var tag = {
+            tagId,
+            elm,
+            children: [],
+            data: null
+          };
+          if (this._stack.length > 0) {
+            this._stack[this._stack.length - 1].children.push(tag);
+          }
+          this._stack.push(tag);
+        };
+        EBMLEncoder2.prototype.endTag = function(elm) {
+          var tagName = elm.name;
+          var tag = this._stack.pop();
+          if (tag == null) {
+            throw new Error("EBML structure is broken");
+          }
+          if (tag.elm.name !== elm.name) {
+            throw new Error("EBML structure is broken");
+          }
+          var childTagDataBuffers = tag.children.reduce(function(lst, child) {
+            if (child.data === null) {
+              throw new Error("EBML structure is broken");
+            }
+            return lst.concat(child.data);
+          }, []);
+          var childTagDataBuffer = tools.concat(childTagDataBuffers);
+          if (tag.elm.type === "m") {
+            tag.data = tools.encodeTag(tag.tagId, childTagDataBuffer, tag.elm.unknownSize);
+          } else {
+            tag.data = tools.encodeTag(tag.tagId, childTagDataBuffer);
+          }
+          if (this._stack.length < 1) {
+            this._buffers = this._buffers.concat(tag.data);
+          }
+        };
+        return EBMLEncoder2;
+      }();
+      exports.default = EBMLEncoder;
+    }
+  });
+
+  // node_modules/ts-ebml/node_modules/buffer/index.js
+  var require_buffer2 = __commonJS({
+    "node_modules/ts-ebml/node_modules/buffer/index.js"(exports) {
+      "use strict";
+      var base64 = require_base64_js();
+      var ieee7542 = require_ieee754();
+      var customInspectSymbol = typeof Symbol === "function" && typeof Symbol["for"] === "function" ? Symbol["for"]("nodejs.util.inspect.custom") : null;
+      exports.Buffer = Buffer8;
+      exports.SlowBuffer = SlowBuffer;
+      exports.INSPECT_MAX_BYTES = 50;
+      var K_MAX_LENGTH = 2147483647;
+      exports.kMaxLength = K_MAX_LENGTH;
+      Buffer8.TYPED_ARRAY_SUPPORT = typedArraySupport();
+      if (!Buffer8.TYPED_ARRAY_SUPPORT && typeof console !== "undefined" && typeof console.error === "function") {
+        console.error("This browser lacks typed array (Uint8Array) support which is required by `buffer` v5.x. Use `buffer` v4.x if you require old browser support.");
+      }
+      function typedArraySupport() {
+        try {
+          var arr = new Uint8Array(1);
+          var proto = { foo: function() {
+            return 42;
+          } };
+          Object.setPrototypeOf(proto, Uint8Array.prototype);
+          Object.setPrototypeOf(arr, proto);
+          return arr.foo() === 42;
+        } catch (e) {
+          return false;
+        }
+      }
+      Object.defineProperty(Buffer8.prototype, "parent", {
+        enumerable: true,
+        get: function() {
+          if (!Buffer8.isBuffer(this))
+            return void 0;
+          return this.buffer;
+        }
+      });
+      Object.defineProperty(Buffer8.prototype, "offset", {
+        enumerable: true,
+        get: function() {
+          if (!Buffer8.isBuffer(this))
+            return void 0;
+          return this.byteOffset;
+        }
+      });
+      function createBuffer(length) {
+        if (length > K_MAX_LENGTH) {
+          throw new RangeError('The value "' + length + '" is invalid for option "size"');
+        }
+        var buf2 = new Uint8Array(length);
+        Object.setPrototypeOf(buf2, Buffer8.prototype);
+        return buf2;
+      }
+      function Buffer8(arg, encodingOrOffset, length) {
+        if (typeof arg === "number") {
+          if (typeof encodingOrOffset === "string") {
+            throw new TypeError('The "string" argument must be of type string. Received type number');
+          }
+          return allocUnsafe(arg);
+        }
+        return from(arg, encodingOrOffset, length);
+      }
+      Buffer8.poolSize = 8192;
+      function from(value, encodingOrOffset, length) {
+        if (typeof value === "string") {
+          return fromString(value, encodingOrOffset);
+        }
+        if (ArrayBuffer.isView(value)) {
+          return fromArrayView(value);
+        }
+        if (value == null) {
+          throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " + typeof value);
+        }
+        if (isInstance(value, ArrayBuffer) || value && isInstance(value.buffer, ArrayBuffer)) {
+          return fromArrayBuffer(value, encodingOrOffset, length);
+        }
+        if (typeof SharedArrayBuffer !== "undefined" && (isInstance(value, SharedArrayBuffer) || value && isInstance(value.buffer, SharedArrayBuffer))) {
+          return fromArrayBuffer(value, encodingOrOffset, length);
+        }
+        if (typeof value === "number") {
+          throw new TypeError('The "value" argument must not be of type number. Received type number');
+        }
+        var valueOf = value.valueOf && value.valueOf();
+        if (valueOf != null && valueOf !== value) {
+          return Buffer8.from(valueOf, encodingOrOffset, length);
+        }
+        var b = fromObject(value);
+        if (b)
+          return b;
+        if (typeof Symbol !== "undefined" && Symbol.toPrimitive != null && typeof value[Symbol.toPrimitive] === "function") {
+          return Buffer8.from(value[Symbol.toPrimitive]("string"), encodingOrOffset, length);
+        }
+        throw new TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " + typeof value);
+      }
+      Buffer8.from = function(value, encodingOrOffset, length) {
+        return from(value, encodingOrOffset, length);
+      };
+      Object.setPrototypeOf(Buffer8.prototype, Uint8Array.prototype);
+      Object.setPrototypeOf(Buffer8, Uint8Array);
+      function assertSize(size) {
+        if (typeof size !== "number") {
+          throw new TypeError('"size" argument must be of type number');
+        } else if (size < 0) {
+          throw new RangeError('The value "' + size + '" is invalid for option "size"');
+        }
+      }
+      function alloc(size, fill, encoding) {
+        assertSize(size);
+        if (size <= 0) {
+          return createBuffer(size);
+        }
+        if (fill !== void 0) {
+          return typeof encoding === "string" ? createBuffer(size).fill(fill, encoding) : createBuffer(size).fill(fill);
+        }
+        return createBuffer(size);
+      }
+      Buffer8.alloc = function(size, fill, encoding) {
+        return alloc(size, fill, encoding);
+      };
+      function allocUnsafe(size) {
+        assertSize(size);
+        return createBuffer(size < 0 ? 0 : checked(size) | 0);
+      }
+      Buffer8.allocUnsafe = function(size) {
+        return allocUnsafe(size);
+      };
+      Buffer8.allocUnsafeSlow = function(size) {
+        return allocUnsafe(size);
+      };
+      function fromString(string, encoding) {
+        if (typeof encoding !== "string" || encoding === "") {
+          encoding = "utf8";
+        }
+        if (!Buffer8.isEncoding(encoding)) {
+          throw new TypeError("Unknown encoding: " + encoding);
+        }
+        var length = byteLength(string, encoding) | 0;
+        var buf2 = createBuffer(length);
+        var actual = buf2.write(string, encoding);
+        if (actual !== length) {
+          buf2 = buf2.slice(0, actual);
+        }
+        return buf2;
+      }
+      function fromArrayLike(array) {
+        var length = array.length < 0 ? 0 : checked(array.length) | 0;
+        var buf2 = createBuffer(length);
+        for (var i = 0; i < length; i += 1) {
+          buf2[i] = array[i] & 255;
+        }
+        return buf2;
+      }
+      function fromArrayView(arrayView) {
+        if (isInstance(arrayView, Uint8Array)) {
+          var copy = new Uint8Array(arrayView);
+          return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength);
+        }
+        return fromArrayLike(arrayView);
+      }
+      function fromArrayBuffer(array, byteOffset, length) {
+        if (byteOffset < 0 || array.byteLength < byteOffset) {
+          throw new RangeError('"offset" is outside of buffer bounds');
+        }
+        if (array.byteLength < byteOffset + (length || 0)) {
+          throw new RangeError('"length" is outside of buffer bounds');
+        }
+        var buf2;
+        if (byteOffset === void 0 && length === void 0) {
+          buf2 = new Uint8Array(array);
+        } else if (length === void 0) {
+          buf2 = new Uint8Array(array, byteOffset);
+        } else {
+          buf2 = new Uint8Array(array, byteOffset, length);
+        }
+        Object.setPrototypeOf(buf2, Buffer8.prototype);
+        return buf2;
+      }
+      function fromObject(obj) {
+        if (Buffer8.isBuffer(obj)) {
+          var len = checked(obj.length) | 0;
+          var buf2 = createBuffer(len);
+          if (buf2.length === 0) {
+            return buf2;
+          }
+          obj.copy(buf2, 0, 0, len);
+          return buf2;
+        }
+        if (obj.length !== void 0) {
+          if (typeof obj.length !== "number" || numberIsNaN(obj.length)) {
+            return createBuffer(0);
+          }
+          return fromArrayLike(obj);
+        }
+        if (obj.type === "Buffer" && Array.isArray(obj.data)) {
+          return fromArrayLike(obj.data);
+        }
+      }
+      function checked(length) {
+        if (length >= K_MAX_LENGTH) {
+          throw new RangeError("Attempt to allocate Buffer larger than maximum size: 0x" + K_MAX_LENGTH.toString(16) + " bytes");
+        }
+        return length | 0;
+      }
+      function SlowBuffer(length) {
+        if (+length != length) {
+          length = 0;
+        }
+        return Buffer8.alloc(+length);
+      }
+      Buffer8.isBuffer = function isBuffer(b) {
+        return b != null && b._isBuffer === true && b !== Buffer8.prototype;
+      };
+      Buffer8.compare = function compare(a, b) {
+        if (isInstance(a, Uint8Array))
+          a = Buffer8.from(a, a.offset, a.byteLength);
+        if (isInstance(b, Uint8Array))
+          b = Buffer8.from(b, b.offset, b.byteLength);
+        if (!Buffer8.isBuffer(a) || !Buffer8.isBuffer(b)) {
+          throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');
+        }
+        if (a === b)
+          return 0;
+        var x = a.length;
+        var y = b.length;
+        for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+          if (a[i] !== b[i]) {
+            x = a[i];
+            y = b[i];
+            break;
+          }
+        }
+        if (x < y)
+          return -1;
+        if (y < x)
+          return 1;
+        return 0;
+      };
+      Buffer8.isEncoding = function isEncoding(encoding) {
+        switch (String(encoding).toLowerCase()) {
+          case "hex":
+          case "utf8":
+          case "utf-8":
+          case "ascii":
+          case "latin1":
+          case "binary":
+          case "base64":
+          case "ucs2":
+          case "ucs-2":
+          case "utf16le":
+          case "utf-16le":
+            return true;
+          default:
+            return false;
+        }
+      };
+      Buffer8.concat = function concat(list, length) {
+        if (!Array.isArray(list)) {
+          throw new TypeError('"list" argument must be an Array of Buffers');
+        }
+        if (list.length === 0) {
+          return Buffer8.alloc(0);
+        }
+        var i;
+        if (length === void 0) {
+          length = 0;
+          for (i = 0; i < list.length; ++i) {
+            length += list[i].length;
+          }
+        }
+        var buffer = Buffer8.allocUnsafe(length);
+        var pos = 0;
+        for (i = 0; i < list.length; ++i) {
+          var buf2 = list[i];
+          if (isInstance(buf2, Uint8Array)) {
+            if (pos + buf2.length > buffer.length) {
+              Buffer8.from(buf2).copy(buffer, pos);
+            } else {
+              Uint8Array.prototype.set.call(buffer, buf2, pos);
+            }
+          } else if (!Buffer8.isBuffer(buf2)) {
+            throw new TypeError('"list" argument must be an Array of Buffers');
+          } else {
+            buf2.copy(buffer, pos);
+          }
+          pos += buf2.length;
+        }
+        return buffer;
+      };
+      function byteLength(string, encoding) {
+        if (Buffer8.isBuffer(string)) {
+          return string.length;
+        }
+        if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
+          return string.byteLength;
+        }
+        if (typeof string !== "string") {
+          throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. Received type ' + typeof string);
+        }
+        var len = string.length;
+        var mustMatch = arguments.length > 2 && arguments[2] === true;
+        if (!mustMatch && len === 0)
+          return 0;
+        var loweredCase = false;
+        for (; ; ) {
+          switch (encoding) {
+            case "ascii":
+            case "latin1":
+            case "binary":
+              return len;
+            case "utf8":
+            case "utf-8":
+              return utf8ToBytes(string).length;
+            case "ucs2":
+            case "ucs-2":
+            case "utf16le":
+            case "utf-16le":
+              return len * 2;
+            case "hex":
+              return len >>> 1;
+            case "base64":
+              return base64ToBytes(string).length;
+            default:
+              if (loweredCase) {
+                return mustMatch ? -1 : utf8ToBytes(string).length;
+              }
+              encoding = ("" + encoding).toLowerCase();
+              loweredCase = true;
+          }
+        }
+      }
+      Buffer8.byteLength = byteLength;
+      function slowToString(encoding, start, end) {
+        var loweredCase = false;
+        if (start === void 0 || start < 0) {
+          start = 0;
+        }
+        if (start > this.length) {
+          return "";
+        }
+        if (end === void 0 || end > this.length) {
+          end = this.length;
+        }
+        if (end <= 0) {
+          return "";
+        }
+        end >>>= 0;
+        start >>>= 0;
+        if (end <= start) {
+          return "";
+        }
+        if (!encoding)
+          encoding = "utf8";
+        while (true) {
+          switch (encoding) {
+            case "hex":
+              return hexSlice(this, start, end);
+            case "utf8":
+            case "utf-8":
+              return utf8Slice(this, start, end);
+            case "ascii":
+              return asciiSlice(this, start, end);
+            case "latin1":
+            case "binary":
+              return latin1Slice(this, start, end);
+            case "base64":
+              return base64Slice(this, start, end);
+            case "ucs2":
+            case "ucs-2":
+            case "utf16le":
+            case "utf-16le":
+              return utf16leSlice(this, start, end);
+            default:
+              if (loweredCase)
+                throw new TypeError("Unknown encoding: " + encoding);
+              encoding = (encoding + "").toLowerCase();
+              loweredCase = true;
+          }
+        }
+      }
+      Buffer8.prototype._isBuffer = true;
+      function swap(b, n, m) {
+        var i = b[n];
+        b[n] = b[m];
+        b[m] = i;
+      }
+      Buffer8.prototype.swap16 = function swap16() {
+        var len = this.length;
+        if (len % 2 !== 0) {
+          throw new RangeError("Buffer size must be a multiple of 16-bits");
+        }
+        for (var i = 0; i < len; i += 2) {
+          swap(this, i, i + 1);
+        }
+        return this;
+      };
+      Buffer8.prototype.swap32 = function swap32() {
+        var len = this.length;
+        if (len % 4 !== 0) {
+          throw new RangeError("Buffer size must be a multiple of 32-bits");
+        }
+        for (var i = 0; i < len; i += 4) {
+          swap(this, i, i + 3);
+          swap(this, i + 1, i + 2);
+        }
+        return this;
+      };
+      Buffer8.prototype.swap64 = function swap64() {
+        var len = this.length;
+        if (len % 8 !== 0) {
+          throw new RangeError("Buffer size must be a multiple of 64-bits");
+        }
+        for (var i = 0; i < len; i += 8) {
+          swap(this, i, i + 7);
+          swap(this, i + 1, i + 6);
+          swap(this, i + 2, i + 5);
+          swap(this, i + 3, i + 4);
+        }
+        return this;
+      };
+      Buffer8.prototype.toString = function toString() {
+        var length = this.length;
+        if (length === 0)
+          return "";
+        if (arguments.length === 0)
+          return utf8Slice(this, 0, length);
+        return slowToString.apply(this, arguments);
+      };
+      Buffer8.prototype.toLocaleString = Buffer8.prototype.toString;
+      Buffer8.prototype.equals = function equals(b) {
+        if (!Buffer8.isBuffer(b))
+          throw new TypeError("Argument must be a Buffer");
+        if (this === b)
+          return true;
+        return Buffer8.compare(this, b) === 0;
+      };
+      Buffer8.prototype.inspect = function inspect() {
+        var str = "";
+        var max = exports.INSPECT_MAX_BYTES;
+        str = this.toString("hex", 0, max).replace(/(.{2})/g, "$1 ").trim();
+        if (this.length > max)
+          str += " ... ";
+        return "<Buffer " + str + ">";
+      };
+      if (customInspectSymbol) {
+        Buffer8.prototype[customInspectSymbol] = Buffer8.prototype.inspect;
+      }
+      Buffer8.prototype.compare = function compare(target, start, end, thisStart, thisEnd) {
+        if (isInstance(target, Uint8Array)) {
+          target = Buffer8.from(target, target.offset, target.byteLength);
+        }
+        if (!Buffer8.isBuffer(target)) {
+          throw new TypeError('The "target" argument must be one of type Buffer or Uint8Array. Received type ' + typeof target);
+        }
+        if (start === void 0) {
+          start = 0;
+        }
+        if (end === void 0) {
+          end = target ? target.length : 0;
+        }
+        if (thisStart === void 0) {
+          thisStart = 0;
+        }
+        if (thisEnd === void 0) {
+          thisEnd = this.length;
+        }
+        if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
+          throw new RangeError("out of range index");
+        }
+        if (thisStart >= thisEnd && start >= end) {
+          return 0;
+        }
+        if (thisStart >= thisEnd) {
+          return -1;
+        }
+        if (start >= end) {
+          return 1;
+        }
+        start >>>= 0;
+        end >>>= 0;
+        thisStart >>>= 0;
+        thisEnd >>>= 0;
+        if (this === target)
+          return 0;
+        var x = thisEnd - thisStart;
+        var y = end - start;
+        var len = Math.min(x, y);
+        var thisCopy = this.slice(thisStart, thisEnd);
+        var targetCopy = target.slice(start, end);
+        for (var i = 0; i < len; ++i) {
+          if (thisCopy[i] !== targetCopy[i]) {
+            x = thisCopy[i];
+            y = targetCopy[i];
+            break;
+          }
+        }
+        if (x < y)
+          return -1;
+        if (y < x)
+          return 1;
+        return 0;
+      };
+      function bidirectionalIndexOf(buffer, val, byteOffset, encoding, dir) {
+        if (buffer.length === 0)
+          return -1;
+        if (typeof byteOffset === "string") {
+          encoding = byteOffset;
+          byteOffset = 0;
+        } else if (byteOffset > 2147483647) {
+          byteOffset = 2147483647;
+        } else if (byteOffset < -2147483648) {
+          byteOffset = -2147483648;
+        }
+        byteOffset = +byteOffset;
+        if (numberIsNaN(byteOffset)) {
+          byteOffset = dir ? 0 : buffer.length - 1;
+        }
+        if (byteOffset < 0)
+          byteOffset = buffer.length + byteOffset;
+        if (byteOffset >= buffer.length) {
+          if (dir)
+            return -1;
+          else
+            byteOffset = buffer.length - 1;
+        } else if (byteOffset < 0) {
+          if (dir)
+            byteOffset = 0;
+          else
+            return -1;
+        }
+        if (typeof val === "string") {
+          val = Buffer8.from(val, encoding);
+        }
+        if (Buffer8.isBuffer(val)) {
+          if (val.length === 0) {
+            return -1;
+          }
+          return arrayIndexOf(buffer, val, byteOffset, encoding, dir);
+        } else if (typeof val === "number") {
+          val = val & 255;
+          if (typeof Uint8Array.prototype.indexOf === "function") {
+            if (dir) {
+              return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset);
+            } else {
+              return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset);
+            }
+          }
+          return arrayIndexOf(buffer, [val], byteOffset, encoding, dir);
+        }
+        throw new TypeError("val must be string, number or Buffer");
+      }
+      function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
+        var indexSize = 1;
+        var arrLength = arr.length;
+        var valLength = val.length;
+        if (encoding !== void 0) {
+          encoding = String(encoding).toLowerCase();
+          if (encoding === "ucs2" || encoding === "ucs-2" || encoding === "utf16le" || encoding === "utf-16le") {
+            if (arr.length < 2 || val.length < 2) {
+              return -1;
+            }
+            indexSize = 2;
+            arrLength /= 2;
+            valLength /= 2;
+            byteOffset /= 2;
+          }
+        }
+        function read2(buf2, i2) {
+          if (indexSize === 1) {
+            return buf2[i2];
+          } else {
+            return buf2.readUInt16BE(i2 * indexSize);
+          }
+        }
+        var i;
+        if (dir) {
+          var foundIndex = -1;
+          for (i = byteOffset; i < arrLength; i++) {
+            if (read2(arr, i) === read2(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+              if (foundIndex === -1)
+                foundIndex = i;
+              if (i - foundIndex + 1 === valLength)
+                return foundIndex * indexSize;
+            } else {
+              if (foundIndex !== -1)
+                i -= i - foundIndex;
+              foundIndex = -1;
+            }
+          }
+        } else {
+          if (byteOffset + valLength > arrLength)
+            byteOffset = arrLength - valLength;
+          for (i = byteOffset; i >= 0; i--) {
+            var found = true;
+            for (var j = 0; j < valLength; j++) {
+              if (read2(arr, i + j) !== read2(val, j)) {
+                found = false;
+                break;
+              }
+            }
+            if (found)
+              return i;
+          }
+        }
+        return -1;
+      }
+      Buffer8.prototype.includes = function includes(val, byteOffset, encoding) {
+        return this.indexOf(val, byteOffset, encoding) !== -1;
+      };
+      Buffer8.prototype.indexOf = function indexOf(val, byteOffset, encoding) {
+        return bidirectionalIndexOf(this, val, byteOffset, encoding, true);
+      };
+      Buffer8.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
+        return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
+      };
+      function hexWrite(buf2, string, offset, length) {
+        offset = Number(offset) || 0;
+        var remaining = buf2.length - offset;
+        if (!length) {
+          length = remaining;
+        } else {
+          length = Number(length);
+          if (length > remaining) {
+            length = remaining;
+          }
+        }
+        var strLen = string.length;
+        if (length > strLen / 2) {
+          length = strLen / 2;
+        }
+        for (var i = 0; i < length; ++i) {
+          var parsed = parseInt(string.substr(i * 2, 2), 16);
+          if (numberIsNaN(parsed))
+            return i;
+          buf2[offset + i] = parsed;
+        }
+        return i;
+      }
+      function utf8Write(buf2, string, offset, length) {
+        return blitBuffer(utf8ToBytes(string, buf2.length - offset), buf2, offset, length);
+      }
+      function asciiWrite(buf2, string, offset, length) {
+        return blitBuffer(asciiToBytes(string), buf2, offset, length);
+      }
+      function base64Write(buf2, string, offset, length) {
+        return blitBuffer(base64ToBytes(string), buf2, offset, length);
+      }
+      function ucs2Write(buf2, string, offset, length) {
+        return blitBuffer(utf16leToBytes(string, buf2.length - offset), buf2, offset, length);
+      }
+      Buffer8.prototype.write = function write2(string, offset, length, encoding) {
+        if (offset === void 0) {
+          encoding = "utf8";
+          length = this.length;
+          offset = 0;
+        } else if (length === void 0 && typeof offset === "string") {
+          encoding = offset;
+          length = this.length;
+          offset = 0;
+        } else if (isFinite(offset)) {
+          offset = offset >>> 0;
+          if (isFinite(length)) {
+            length = length >>> 0;
+            if (encoding === void 0)
+              encoding = "utf8";
+          } else {
+            encoding = length;
+            length = void 0;
+          }
+        } else {
+          throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");
+        }
+        var remaining = this.length - offset;
+        if (length === void 0 || length > remaining)
+          length = remaining;
+        if (string.length > 0 && (length < 0 || offset < 0) || offset > this.length) {
+          throw new RangeError("Attempt to write outside buffer bounds");
+        }
+        if (!encoding)
+          encoding = "utf8";
+        var loweredCase = false;
+        for (; ; ) {
+          switch (encoding) {
+            case "hex":
+              return hexWrite(this, string, offset, length);
+            case "utf8":
+            case "utf-8":
+              return utf8Write(this, string, offset, length);
+            case "ascii":
+            case "latin1":
+            case "binary":
+              return asciiWrite(this, string, offset, length);
+            case "base64":
+              return base64Write(this, string, offset, length);
+            case "ucs2":
+            case "ucs-2":
+            case "utf16le":
+            case "utf-16le":
+              return ucs2Write(this, string, offset, length);
+            default:
+              if (loweredCase)
+                throw new TypeError("Unknown encoding: " + encoding);
+              encoding = ("" + encoding).toLowerCase();
+              loweredCase = true;
+          }
+        }
+      };
+      Buffer8.prototype.toJSON = function toJSON() {
+        return {
+          type: "Buffer",
+          data: Array.prototype.slice.call(this._arr || this, 0)
+        };
+      };
+      function base64Slice(buf2, start, end) {
+        if (start === 0 && end === buf2.length) {
+          return base64.fromByteArray(buf2);
+        } else {
+          return base64.fromByteArray(buf2.slice(start, end));
+        }
+      }
+      function utf8Slice(buf2, start, end) {
+        end = Math.min(buf2.length, end);
+        var res = [];
+        var i = start;
+        while (i < end) {
+          var firstByte = buf2[i];
+          var codePoint = null;
+          var bytesPerSequence = firstByte > 239 ? 4 : firstByte > 223 ? 3 : firstByte > 191 ? 2 : 1;
+          if (i + bytesPerSequence <= end) {
+            var secondByte, thirdByte, fourthByte, tempCodePoint;
+            switch (bytesPerSequence) {
+              case 1:
+                if (firstByte < 128) {
+                  codePoint = firstByte;
+                }
+                break;
+              case 2:
+                secondByte = buf2[i + 1];
+                if ((secondByte & 192) === 128) {
+                  tempCodePoint = (firstByte & 31) << 6 | secondByte & 63;
+                  if (tempCodePoint > 127) {
+                    codePoint = tempCodePoint;
+                  }
+                }
+                break;
+              case 3:
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
+                if ((secondByte & 192) === 128 && (thirdByte & 192) === 128) {
+                  tempCodePoint = (firstByte & 15) << 12 | (secondByte & 63) << 6 | thirdByte & 63;
+                  if (tempCodePoint > 2047 && (tempCodePoint < 55296 || tempCodePoint > 57343)) {
+                    codePoint = tempCodePoint;
+                  }
+                }
+                break;
+              case 4:
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
+                fourthByte = buf2[i + 3];
+                if ((secondByte & 192) === 128 && (thirdByte & 192) === 128 && (fourthByte & 192) === 128) {
+                  tempCodePoint = (firstByte & 15) << 18 | (secondByte & 63) << 12 | (thirdByte & 63) << 6 | fourthByte & 63;
+                  if (tempCodePoint > 65535 && tempCodePoint < 1114112) {
+                    codePoint = tempCodePoint;
+                  }
+                }
+            }
+          }
+          if (codePoint === null) {
+            codePoint = 65533;
+            bytesPerSequence = 1;
+          } else if (codePoint > 65535) {
+            codePoint -= 65536;
+            res.push(codePoint >>> 10 & 1023 | 55296);
+            codePoint = 56320 | codePoint & 1023;
+          }
+          res.push(codePoint);
+          i += bytesPerSequence;
+        }
+        return decodeCodePointsArray(res);
+      }
+      var MAX_ARGUMENTS_LENGTH = 4096;
+      function decodeCodePointsArray(codePoints) {
+        var len = codePoints.length;
+        if (len <= MAX_ARGUMENTS_LENGTH) {
+          return String.fromCharCode.apply(String, codePoints);
+        }
+        var res = "";
+        var i = 0;
+        while (i < len) {
+          res += String.fromCharCode.apply(String, codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH));
+        }
+        return res;
+      }
+      function asciiSlice(buf2, start, end) {
+        var ret = "";
+        end = Math.min(buf2.length, end);
+        for (var i = start; i < end; ++i) {
+          ret += String.fromCharCode(buf2[i] & 127);
+        }
+        return ret;
+      }
+      function latin1Slice(buf2, start, end) {
+        var ret = "";
+        end = Math.min(buf2.length, end);
+        for (var i = start; i < end; ++i) {
+          ret += String.fromCharCode(buf2[i]);
+        }
+        return ret;
+      }
+      function hexSlice(buf2, start, end) {
+        var len = buf2.length;
+        if (!start || start < 0)
+          start = 0;
+        if (!end || end < 0 || end > len)
+          end = len;
+        var out = "";
+        for (var i = start; i < end; ++i) {
+          out += hexSliceLookupTable[buf2[i]];
+        }
+        return out;
+      }
+      function utf16leSlice(buf2, start, end) {
+        var bytes = buf2.slice(start, end);
+        var res = "";
+        for (var i = 0; i < bytes.length - 1; i += 2) {
+          res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
+        }
+        return res;
+      }
+      Buffer8.prototype.slice = function slice(start, end) {
+        var len = this.length;
+        start = ~~start;
+        end = end === void 0 ? len : ~~end;
+        if (start < 0) {
+          start += len;
+          if (start < 0)
+            start = 0;
+        } else if (start > len) {
+          start = len;
+        }
+        if (end < 0) {
+          end += len;
+          if (end < 0)
+            end = 0;
+        } else if (end > len) {
+          end = len;
+        }
+        if (end < start)
+          end = start;
+        var newBuf = this.subarray(start, end);
+        Object.setPrototypeOf(newBuf, Buffer8.prototype);
+        return newBuf;
+      };
+      function checkOffset(offset, ext, length) {
+        if (offset % 1 !== 0 || offset < 0)
+          throw new RangeError("offset is not uint");
+        if (offset + ext > length)
+          throw new RangeError("Trying to access beyond buffer length");
+      }
+      Buffer8.prototype.readUintLE = Buffer8.prototype.readUIntLE = function readUIntLE(offset, byteLength2, noAssert) {
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert)
+          checkOffset(offset, byteLength2, this.length);
+        var val = this[offset];
+        var mul = 1;
+        var i = 0;
+        while (++i < byteLength2 && (mul *= 256)) {
+          val += this[offset + i] * mul;
+        }
+        return val;
+      };
+      Buffer8.prototype.readUintBE = Buffer8.prototype.readUIntBE = function readUIntBE(offset, byteLength2, noAssert) {
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert) {
+          checkOffset(offset, byteLength2, this.length);
+        }
+        var val = this[offset + --byteLength2];
+        var mul = 1;
+        while (byteLength2 > 0 && (mul *= 256)) {
+          val += this[offset + --byteLength2] * mul;
+        }
+        return val;
+      };
+      Buffer8.prototype.readUint8 = Buffer8.prototype.readUInt8 = function readUInt8(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 1, this.length);
+        return this[offset];
+      };
+      Buffer8.prototype.readUint16LE = Buffer8.prototype.readUInt16LE = function readUInt16LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 2, this.length);
+        return this[offset] | this[offset + 1] << 8;
+      };
+      Buffer8.prototype.readUint16BE = Buffer8.prototype.readUInt16BE = function readUInt16BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 2, this.length);
+        return this[offset] << 8 | this[offset + 1];
+      };
+      Buffer8.prototype.readUint32LE = Buffer8.prototype.readUInt32LE = function readUInt32LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return (this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16) + this[offset + 3] * 16777216;
+      };
+      Buffer8.prototype.readUint32BE = Buffer8.prototype.readUInt32BE = function readUInt32BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return this[offset] * 16777216 + (this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3]);
+      };
+      Buffer8.prototype.readIntLE = function readIntLE(offset, byteLength2, noAssert) {
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert)
+          checkOffset(offset, byteLength2, this.length);
+        var val = this[offset];
+        var mul = 1;
+        var i = 0;
+        while (++i < byteLength2 && (mul *= 256)) {
+          val += this[offset + i] * mul;
+        }
+        mul *= 128;
+        if (val >= mul)
+          val -= Math.pow(2, 8 * byteLength2);
+        return val;
+      };
+      Buffer8.prototype.readIntBE = function readIntBE(offset, byteLength2, noAssert) {
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert)
+          checkOffset(offset, byteLength2, this.length);
+        var i = byteLength2;
+        var mul = 1;
+        var val = this[offset + --i];
+        while (i > 0 && (mul *= 256)) {
+          val += this[offset + --i] * mul;
+        }
+        mul *= 128;
+        if (val >= mul)
+          val -= Math.pow(2, 8 * byteLength2);
+        return val;
+      };
+      Buffer8.prototype.readInt8 = function readInt8(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 1, this.length);
+        if (!(this[offset] & 128))
+          return this[offset];
+        return (255 - this[offset] + 1) * -1;
+      };
+      Buffer8.prototype.readInt16LE = function readInt16LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 2, this.length);
+        var val = this[offset] | this[offset + 1] << 8;
+        return val & 32768 ? val | 4294901760 : val;
+      };
+      Buffer8.prototype.readInt16BE = function readInt16BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 2, this.length);
+        var val = this[offset + 1] | this[offset] << 8;
+        return val & 32768 ? val | 4294901760 : val;
+      };
+      Buffer8.prototype.readInt32LE = function readInt32LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return this[offset] | this[offset + 1] << 8 | this[offset + 2] << 16 | this[offset + 3] << 24;
+      };
+      Buffer8.prototype.readInt32BE = function readInt32BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return this[offset] << 24 | this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3];
+      };
+      Buffer8.prototype.readFloatLE = function readFloatLE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return ieee7542.read(this, offset, true, 23, 4);
+      };
+      Buffer8.prototype.readFloatBE = function readFloatBE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 4, this.length);
+        return ieee7542.read(this, offset, false, 23, 4);
+      };
+      Buffer8.prototype.readDoubleLE = function readDoubleLE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 8, this.length);
+        return ieee7542.read(this, offset, true, 52, 8);
+      };
+      Buffer8.prototype.readDoubleBE = function readDoubleBE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkOffset(offset, 8, this.length);
+        return ieee7542.read(this, offset, false, 52, 8);
+      };
+      function checkInt(buf2, value, offset, ext, max, min) {
+        if (!Buffer8.isBuffer(buf2))
+          throw new TypeError('"buffer" argument must be a Buffer instance');
+        if (value > max || value < min)
+          throw new RangeError('"value" argument is out of bounds');
+        if (offset + ext > buf2.length)
+          throw new RangeError("Index out of range");
+      }
+      Buffer8.prototype.writeUintLE = Buffer8.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength2, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert) {
+          var maxBytes = Math.pow(2, 8 * byteLength2) - 1;
+          checkInt(this, value, offset, byteLength2, maxBytes, 0);
+        }
+        var mul = 1;
+        var i = 0;
+        this[offset] = value & 255;
+        while (++i < byteLength2 && (mul *= 256)) {
+          this[offset + i] = value / mul & 255;
+        }
+        return offset + byteLength2;
+      };
+      Buffer8.prototype.writeUintBE = Buffer8.prototype.writeUIntBE = function writeUIntBE(value, offset, byteLength2, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        byteLength2 = byteLength2 >>> 0;
+        if (!noAssert) {
+          var maxBytes = Math.pow(2, 8 * byteLength2) - 1;
+          checkInt(this, value, offset, byteLength2, maxBytes, 0);
+        }
+        var i = byteLength2 - 1;
+        var mul = 1;
+        this[offset + i] = value & 255;
+        while (--i >= 0 && (mul *= 256)) {
+          this[offset + i] = value / mul & 255;
+        }
+        return offset + byteLength2;
+      };
+      Buffer8.prototype.writeUint8 = Buffer8.prototype.writeUInt8 = function writeUInt8(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 1, 255, 0);
+        this[offset] = value & 255;
+        return offset + 1;
+      };
+      Buffer8.prototype.writeUint16LE = Buffer8.prototype.writeUInt16LE = function writeUInt16LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 2, 65535, 0);
+        this[offset] = value & 255;
+        this[offset + 1] = value >>> 8;
+        return offset + 2;
+      };
+      Buffer8.prototype.writeUint16BE = Buffer8.prototype.writeUInt16BE = function writeUInt16BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 2, 65535, 0);
+        this[offset] = value >>> 8;
+        this[offset + 1] = value & 255;
+        return offset + 2;
+      };
+      Buffer8.prototype.writeUint32LE = Buffer8.prototype.writeUInt32LE = function writeUInt32LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 4, 4294967295, 0);
+        this[offset + 3] = value >>> 24;
+        this[offset + 2] = value >>> 16;
+        this[offset + 1] = value >>> 8;
+        this[offset] = value & 255;
+        return offset + 4;
+      };
+      Buffer8.prototype.writeUint32BE = Buffer8.prototype.writeUInt32BE = function writeUInt32BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 4, 4294967295, 0);
+        this[offset] = value >>> 24;
+        this[offset + 1] = value >>> 16;
+        this[offset + 2] = value >>> 8;
+        this[offset + 3] = value & 255;
+        return offset + 4;
+      };
+      Buffer8.prototype.writeIntLE = function writeIntLE(value, offset, byteLength2, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) {
+          var limit = Math.pow(2, 8 * byteLength2 - 1);
+          checkInt(this, value, offset, byteLength2, limit - 1, -limit);
+        }
+        var i = 0;
+        var mul = 1;
+        var sub = 0;
+        this[offset] = value & 255;
+        while (++i < byteLength2 && (mul *= 256)) {
+          if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
+            sub = 1;
+          }
+          this[offset + i] = (value / mul >> 0) - sub & 255;
+        }
+        return offset + byteLength2;
+      };
+      Buffer8.prototype.writeIntBE = function writeIntBE(value, offset, byteLength2, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) {
+          var limit = Math.pow(2, 8 * byteLength2 - 1);
+          checkInt(this, value, offset, byteLength2, limit - 1, -limit);
+        }
+        var i = byteLength2 - 1;
+        var mul = 1;
+        var sub = 0;
+        this[offset + i] = value & 255;
+        while (--i >= 0 && (mul *= 256)) {
+          if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
+            sub = 1;
+          }
+          this[offset + i] = (value / mul >> 0) - sub & 255;
+        }
+        return offset + byteLength2;
+      };
+      Buffer8.prototype.writeInt8 = function writeInt8(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 1, 127, -128);
+        if (value < 0)
+          value = 255 + value + 1;
+        this[offset] = value & 255;
+        return offset + 1;
+      };
+      Buffer8.prototype.writeInt16LE = function writeInt16LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 2, 32767, -32768);
+        this[offset] = value & 255;
+        this[offset + 1] = value >>> 8;
+        return offset + 2;
+      };
+      Buffer8.prototype.writeInt16BE = function writeInt16BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 2, 32767, -32768);
+        this[offset] = value >>> 8;
+        this[offset + 1] = value & 255;
+        return offset + 2;
+      };
+      Buffer8.prototype.writeInt32LE = function writeInt32LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 4, 2147483647, -2147483648);
+        this[offset] = value & 255;
+        this[offset + 1] = value >>> 8;
+        this[offset + 2] = value >>> 16;
+        this[offset + 3] = value >>> 24;
+        return offset + 4;
+      };
+      Buffer8.prototype.writeInt32BE = function writeInt32BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert)
+          checkInt(this, value, offset, 4, 2147483647, -2147483648);
+        if (value < 0)
+          value = 4294967295 + value + 1;
+        this[offset] = value >>> 24;
+        this[offset + 1] = value >>> 16;
+        this[offset + 2] = value >>> 8;
+        this[offset + 3] = value & 255;
+        return offset + 4;
+      };
+      function checkIEEE754(buf2, value, offset, ext, max, min) {
+        if (offset + ext > buf2.length)
+          throw new RangeError("Index out of range");
+        if (offset < 0)
+          throw new RangeError("Index out of range");
+      }
+      function writeFloat(buf2, value, offset, littleEndian, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) {
+          checkIEEE754(buf2, value, offset, 4, 34028234663852886e22, -34028234663852886e22);
+        }
+        ieee7542.write(buf2, value, offset, littleEndian, 23, 4);
+        return offset + 4;
+      }
+      Buffer8.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
+        return writeFloat(this, value, offset, true, noAssert);
+      };
+      Buffer8.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
+        return writeFloat(this, value, offset, false, noAssert);
+      };
+      function writeDouble(buf2, value, offset, littleEndian, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) {
+          checkIEEE754(buf2, value, offset, 8, 17976931348623157e292, -17976931348623157e292);
+        }
+        ieee7542.write(buf2, value, offset, littleEndian, 52, 8);
+        return offset + 8;
+      }
+      Buffer8.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
+        return writeDouble(this, value, offset, true, noAssert);
+      };
+      Buffer8.prototype.writeDoubleBE = function writeDoubleBE(value, offset, noAssert) {
+        return writeDouble(this, value, offset, false, noAssert);
+      };
+      Buffer8.prototype.copy = function copy(target, targetStart, start, end) {
+        if (!Buffer8.isBuffer(target))
+          throw new TypeError("argument should be a Buffer");
+        if (!start)
+          start = 0;
+        if (!end && end !== 0)
+          end = this.length;
+        if (targetStart >= target.length)
+          targetStart = target.length;
+        if (!targetStart)
+          targetStart = 0;
+        if (end > 0 && end < start)
+          end = start;
+        if (end === start)
+          return 0;
+        if (target.length === 0 || this.length === 0)
+          return 0;
+        if (targetStart < 0) {
+          throw new RangeError("targetStart out of bounds");
+        }
+        if (start < 0 || start >= this.length)
+          throw new RangeError("Index out of range");
+        if (end < 0)
+          throw new RangeError("sourceEnd out of bounds");
+        if (end > this.length)
+          end = this.length;
+        if (target.length - targetStart < end - start) {
+          end = target.length - targetStart + start;
+        }
+        var len = end - start;
+        if (this === target && typeof Uint8Array.prototype.copyWithin === "function") {
+          this.copyWithin(targetStart, start, end);
+        } else {
+          Uint8Array.prototype.set.call(target, this.subarray(start, end), targetStart);
+        }
+        return len;
+      };
+      Buffer8.prototype.fill = function fill(val, start, end, encoding) {
+        if (typeof val === "string") {
+          if (typeof start === "string") {
+            encoding = start;
+            start = 0;
+            end = this.length;
+          } else if (typeof end === "string") {
+            encoding = end;
+            end = this.length;
+          }
+          if (encoding !== void 0 && typeof encoding !== "string") {
+            throw new TypeError("encoding must be a string");
+          }
+          if (typeof encoding === "string" && !Buffer8.isEncoding(encoding)) {
+            throw new TypeError("Unknown encoding: " + encoding);
+          }
+          if (val.length === 1) {
+            var code = val.charCodeAt(0);
+            if (encoding === "utf8" && code < 128 || encoding === "latin1") {
+              val = code;
+            }
+          }
+        } else if (typeof val === "number") {
+          val = val & 255;
+        } else if (typeof val === "boolean") {
+          val = Number(val);
+        }
+        if (start < 0 || this.length < start || this.length < end) {
+          throw new RangeError("Out of range index");
+        }
+        if (end <= start) {
+          return this;
+        }
+        start = start >>> 0;
+        end = end === void 0 ? this.length : end >>> 0;
+        if (!val)
+          val = 0;
+        var i;
+        if (typeof val === "number") {
+          for (i = start; i < end; ++i) {
+            this[i] = val;
+          }
+        } else {
+          var bytes = Buffer8.isBuffer(val) ? val : Buffer8.from(val, encoding);
+          var len = bytes.length;
+          if (len === 0) {
+            throw new TypeError('The value "' + val + '" is invalid for argument "value"');
+          }
+          for (i = 0; i < end - start; ++i) {
+            this[i + start] = bytes[i % len];
+          }
+        }
+        return this;
+      };
+      var INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
+      function base64clean(str) {
+        str = str.split("=")[0];
+        str = str.trim().replace(INVALID_BASE64_RE, "");
+        if (str.length < 2)
+          return "";
+        while (str.length % 4 !== 0) {
+          str = str + "=";
+        }
+        return str;
+      }
+      function utf8ToBytes(string, units) {
+        units = units || Infinity;
+        var codePoint;
+        var length = string.length;
+        var leadSurrogate = null;
+        var bytes = [];
+        for (var i = 0; i < length; ++i) {
+          codePoint = string.charCodeAt(i);
+          if (codePoint > 55295 && codePoint < 57344) {
+            if (!leadSurrogate) {
+              if (codePoint > 56319) {
+                if ((units -= 3) > -1)
+                  bytes.push(239, 191, 189);
+                continue;
+              } else if (i + 1 === length) {
+                if ((units -= 3) > -1)
+                  bytes.push(239, 191, 189);
+                continue;
+              }
+              leadSurrogate = codePoint;
+              continue;
+            }
+            if (codePoint < 56320) {
+              if ((units -= 3) > -1)
+                bytes.push(239, 191, 189);
+              leadSurrogate = codePoint;
+              continue;
+            }
+            codePoint = (leadSurrogate - 55296 << 10 | codePoint - 56320) + 65536;
+          } else if (leadSurrogate) {
+            if ((units -= 3) > -1)
+              bytes.push(239, 191, 189);
+          }
+          leadSurrogate = null;
+          if (codePoint < 128) {
+            if ((units -= 1) < 0)
+              break;
+            bytes.push(codePoint);
+          } else if (codePoint < 2048) {
+            if ((units -= 2) < 0)
+              break;
+            bytes.push(codePoint >> 6 | 192, codePoint & 63 | 128);
+          } else if (codePoint < 65536) {
+            if ((units -= 3) < 0)
+              break;
+            bytes.push(codePoint >> 12 | 224, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
+          } else if (codePoint < 1114112) {
+            if ((units -= 4) < 0)
+              break;
+            bytes.push(codePoint >> 18 | 240, codePoint >> 12 & 63 | 128, codePoint >> 6 & 63 | 128, codePoint & 63 | 128);
+          } else {
+            throw new Error("Invalid code point");
+          }
+        }
+        return bytes;
+      }
+      function asciiToBytes(str) {
+        var byteArray = [];
+        for (var i = 0; i < str.length; ++i) {
+          byteArray.push(str.charCodeAt(i) & 255);
+        }
+        return byteArray;
+      }
+      function utf16leToBytes(str, units) {
+        var c, hi, lo;
+        var byteArray = [];
+        for (var i = 0; i < str.length; ++i) {
+          if ((units -= 2) < 0)
+            break;
+          c = str.charCodeAt(i);
+          hi = c >> 8;
+          lo = c % 256;
+          byteArray.push(lo);
+          byteArray.push(hi);
+        }
+        return byteArray;
+      }
+      function base64ToBytes(str) {
+        return base64.toByteArray(base64clean(str));
+      }
+      function blitBuffer(src, dst, offset, length) {
+        for (var i = 0; i < length; ++i) {
+          if (i + offset >= dst.length || i >= src.length)
+            break;
+          dst[i + offset] = src[i];
+        }
+        return i;
+      }
+      function isInstance(obj, type) {
+        return obj instanceof type || obj != null && obj.constructor != null && obj.constructor.name != null && obj.constructor.name === type.name;
+      }
+      function numberIsNaN(obj) {
+        return obj !== obj;
+      }
+      var hexSliceLookupTable = function() {
+        var alphabet = "0123456789abcdef";
+        var table = new Array(256);
+        for (var i = 0; i < 16; ++i) {
+          var i16 = i * 16;
+          for (var j = 0; j < 16; ++j) {
+            table[i16 + j] = alphabet[i] + alphabet[j];
+          }
+        }
+        return table;
+      }();
+    }
+  });
+
+  // node_modules/ebml/lib/ebml/tools.js
+  var require_tools = __commonJS({
+    "node_modules/ebml/lib/ebml/tools.js"(exports, module) {
+      var tools = {
+        readVint: function(buffer, start) {
+          start = start || 0;
+          for (var length = 1; length <= 8; length++) {
+            if (buffer[start] >= Math.pow(2, 8 - length)) {
+              break;
+            }
+          }
+          if (length > 8) {
+            throw new Error("Unrepresentable length: " + length + " " + buffer.toString("hex", start, start + length));
+          }
+          if (start + length > buffer.length) {
+            return null;
+          }
+          var value = buffer[start] & (1 << 8 - length) - 1;
+          for (var i = 1; i < length; i++) {
+            if (i === 7) {
+              if (value >= Math.pow(2, 53 - 8) && buffer[start + 7] > 0) {
+                return {
+                  length,
+                  value: -1
+                };
+              }
+            }
+            value *= Math.pow(2, 8);
+            value += buffer[start + i];
+          }
+          return {
+            length,
+            value
+          };
+        },
+        writeVint: function(value) {
+          if (value < 0 || value > Math.pow(2, 53)) {
+            throw new Error("Unrepresentable value: " + value);
+          }
+          for (var length = 1; length <= 8; length++) {
+            if (value < Math.pow(2, 7 * length) - 1) {
+              break;
+            }
+          }
+          var buffer = new Buffer(length);
+          for (var i = 1; i <= length; i++) {
+            var b = value & 255;
+            buffer[length - i] = b;
+            value -= b;
+            value /= Math.pow(2, 8);
+          }
+          buffer[0] = buffer[0] | 1 << 8 - length;
+          return buffer;
+        }
+      };
+      module.exports = tools;
+    }
+  });
+
+  // node_modules/ebml-block/lib/vint.js
+  var require_vint = __commonJS({
+    "node_modules/ebml-block/lib/vint.js"(exports, module) {
+      module.exports = function(buffer, start, signed) {
+        start = start || 0;
+        for (var length = 1; length <= 8; length++) {
+          if (buffer[start] >= Math.pow(2, 8 - length)) {
+            break;
+          }
+        }
+        if (length > 8) {
+          throw new Error("Unrepresentable length: " + length + " " + buffer.toString("hex", start, start + length));
+        }
+        if (start + length > buffer.length) {
+          return null;
+        }
+        var i;
+        var value = buffer[start] & (1 << 8 - length) - 1;
+        for (i = 1; i < length; i++) {
+          if (i === 7) {
+            if (value >= Math.pow(2, 53 - 8) && buffer[start + 7] > 0) {
+              return {
+                length,
+                value: -1
+              };
+            }
+          }
+          value *= Math.pow(2, 8);
+          value += buffer[start + i];
+        }
+        if (signed) {
+          value -= Math.pow(2, length * 7 - 1) - 1;
+        }
+        return {
+          length,
+          value
+        };
+      };
+    }
+  });
+
+  // node_modules/ebml-block/lib/buffer-reader.js
+  var require_buffer_reader = __commonJS({
+    "node_modules/ebml-block/lib/buffer-reader.js"(exports, module) {
+      var vint = require_vint();
+      function BufferReader(buffer) {
+        this.buffer = buffer;
+        this.offset = 0;
+      }
+      BufferReader.prototype.nextInt16BE = function() {
+        var value = this.buffer.readInt16BE(this.offset);
+        this.offset += 2;
+        return value;
+      };
+      BufferReader.prototype.nextUInt8 = function() {
+        var value = this.buffer.readUInt8(this.offset);
+        this.offset += 1;
+        return value;
+      };
+      BufferReader.prototype.nextUIntV = function() {
+        var v = vint(this.buffer, this.offset);
+        this.offset += v.length;
+        return v.value;
+      };
+      BufferReader.prototype.nextIntV = function() {
+        var v = vint(this.buffer, this.offset, true);
+        this.offset += v.length;
+        return v.value;
+      };
+      BufferReader.prototype.nextBuffer = function(length) {
+        var buffer = length ? this.buffer.slice(this.offset, this.offset + length) : this.buffer.slice(this.offset);
+        this.offset += length || this.length;
+        return buffer;
+      };
+      Object.defineProperty(BufferReader.prototype, "length", {
+        get: function() {
+          return this.buffer.length - this.offset;
+        }
+      });
+      module.exports = BufferReader;
+    }
+  });
+
+  // node_modules/ebml-block/index.js
+  var require_ebml_block = __commonJS({
+    "node_modules/ebml-block/index.js"(exports, module) {
+      var BufferReader = require_buffer_reader();
+      var XIPH_LACING = 1;
+      var EBML_LACING = 3;
+      var FIXED_SIZE_LACING = 2;
+      module.exports = function(buffer) {
+        var block = {};
+        var reader = new BufferReader(buffer);
+        block.trackNumber = reader.nextUIntV();
+        block.timecode = reader.nextInt16BE();
+        var flags = reader.nextUInt8();
+        block.invisible = !!(flags & 8);
+        block.keyframe = !!(flags & 128);
+        block.discardable = !!(flags & 1);
+        var lacing = (flags & 6) >> 1;
+        block.frames = readLacedData(reader, lacing);
+        return block;
+      };
+      function readLacedData(reader, lacing) {
+        if (!lacing)
+          return [reader.nextBuffer()];
+        var i, frameSize;
+        var frames = [];
+        var framesNum = reader.nextUInt8() + 1;
+        if (lacing === FIXED_SIZE_LACING) {
+          if (reader.length % framesNum !== 0)
+            throw new Error("Fixed-Size Lacing Error");
+          frameSize = reader.length / framesNum;
+          for (i = 0; i < framesNum; i++) {
+            frames.push(reader.nextBuffer(frameSize));
+          }
+          return frames;
+        }
+        var frameSizes = [];
+        if (lacing === XIPH_LACING) {
+          for (i = 0; i < framesNum - 1; i++) {
+            var val;
+            frameSize = 0;
+            do {
+              val = reader.nextUInt8();
+              frameSize += val;
+            } while (val === 255);
+            frameSizes.push(frameSize);
+          }
+        } else if (lacing === EBML_LACING) {
+          frameSize = reader.nextUIntV();
+          frameSizes.push(frameSize);
+          for (i = 1; i < framesNum - 1; i++) {
+            frameSize += reader.nextIntV();
+            frameSizes.push(frameSize);
+          }
+        }
+        for (i = 0; i < framesNum - 1; i++) {
+          frames.push(reader.nextBuffer(frameSizes[i]));
+        }
+        frames.push(reader.nextBuffer());
+        return frames;
+      }
+    }
+  });
+
+  // node_modules/ts-ebml/lib/tools.js
+  var require_tools2 = __commonJS({
+    "node_modules/ts-ebml/lib/tools.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      var int64_buffer_1 = require_int64_buffer();
+      var EBMLEncoder_1 = require_EBMLEncoder();
+      var _Buffer = require_buffer2();
+      var _tools = require_tools();
+      var _block = require_ebml_block();
+      exports.Buffer = _Buffer.Buffer;
+      exports.readVint = _tools.readVint;
+      exports.writeVint = _tools.writeVint;
+      exports.ebmlBlock = _block;
+      function readBlock(buf2) {
+        return exports.ebmlBlock(new exports.Buffer(buf2));
+      }
+      exports.readBlock = readBlock;
+      function encodeTag(tagId, tagData, unknownSize) {
+        if (unknownSize === void 0) {
+          unknownSize = false;
+        }
+        return concat([
+          tagId,
+          unknownSize ? new exports.Buffer("01ffffffffffffff", "hex") : exports.writeVint(tagData.length),
+          tagData
+        ]);
+      }
+      exports.encodeTag = encodeTag;
+      function WebPFrameFilter(elms) {
+        return WebPBlockFilter(elms).reduce(function(lst, elm) {
+          var o = exports.ebmlBlock(elm.data);
+          return o.frames.reduce(function(lst2, frame) {
+            var webpBuf = VP8BitStreamToRiffWebPBuffer(frame);
+            var webp = new Blob([webpBuf], { type: "image/webp" });
+            return lst2.concat(webp);
+          }, lst);
+        }, []);
+      }
+      exports.WebPFrameFilter = WebPFrameFilter;
+      function WebPBlockFilter(elms) {
+        return elms.reduce(function(lst, elm) {
+          if (elm.type !== "b") {
+            return lst;
+          }
+          if (elm.name !== "SimpleBlock") {
+            return lst;
+          }
+          var o = exports.ebmlBlock(elm.data);
+          var hasWebP = o.frames.some(function(frame) {
+            var startcode = frame.slice(3, 6).toString("hex");
+            return startcode === "9d012a";
+          });
+          if (!hasWebP) {
+            return lst;
+          }
+          return lst.concat(elm);
+        }, []);
+      }
+      exports.WebPBlockFilter = WebPBlockFilter;
+      function VP8BitStreamToRiffWebPBuffer(frame) {
+        var VP8Chunk = createRIFFChunk("VP8 ", frame);
+        var WebPChunk = concat([
+          new exports.Buffer("WEBP", "ascii"),
+          VP8Chunk
+        ]);
+        return createRIFFChunk("RIFF", WebPChunk);
+      }
+      exports.VP8BitStreamToRiffWebPBuffer = VP8BitStreamToRiffWebPBuffer;
+      function createRIFFChunk(FourCC, chunk) {
+        var chunkSize = new exports.Buffer(4);
+        chunkSize.writeUInt32LE(chunk.byteLength, 0);
+        return concat([
+          new exports.Buffer(FourCC.substr(0, 4), "ascii"),
+          chunkSize,
+          chunk,
+          new exports.Buffer(chunk.byteLength % 2 === 0 ? 0 : 1)
+        ]);
+      }
+      exports.createRIFFChunk = createRIFFChunk;
+      function makeMetadataSeekable(originalMetadata, duration, cuesInfo) {
+        var header = extractElement("EBML", originalMetadata);
+        var headerSize = encodedSizeOfEbml(header);
+        var segmentContentStartPos = headerSize + 12;
+        var originalMetadataSize = originalMetadata[originalMetadata.length - 1].dataEnd - segmentContentStartPos;
+        var info = extractElement("Info", originalMetadata);
+        removeElement("Duration", info);
+        info.splice(1, 0, { name: "Duration", type: "f", data: createFloatBuffer(duration, 8) });
+        var infoSize = encodedSizeOfEbml(info);
+        var tracks = extractElement("Tracks", originalMetadata);
+        var tracksSize = encodedSizeOfEbml(tracks);
+        var seekHeadSize = 47;
+        var seekHead = [];
+        var cuesSize = 5 + cuesInfo.length * 15;
+        var cues = [];
+        var lastSizeDifference = -1;
+        var maxIterations = 10;
+        var _loop_1 = function(i2) {
+          var infoStart = seekHeadSize;
+          var tracksStart = infoStart + infoSize;
+          var cuesStart = tracksStart + tracksSize;
+          var newMetadataSize = cuesStart + cuesSize;
+          var sizeDifference = newMetadataSize - originalMetadataSize;
+          seekHead = [];
+          seekHead.push({ name: "SeekHead", type: "m", isEnd: false });
+          seekHead.push({ name: "Seek", type: "m", isEnd: false });
+          seekHead.push({ name: "SeekID", type: "b", data: new exports.Buffer([21, 73, 169, 102]) });
+          seekHead.push({ name: "SeekPosition", type: "u", data: createUIntBuffer(infoStart) });
+          seekHead.push({ name: "Seek", type: "m", isEnd: true });
+          seekHead.push({ name: "Seek", type: "m", isEnd: false });
+          seekHead.push({ name: "SeekID", type: "b", data: new exports.Buffer([22, 84, 174, 107]) });
+          seekHead.push({ name: "SeekPosition", type: "u", data: createUIntBuffer(tracksStart) });
+          seekHead.push({ name: "Seek", type: "m", isEnd: true });
+          seekHead.push({ name: "Seek", type: "m", isEnd: false });
+          seekHead.push({ name: "SeekID", type: "b", data: new exports.Buffer([28, 83, 187, 107]) });
+          seekHead.push({ name: "SeekPosition", type: "u", data: createUIntBuffer(cuesStart) });
+          seekHead.push({ name: "Seek", type: "m", isEnd: true });
+          seekHead.push({ name: "SeekHead", type: "m", isEnd: true });
+          seekHeadSize = encodedSizeOfEbml(seekHead);
+          cues = [];
+          cues.push({ name: "Cues", type: "m", isEnd: false });
+          cuesInfo.forEach(function(_a) {
+            var CueTrack = _a.CueTrack, CueClusterPosition = _a.CueClusterPosition, CueTime = _a.CueTime;
+            cues.push({ name: "CuePoint", type: "m", isEnd: false });
+            cues.push({ name: "CueTime", type: "u", data: createUIntBuffer(CueTime) });
+            cues.push({ name: "CueTrackPositions", type: "m", isEnd: false });
+            cues.push({ name: "CueTrack", type: "u", data: createUIntBuffer(CueTrack) });
+            CueClusterPosition -= segmentContentStartPos;
+            CueClusterPosition += sizeDifference;
+            cues.push({ name: "CueClusterPosition", type: "u", data: createUIntBuffer(CueClusterPosition) });
+            cues.push({ name: "CueTrackPositions", type: "m", isEnd: true });
+            cues.push({ name: "CuePoint", type: "m", isEnd: true });
+          });
+          cues.push({ name: "Cues", type: "m", isEnd: true });
+          cuesSize = encodedSizeOfEbml(cues);
+          if (lastSizeDifference !== sizeDifference) {
+            lastSizeDifference = sizeDifference;
+            if (i2 === maxIterations - 1) {
+              throw new Error("Failed to converge to a stable metadata size");
+            }
+          } else {
+            return "break";
+          }
+        };
+        for (var i = 0; i < maxIterations; i++) {
+          var state_1 = _loop_1(i);
+          if (state_1 === "break")
+            break;
+        }
+        var finalMetadata = [].concat.apply([], [
+          header,
+          { name: "Segment", type: "m", isEnd: false, unknownSize: true },
+          seekHead,
+          info,
+          tracks,
+          cues
+        ]);
+        var result = new EBMLEncoder_1.default().encode(finalMetadata);
+        return result;
+      }
+      exports.makeMetadataSeekable = makeMetadataSeekable;
+      function removeElement(idName, metadata) {
+        var result = [];
+        var start = -1;
+        for (var i = 0; i < metadata.length; i++) {
+          var element = metadata[i];
+          if (element.name === idName) {
+            if (element.type === "m") {
+              if (!element.isEnd) {
+                start = i;
+              } else {
+                if (start == -1)
+                  throw new Error("Detected " + idName + " closing element before finding the start");
+                metadata.splice(start, i - start + 1);
+                return;
+              }
+            } else {
+              metadata.splice(i, 1);
+              return;
+            }
+          }
+        }
+      }
+      exports.removeElement = removeElement;
+      function extractElement(idName, metadata) {
+        var result = [];
+        var start = -1;
+        for (var i = 0; i < metadata.length; i++) {
+          var element = metadata[i];
+          if (element.name === idName) {
+            if (element.type === "m") {
+              if (!element.isEnd) {
+                start = i;
+              } else {
+                if (start == -1)
+                  throw new Error("Detected " + idName + " closing element before finding the start");
+                result = metadata.slice(start, i + 1);
+                break;
+              }
+            } else {
+              result.push(metadata[i]);
+              break;
+            }
+          }
+        }
+        return result;
+      }
+      exports.extractElement = extractElement;
+      function putRefinedMetaData(metadata, info) {
+        if (Array.isArray(info.cueInfos) && !Array.isArray(info.cues)) {
+          console.warn("putRefinedMetaData: info.cueInfos property is deprecated. please use info.cues");
+          info.cues = info.cueInfos;
+        }
+        var ebml2 = [];
+        var payload = [];
+        for (var i_1 = 0; i_1 < metadata.length; i_1++) {
+          var elm = metadata[i_1];
+          if (elm.type === "m" && elm.name === "Segment") {
+            ebml2 = metadata.slice(0, i_1);
+            payload = metadata.slice(i_1);
+            if (elm.unknownSize) {
+              payload.shift();
+              break;
+            }
+            throw new Error("this metadata is not streaming webm file");
+          }
+        }
+        if (!(payload[payload.length - 1].dataEnd > 0)) {
+          throw new Error("metadata dataEnd has wrong number");
+        }
+        var originalPayloadOffsetEnd = payload[payload.length - 1].dataEnd;
+        var ebmlSize = ebml2[ebml2.length - 1].dataEnd;
+        var refinedEBMLSize = new EBMLEncoder_1.default().encode(ebml2).byteLength;
+        var offsetDiff = refinedEBMLSize - ebmlSize;
+        var payloadSize = originalPayloadOffsetEnd - payload[0].tagStart;
+        var segmentSize = payload[0].tagStart - ebmlSize;
+        var segmentOffset = payload[0].tagStart;
+        var segmentTagBuf = new exports.Buffer([24, 83, 128, 103]);
+        var segmentSizeBuf = new exports.Buffer("01ffffffffffffff", "hex");
+        var _segmentSize = segmentTagBuf.byteLength + segmentSizeBuf.byteLength;
+        var newPayloadSize = payloadSize;
+        var i;
+        for (i = 1; i < 20; i++) {
+          var newPayloadOffsetEnd = ebmlSize + _segmentSize + newPayloadSize;
+          var offsetEndDiff = newPayloadOffsetEnd - originalPayloadOffsetEnd;
+          var sizeDiff = offsetDiff + offsetEndDiff;
+          var refined = refineMetadata(payload, sizeDiff, info);
+          var newNewRefinedSize = new EBMLEncoder_1.default().encode(refined).byteLength;
+          if (newNewRefinedSize === newPayloadSize) {
+            return new EBMLEncoder_1.default().encode([].concat(ebml2, [{ type: "m", name: "Segment", isEnd: false, unknownSize: true }], refined));
+          }
+          newPayloadSize = newNewRefinedSize;
+        }
+        throw new Error("unable to refine metadata, stable size could not be found in " + i + " iterations!");
+      }
+      exports.putRefinedMetaData = putRefinedMetaData;
+      function encodedSizeOfEbml(refinedMetaData) {
+        var encorder = new EBMLEncoder_1.default();
+        return refinedMetaData.reduce(function(lst, elm) {
+          return lst.concat(encorder.encode([elm]));
+        }, []).reduce(function(o, buf2) {
+          return o + buf2.byteLength;
+        }, 0);
+      }
+      function refineMetadata(mesetadata, sizeDiff, info) {
+        var duration = info.duration, clusterPtrs = info.clusterPtrs, cues = info.cues;
+        var _metadata = mesetadata.slice(0);
+        if (typeof duration === "number") {
+          var overwrited_1 = false;
+          _metadata.forEach(function(elm) {
+            if (elm.type === "f" && elm.name === "Duration") {
+              overwrited_1 = true;
+              elm.data = createFloatBuffer(duration, 8);
+            }
+          });
+          if (!overwrited_1) {
+            insertTag(_metadata, "Info", [{ name: "Duration", type: "f", data: createFloatBuffer(duration, 8) }]);
+          }
+        }
+        if (Array.isArray(cues)) {
+          insertTag(_metadata, "Cues", create_cue(cues, sizeDiff));
+        }
+        var seekhead_children = [];
+        if (Array.isArray(clusterPtrs)) {
+          console.warn("append cluster pointers to seekhead is deprecated. please use cues");
+          seekhead_children = create_seek_from_clusters(clusterPtrs, sizeDiff);
+        }
+        insertTag(_metadata, "SeekHead", seekhead_children, true);
+        return _metadata;
+      }
+      function create_seek_from_clusters(clusterPtrs, sizeDiff) {
+        var seeks = [];
+        clusterPtrs.forEach(function(start) {
+          seeks.push({ name: "Seek", type: "m", isEnd: false });
+          seeks.push({ name: "SeekID", type: "b", data: new exports.Buffer([31, 67, 182, 117]) });
+          seeks.push({ name: "SeekPosition", type: "u", data: createUIntBuffer(start + sizeDiff) });
+          seeks.push({ name: "Seek", type: "m", isEnd: true });
+        });
+        return seeks;
+      }
+      function create_cue(cueInfos, sizeDiff) {
+        var cues = [];
+        cueInfos.forEach(function(_a) {
+          var CueTrack = _a.CueTrack, CueClusterPosition = _a.CueClusterPosition, CueTime = _a.CueTime;
+          cues.push({ name: "CuePoint", type: "m", isEnd: false });
+          cues.push({ name: "CueTime", type: "u", data: createUIntBuffer(CueTime) });
+          cues.push({ name: "CueTrackPositions", type: "m", isEnd: false });
+          cues.push({ name: "CueTrack", type: "u", data: createUIntBuffer(CueTrack) });
+          cues.push({ name: "CueClusterPosition", type: "u", data: createUIntBuffer(CueClusterPosition + sizeDiff) });
+          cues.push({ name: "CueTrackPositions", type: "m", isEnd: true });
+          cues.push({ name: "CuePoint", type: "m", isEnd: true });
+        });
+        return cues;
+      }
+      function insertTag(_metadata, tagName, children, insertHead) {
+        if (insertHead === void 0) {
+          insertHead = false;
+        }
+        var idx = -1;
+        for (var i = 0; i < _metadata.length; i++) {
+          var elm = _metadata[i];
+          if (elm.type === "m" && elm.name === tagName && elm.isEnd === false) {
+            idx = i;
+            break;
+          }
+        }
+        if (idx >= 0) {
+          Array.prototype.splice.apply(_metadata, [idx + 1, 0].concat(children));
+        } else if (insertHead) {
+          [].concat([{ name: tagName, type: "m", isEnd: false }], children, [{ name: tagName, type: "m", isEnd: true }]).reverse().forEach(function(elm2) {
+            _metadata.unshift(elm2);
+          });
+        } else {
+          _metadata.push({ name: tagName, type: "m", isEnd: false });
+          children.forEach(function(elm2) {
+            _metadata.push(elm2);
+          });
+          _metadata.push({ name: tagName, type: "m", isEnd: true });
+        }
+      }
+      function concat(list) {
+        var i = 0;
+        var length = 0;
+        for (; i < list.length; ++i) {
+          length += list[i].length;
+        }
+        var buffer = exports.Buffer.allocUnsafe(length);
+        var pos = 0;
+        for (i = 0; i < list.length; ++i) {
+          var buf2 = list[i];
+          buf2.copy(buffer, pos);
+          pos += buf2.length;
+        }
+        return buffer;
+      }
+      exports.concat = concat;
+      function encodeValueToBuffer(elm) {
+        var data = new exports.Buffer(0);
+        if (elm.type === "m") {
+          return elm;
+        }
+        switch (elm.type) {
+          case "u":
+            data = createUIntBuffer(elm.value);
+            break;
+          case "i":
+            data = createIntBuffer(elm.value);
+            break;
+          case "f":
+            data = createFloatBuffer(elm.value);
+            break;
+          case "s":
+            data = new exports.Buffer(elm.value, "ascii");
+            break;
+          case "8":
+            data = new exports.Buffer(elm.value, "utf8");
+            break;
+          case "b":
+            data = elm.value;
+            break;
+          case "d":
+            data = new int64_buffer_1.Int64BE(elm.value.getTime().toString()).toBuffer();
+            break;
+        }
+        return Object.assign({}, elm, { data });
+      }
+      exports.encodeValueToBuffer = encodeValueToBuffer;
+      function createUIntBuffer(value) {
+        var bytes = 1;
+        for (; value >= Math.pow(2, 8 * bytes); bytes++) {
+        }
+        if (bytes >= 7) {
+          console.warn("7bit or more bigger uint not supported.");
+          return new int64_buffer_1.Uint64BE(value).toBuffer();
+        }
+        var data = new exports.Buffer(bytes);
+        data.writeUIntBE(value, 0, bytes);
+        return data;
+      }
+      exports.createUIntBuffer = createUIntBuffer;
+      function createIntBuffer(value) {
+        var bytes = 1;
+        for (; value >= Math.pow(2, 8 * bytes); bytes++) {
+        }
+        if (bytes >= 7) {
+          console.warn("7bit or more bigger uint not supported.");
+          return new int64_buffer_1.Int64BE(value).toBuffer();
+        }
+        var data = new exports.Buffer(bytes);
+        data.writeIntBE(value, 0, bytes);
+        return data;
+      }
+      exports.createIntBuffer = createIntBuffer;
+      function createFloatBuffer(value, bytes) {
+        if (bytes === void 0) {
+          bytes = 8;
+        }
+        if (bytes === 8) {
+          var data = new exports.Buffer(8);
+          data.writeDoubleBE(value, 0);
+          return data;
+        } else if (bytes === 4) {
+          var data = new exports.Buffer(4);
+          data.writeFloatBE(value, 0);
+          return data;
+        } else {
+          throw new Error("float type bits must 4bytes or 8bytes");
+        }
+      }
+      exports.createFloatBuffer = createFloatBuffer;
+      function convertEBMLDateToJSDate(int64str) {
+        if (int64str instanceof Date) {
+          return int64str;
+        }
+        return new Date(new Date("2001-01-01T00:00:00.000Z").getTime() + Number(int64str) / 1e3 / 1e3);
+      }
+      exports.convertEBMLDateToJSDate = convertEBMLDateToJSDate;
+    }
+  });
+
+  // node_modules/ts-ebml/lib/EBMLDecoder.js
+  var require_EBMLDecoder = __commonJS({
+    "node_modules/ts-ebml/lib/EBMLDecoder.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      var tools_1 = require_tools2();
+      var int64_buffer_1 = require_int64_buffer();
+      var tools = require_tools2();
+      var schema = require_schema();
+      var byEbmlID = schema.byEbmlID;
+      var State;
+      (function(State2) {
+        State2[State2["STATE_TAG"] = 1] = "STATE_TAG";
+        State2[State2["STATE_SIZE"] = 2] = "STATE_SIZE";
+        State2[State2["STATE_CONTENT"] = 3] = "STATE_CONTENT";
+      })(State || (State = {}));
+      var EBMLDecoder = function() {
+        function EBMLDecoder2() {
+          this._buffer = new tools_1.Buffer(0);
+          this._tag_stack = [];
+          this._state = State.STATE_TAG;
+          this._cursor = 0;
+          this._total = 0;
+          this._schema = byEbmlID;
+          this._result = [];
+        }
+        EBMLDecoder2.prototype.decode = function(chunk) {
+          this.readChunk(chunk);
+          var diff = this._result;
+          this._result = [];
+          return diff;
+        };
+        EBMLDecoder2.prototype.readChunk = function(chunk) {
+          this._buffer = tools.concat([this._buffer, new tools_1.Buffer(chunk)]);
+          while (this._cursor < this._buffer.length) {
+            if (this._state === State.STATE_TAG && !this.readTag()) {
+              break;
+            }
+            if (this._state === State.STATE_SIZE && !this.readSize()) {
+              break;
+            }
+            if (this._state === State.STATE_CONTENT && !this.readContent()) {
+              break;
+            }
+          }
+        };
+        EBMLDecoder2.prototype.getSchemaInfo = function(tagNum) {
+          return this._schema[tagNum] || {
+            name: "unknown",
+            level: -1,
+            type: "unknown",
+            description: "unknown"
+          };
+        };
+        EBMLDecoder2.prototype.readTag = function() {
+          if (this._cursor >= this._buffer.length) {
+            return false;
+          }
+          var tag = tools_1.readVint(this._buffer, this._cursor);
+          if (tag == null) {
+            return false;
+          }
+          var buf2 = this._buffer.slice(this._cursor, this._cursor + tag.length);
+          var tagNum = buf2.reduce(function(o, v, i, arr) {
+            return o + v * Math.pow(16, 2 * (arr.length - 1 - i));
+          }, 0);
+          var schema2 = this.getSchemaInfo(tagNum);
+          var tagObj = {
+            EBML_ID: tagNum.toString(16),
+            schema: schema2,
+            type: schema2.type,
+            name: schema2.name,
+            level: schema2.level,
+            tagStart: this._total,
+            tagEnd: this._total + tag.length,
+            sizeStart: this._total + tag.length,
+            sizeEnd: null,
+            dataStart: null,
+            dataEnd: null,
+            dataSize: null,
+            data: null
+          };
+          this._tag_stack.push(tagObj);
+          this._cursor += tag.length;
+          this._total += tag.length;
+          this._state = State.STATE_SIZE;
+          return true;
+        };
+        EBMLDecoder2.prototype.readSize = function() {
+          if (this._cursor >= this._buffer.length) {
+            return false;
+          }
+          var size = tools_1.readVint(this._buffer, this._cursor);
+          if (size == null) {
+            return false;
+          }
+          var tagObj = this._tag_stack[this._tag_stack.length - 1];
+          tagObj.sizeEnd = tagObj.sizeStart + size.length;
+          tagObj.dataStart = tagObj.sizeEnd;
+          tagObj.dataSize = size.value;
+          if (size.value === -1) {
+            tagObj.dataEnd = -1;
+            if (tagObj.type === "m") {
+              tagObj.unknownSize = true;
+            }
+          } else {
+            tagObj.dataEnd = tagObj.sizeEnd + size.value;
+          }
+          this._cursor += size.length;
+          this._total += size.length;
+          this._state = State.STATE_CONTENT;
+          return true;
+        };
+        EBMLDecoder2.prototype.readContent = function() {
+          var tagObj = this._tag_stack[this._tag_stack.length - 1];
+          if (tagObj.type === "m") {
+            tagObj.isEnd = false;
+            this._result.push(tagObj);
+            this._state = State.STATE_TAG;
+            if (tagObj.dataSize === 0) {
+              var elm = Object.assign({}, tagObj, { isEnd: true });
+              this._result.push(elm);
+              this._tag_stack.pop();
+            }
+            return true;
+          }
+          if (this._buffer.length < this._cursor + tagObj.dataSize) {
+            return false;
+          }
+          var data = this._buffer.slice(this._cursor, this._cursor + tagObj.dataSize);
+          this._buffer = this._buffer.slice(this._cursor + tagObj.dataSize);
+          tagObj.data = data;
+          switch (tagObj.type) {
+            case "u":
+              tagObj.value = data.readUIntBE(0, data.length);
+              break;
+            case "i":
+              tagObj.value = data.readIntBE(0, data.length);
+              break;
+            case "f":
+              tagObj.value = tagObj.dataSize === 4 ? data.readFloatBE(0) : tagObj.dataSize === 8 ? data.readDoubleBE(0) : (console.warn("cannot read " + tagObj.dataSize + " octets float. failback to 0"), 0);
+              break;
+            case "s":
+              tagObj.value = data.toString("ascii");
+              break;
+            case "8":
+              tagObj.value = data.toString("utf8");
+              break;
+            case "b":
+              tagObj.value = data;
+              break;
+            case "d":
+              tagObj.value = tools_1.convertEBMLDateToJSDate(new int64_buffer_1.Int64BE(data).toNumber());
+              break;
+          }
+          if (tagObj.value === null) {
+            throw new Error("unknown tag type:" + tagObj.type);
+          }
+          this._result.push(tagObj);
+          this._total += tagObj.dataSize;
+          this._state = State.STATE_TAG;
+          this._cursor = 0;
+          this._tag_stack.pop();
+          while (this._tag_stack.length > 0) {
+            var topEle = this._tag_stack[this._tag_stack.length - 1];
+            if (topEle.dataEnd < 0) {
+              this._tag_stack.pop();
+              return true;
+            }
+            if (this._total < topEle.dataEnd) {
+              break;
+            }
+            if (topEle.type !== "m") {
+              throw new Error("parent element is not master element");
+            }
+            var elm = Object.assign({}, topEle, { isEnd: true });
+            this._result.push(elm);
+            this._tag_stack.pop();
+          }
+          return true;
+        };
+        return EBMLDecoder2;
+      }();
+      exports.default = EBMLDecoder;
+    }
+  });
+
+  // node_modules/ts-ebml/node_modules/events/events.js
+  var require_events2 = __commonJS({
+    "node_modules/ts-ebml/node_modules/events/events.js"(exports, module) {
+      function EventEmitter() {
+        this._events = this._events || {};
+        this._maxListeners = this._maxListeners || void 0;
+      }
+      module.exports = EventEmitter;
+      EventEmitter.EventEmitter = EventEmitter;
+      EventEmitter.prototype._events = void 0;
+      EventEmitter.prototype._maxListeners = void 0;
+      EventEmitter.defaultMaxListeners = 10;
+      EventEmitter.prototype.setMaxListeners = function(n) {
+        if (!isNumber(n) || n < 0 || isNaN(n))
+          throw TypeError("n must be a positive number");
+        this._maxListeners = n;
+        return this;
+      };
+      EventEmitter.prototype.emit = function(type) {
+        var er, handler, len, args, i, listeners;
+        if (!this._events)
+          this._events = {};
+        if (type === "error") {
+          if (!this._events.error || isObject(this._events.error) && !this._events.error.length) {
+            er = arguments[1];
+            if (er instanceof Error) {
+              throw er;
+            } else {
+              var err = new Error('Uncaught, unspecified "error" event. (' + er + ")");
+              err.context = er;
+              throw err;
+            }
+          }
+        }
+        handler = this._events[type];
+        if (isUndefined(handler))
+          return false;
+        if (isFunction(handler)) {
+          switch (arguments.length) {
+            case 1:
+              handler.call(this);
+              break;
+            case 2:
+              handler.call(this, arguments[1]);
+              break;
+            case 3:
+              handler.call(this, arguments[1], arguments[2]);
+              break;
+            default:
+              args = Array.prototype.slice.call(arguments, 1);
+              handler.apply(this, args);
+          }
+        } else if (isObject(handler)) {
+          args = Array.prototype.slice.call(arguments, 1);
+          listeners = handler.slice();
+          len = listeners.length;
+          for (i = 0; i < len; i++)
+            listeners[i].apply(this, args);
+        }
+        return true;
+      };
+      EventEmitter.prototype.addListener = function(type, listener) {
+        var m;
+        if (!isFunction(listener))
+          throw TypeError("listener must be a function");
+        if (!this._events)
+          this._events = {};
+        if (this._events.newListener)
+          this.emit("newListener", type, isFunction(listener.listener) ? listener.listener : listener);
+        if (!this._events[type])
+          this._events[type] = listener;
+        else if (isObject(this._events[type]))
+          this._events[type].push(listener);
+        else
+          this._events[type] = [this._events[type], listener];
+        if (isObject(this._events[type]) && !this._events[type].warned) {
+          if (!isUndefined(this._maxListeners)) {
+            m = this._maxListeners;
+          } else {
+            m = EventEmitter.defaultMaxListeners;
+          }
+          if (m && m > 0 && this._events[type].length > m) {
+            this._events[type].warned = true;
+            console.error("(node) warning: possible EventEmitter memory leak detected. %d listeners added. Use emitter.setMaxListeners() to increase limit.", this._events[type].length);
+            if (typeof console.trace === "function") {
+              console.trace();
+            }
+          }
+        }
+        return this;
+      };
+      EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+      EventEmitter.prototype.once = function(type, listener) {
+        if (!isFunction(listener))
+          throw TypeError("listener must be a function");
+        var fired = false;
+        function g() {
+          this.removeListener(type, g);
+          if (!fired) {
+            fired = true;
+            listener.apply(this, arguments);
+          }
+        }
+        g.listener = listener;
+        this.on(type, g);
+        return this;
+      };
+      EventEmitter.prototype.removeListener = function(type, listener) {
+        var list, position, length, i;
+        if (!isFunction(listener))
+          throw TypeError("listener must be a function");
+        if (!this._events || !this._events[type])
+          return this;
+        list = this._events[type];
+        length = list.length;
+        position = -1;
+        if (list === listener || isFunction(list.listener) && list.listener === listener) {
+          delete this._events[type];
+          if (this._events.removeListener)
+            this.emit("removeListener", type, listener);
+        } else if (isObject(list)) {
+          for (i = length; i-- > 0; ) {
+            if (list[i] === listener || list[i].listener && list[i].listener === listener) {
+              position = i;
+              break;
+            }
+          }
+          if (position < 0)
+            return this;
+          if (list.length === 1) {
+            list.length = 0;
+            delete this._events[type];
+          } else {
+            list.splice(position, 1);
+          }
+          if (this._events.removeListener)
+            this.emit("removeListener", type, listener);
+        }
+        return this;
+      };
+      EventEmitter.prototype.removeAllListeners = function(type) {
+        var key, listeners;
+        if (!this._events)
+          return this;
+        if (!this._events.removeListener) {
+          if (arguments.length === 0)
+            this._events = {};
+          else if (this._events[type])
+            delete this._events[type];
+          return this;
+        }
+        if (arguments.length === 0) {
+          for (key in this._events) {
+            if (key === "removeListener")
+              continue;
+            this.removeAllListeners(key);
+          }
+          this.removeAllListeners("removeListener");
+          this._events = {};
+          return this;
+        }
+        listeners = this._events[type];
+        if (isFunction(listeners)) {
+          this.removeListener(type, listeners);
+        } else if (listeners) {
+          while (listeners.length)
+            this.removeListener(type, listeners[listeners.length - 1]);
+        }
+        delete this._events[type];
+        return this;
+      };
+      EventEmitter.prototype.listeners = function(type) {
+        var ret;
+        if (!this._events || !this._events[type])
+          ret = [];
+        else if (isFunction(this._events[type]))
+          ret = [this._events[type]];
+        else
+          ret = this._events[type].slice();
+        return ret;
+      };
+      EventEmitter.prototype.listenerCount = function(type) {
+        if (this._events) {
+          var evlistener = this._events[type];
+          if (isFunction(evlistener))
+            return 1;
+          else if (evlistener)
+            return evlistener.length;
+        }
+        return 0;
+      };
+      EventEmitter.listenerCount = function(emitter, type) {
+        return emitter.listenerCount(type);
+      };
+      function isFunction(arg) {
+        return typeof arg === "function";
+      }
+      function isNumber(arg) {
+        return typeof arg === "number";
+      }
+      function isObject(arg) {
+        return typeof arg === "object" && arg !== null;
+      }
+      function isUndefined(arg) {
+        return arg === void 0;
+      }
+    }
+  });
+
+  // node_modules/ts-ebml/lib/EBMLReader.js
+  var require_EBMLReader = __commonJS({
+    "node_modules/ts-ebml/lib/EBMLReader.js"(exports) {
+      "use strict";
+      var __extends = exports && exports.__extends || function() {
+        var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+          d.__proto__ = b;
+        } || function(d, b) {
+          for (var p in b)
+            if (b.hasOwnProperty(p))
+              d[p] = b[p];
+        };
+        return function(d, b) {
+          extendStatics(d, b);
+          function __() {
+            this.constructor = d;
+          }
+          d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+      }();
+      Object.defineProperty(exports, "__esModule", { value: true });
+      var events_1 = require_events2();
+      var tools = require_tools2();
+      var EBMLReader = function(_super) {
+        __extends(EBMLReader2, _super);
+        function EBMLReader2() {
+          var _this = _super.call(this) || this;
+          _this.logGroup = "";
+          _this.hasLoggingStarted = false;
+          _this.metadataloaded = false;
+          _this.chunks = [];
+          _this.stack = [];
+          _this.segmentOffset = 0;
+          _this.last2SimpleBlockVideoTrackTimecode = [0, 0];
+          _this.last2SimpleBlockAudioTrackTimecode = [0, 0];
+          _this.lastClusterTimecode = 0;
+          _this.lastClusterPosition = 0;
+          _this.timecodeScale = 1e6;
+          _this.metadataSize = 0;
+          _this.metadatas = [];
+          _this.cues = [];
+          _this.firstVideoBlockRead = false;
+          _this.firstAudioBlockRead = false;
+          _this.currentTrack = { TrackNumber: -1, TrackType: -1, DefaultDuration: null, CodecDelay: null };
+          _this.trackTypes = [];
+          _this.trackDefaultDuration = [];
+          _this.trackCodecDelay = [];
+          _this.trackInfo = { type: "nothing" };
+          _this.ended = false;
+          _this.logging = false;
+          _this.use_duration_every_simpleblock = false;
+          _this.use_webp = false;
+          _this.use_segment_info = true;
+          _this.drop_default_duration = true;
+          return _this;
+        }
+        EBMLReader2.prototype.stop = function() {
+          this.ended = true;
+          this.emit_segment_info();
+          while (this.stack.length) {
+            this.stack.pop();
+            if (this.logging) {
+              console.groupEnd();
+            }
+          }
+          if (this.logging && this.hasLoggingStarted && this.logGroup) {
+            console.groupEnd();
+          }
+        };
+        EBMLReader2.prototype.emit_segment_info = function() {
+          var data = this.chunks;
+          this.chunks = [];
+          if (!this.metadataloaded) {
+            this.metadataloaded = true;
+            this.metadatas = data;
+            var videoTrackNum = this.trackTypes.indexOf(1);
+            var audioTrackNum = this.trackTypes.indexOf(2);
+            this.trackInfo = videoTrackNum >= 0 && audioTrackNum >= 0 ? { type: "both", trackNumber: videoTrackNum } : videoTrackNum >= 0 ? { type: "video", trackNumber: videoTrackNum } : audioTrackNum >= 0 ? { type: "audio", trackNumber: audioTrackNum } : { type: "nothing" };
+            if (!this.use_segment_info) {
+              return;
+            }
+            this.emit("metadata", { data, metadataSize: this.metadataSize });
+          } else {
+            if (!this.use_segment_info) {
+              return;
+            }
+            var timecode = this.lastClusterTimecode;
+            var duration = this.duration;
+            var timecodeScale = this.timecodeScale;
+            this.emit("cluster", { timecode, data });
+            this.emit("duration", { timecodeScale, duration });
+          }
+        };
+        EBMLReader2.prototype.read = function(elm) {
+          var _this = this;
+          var drop = false;
+          if (this.ended) {
+            return;
+          }
+          if (elm.type === "m") {
+            if (elm.isEnd) {
+              this.stack.pop();
+            } else {
+              var parent_1 = this.stack[this.stack.length - 1];
+              if (parent_1 != null && parent_1.level >= elm.level) {
+                this.stack.pop();
+                if (this.logging) {
+                  console.groupEnd();
+                }
+                parent_1.dataEnd = elm.dataEnd;
+                parent_1.dataSize = elm.dataEnd - parent_1.dataStart;
+                parent_1.unknownSize = false;
+                var o = Object.assign({}, parent_1, { name: parent_1.name, type: parent_1.type, isEnd: true });
+                this.chunks.push(o);
+              }
+              this.stack.push(elm);
+            }
+          }
+          if (elm.type === "m" && elm.name == "Segment") {
+            if (this.segmentOffset != 0) {
+              console.warn("Multiple segments detected!");
+            }
+            this.segmentOffset = elm.dataStart;
+            this.emit("segment_offset", this.segmentOffset);
+          } else if (elm.type === "b" && elm.name === "SimpleBlock") {
+            var _a = tools.ebmlBlock(elm.data), timecode = _a.timecode, trackNumber = _a.trackNumber, frames_1 = _a.frames;
+            if (this.trackTypes[trackNumber] === 1) {
+              if (!this.firstVideoBlockRead) {
+                this.firstVideoBlockRead = true;
+                if (this.trackInfo.type === "both" || this.trackInfo.type === "video") {
+                  var CueTime = this.lastClusterTimecode + timecode;
+                  this.cues.push({ CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime });
+                  this.emit("cue_info", { CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime: this.lastClusterTimecode });
+                  this.emit("cue", { CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime });
+                }
+              }
+              this.last2SimpleBlockVideoTrackTimecode = [this.last2SimpleBlockVideoTrackTimecode[1], timecode];
+            } else if (this.trackTypes[trackNumber] === 2) {
+              if (!this.firstAudioBlockRead) {
+                this.firstAudioBlockRead = true;
+                if (this.trackInfo.type === "audio") {
+                  var CueTime = this.lastClusterTimecode + timecode;
+                  this.cues.push({ CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime });
+                  this.emit("cue_info", { CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime: this.lastClusterTimecode });
+                  this.emit("cue", { CueTrack: trackNumber, CueClusterPosition: this.lastClusterPosition, CueTime });
+                }
+              }
+              this.last2SimpleBlockAudioTrackTimecode = [this.last2SimpleBlockAudioTrackTimecode[1], timecode];
+            }
+            if (this.use_duration_every_simpleblock) {
+              this.emit("duration", { timecodeScale: this.timecodeScale, duration: this.duration });
+            }
+            if (this.use_webp) {
+              frames_1.forEach(function(frame) {
+                var startcode = frame.slice(3, 6).toString("hex");
+                if (startcode !== "9d012a") {
+                  return;
+                }
+                ;
+                var webpBuf = tools.VP8BitStreamToRiffWebPBuffer(frame);
+                var webp = new Blob([webpBuf], { type: "image/webp" });
+                var currentTime = _this.duration;
+                _this.emit("webp", { currentTime, webp });
+              });
+            }
+          } else if (elm.type === "m" && elm.name === "Cluster" && elm.isEnd === false) {
+            this.firstVideoBlockRead = false;
+            this.firstAudioBlockRead = false;
+            this.emit_segment_info();
+            this.emit("cluster_ptr", elm.tagStart);
+            this.lastClusterPosition = elm.tagStart;
+          } else if (elm.type === "u" && elm.name === "Timecode") {
+            this.lastClusterTimecode = elm.value;
+          } else if (elm.type === "u" && elm.name === "TimecodeScale") {
+            this.timecodeScale = elm.value;
+          } else if (elm.type === "m" && elm.name === "TrackEntry") {
+            if (elm.isEnd) {
+              this.trackTypes[this.currentTrack.TrackNumber] = this.currentTrack.TrackType;
+              this.trackDefaultDuration[this.currentTrack.TrackNumber] = this.currentTrack.DefaultDuration;
+              this.trackCodecDelay[this.currentTrack.TrackNumber] = this.currentTrack.CodecDelay;
+            } else {
+              this.currentTrack = { TrackNumber: -1, TrackType: -1, DefaultDuration: null, CodecDelay: null };
+            }
+          } else if (elm.type === "u" && elm.name === "TrackType") {
+            this.currentTrack.TrackType = elm.value;
+          } else if (elm.type === "u" && elm.name === "TrackNumber") {
+            this.currentTrack.TrackNumber = elm.value;
+          } else if (elm.type === "u" && elm.name === "CodecDelay") {
+            this.currentTrack.CodecDelay = elm.value;
+          } else if (elm.type === "u" && elm.name === "DefaultDuration") {
+            if (this.drop_default_duration) {
+              console.warn("DefaultDuration detected!, remove it");
+              drop = true;
+            } else {
+              this.currentTrack.DefaultDuration = elm.value;
+            }
+          } else if (elm.name === "unknown") {
+            console.warn(elm);
+          }
+          if (!this.metadataloaded && elm.dataEnd > 0) {
+            this.metadataSize = elm.dataEnd;
+          }
+          if (!drop) {
+            this.chunks.push(elm);
+          }
+          if (this.logging) {
+            this.put(elm);
+          }
+        };
+        Object.defineProperty(EBMLReader2.prototype, "duration", {
+          get: function() {
+            if (this.trackInfo.type === "nothing") {
+              console.warn("no video, no audio track");
+              return 0;
+            }
+            var defaultDuration = 0;
+            var codecDelay = 0;
+            var lastTimecode = 0;
+            var _defaultDuration = this.trackDefaultDuration[this.trackInfo.trackNumber];
+            if (typeof _defaultDuration === "number") {
+              defaultDuration = _defaultDuration;
+            } else {
+              if (this.trackInfo.type === "both") {
+                if (this.last2SimpleBlockAudioTrackTimecode[1] > this.last2SimpleBlockVideoTrackTimecode[1]) {
+                  defaultDuration = (this.last2SimpleBlockAudioTrackTimecode[1] - this.last2SimpleBlockAudioTrackTimecode[0]) * this.timecodeScale;
+                  var delay = this.trackCodecDelay[this.trackTypes.indexOf(2)];
+                  if (typeof delay === "number") {
+                    codecDelay = delay;
+                  }
+                  lastTimecode = this.last2SimpleBlockAudioTrackTimecode[1];
+                } else {
+                  defaultDuration = (this.last2SimpleBlockVideoTrackTimecode[1] - this.last2SimpleBlockVideoTrackTimecode[0]) * this.timecodeScale;
+                  var delay = this.trackCodecDelay[this.trackTypes.indexOf(1)];
+                  if (typeof delay === "number") {
+                    codecDelay = delay;
+                  }
+                  lastTimecode = this.last2SimpleBlockVideoTrackTimecode[1];
+                }
+              } else if (this.trackInfo.type === "video") {
+                defaultDuration = (this.last2SimpleBlockVideoTrackTimecode[1] - this.last2SimpleBlockVideoTrackTimecode[0]) * this.timecodeScale;
+                var delay = this.trackCodecDelay[this.trackInfo.trackNumber];
+                if (typeof delay === "number") {
+                  codecDelay = delay;
+                }
+                lastTimecode = this.last2SimpleBlockVideoTrackTimecode[1];
+              } else if (this.trackInfo.type === "audio") {
+                defaultDuration = (this.last2SimpleBlockAudioTrackTimecode[1] - this.last2SimpleBlockAudioTrackTimecode[0]) * this.timecodeScale;
+                var delay = this.trackCodecDelay[this.trackInfo.trackNumber];
+                if (typeof delay === "number") {
+                  codecDelay = delay;
+                }
+                lastTimecode = this.last2SimpleBlockAudioTrackTimecode[1];
+              }
+            }
+            var duration_nanosec = (this.lastClusterTimecode + lastTimecode) * this.timecodeScale + defaultDuration - codecDelay;
+            var duration = duration_nanosec / this.timecodeScale;
+            return Math.floor(duration);
+          },
+          enumerable: true,
+          configurable: true
+        });
+        EBMLReader2.prototype.addListener = function(event, listener) {
+          return _super.prototype.addListener.call(this, event, listener);
+        };
+        EBMLReader2.prototype.put = function(elm) {
+          if (!this.hasLoggingStarted) {
+            this.hasLoggingStarted = true;
+            if (this.logging && this.logGroup) {
+              console.groupCollapsed(this.logGroup);
+            }
+          }
+          if (elm.type === "m") {
+            if (elm.isEnd) {
+              console.groupEnd();
+            } else {
+              console.group(elm.name + ":" + elm.tagStart);
+            }
+          } else if (elm.type === "b") {
+            console.log(elm.name, elm.type);
+          } else {
+            console.log(elm.name, elm.tagStart, elm.type, elm.value);
+          }
+        };
+        return EBMLReader2;
+      }(events_1.EventEmitter);
+      exports.default = EBMLReader;
+    }
+  });
+
+  // node_modules/ts-ebml/package.json
+  var require_package = __commonJS({
+    "node_modules/ts-ebml/package.json"(exports, module) {
+      module.exports = {
+        name: "ts-ebml",
+        version: "2.0.2",
+        description: "ebml decoder and encoder",
+        scripts: {
+          setup: "npm install -g http-server;",
+          init: "npm run update; npm run mkdir; npm run build",
+          update: "npm run reset; npm update",
+          reset: "rm -rf node_modules",
+          mkdir: "mkdir lib dist 2>/dev/null",
+          clean: "rm -rf lib/* dist/* test/*.js; mkdir -p dist",
+          build: "npm run clean   && tsc    -p .; npm run browserify",
+          start: "http-server . -s & tsc -w -p .& watchify lib/example_seekable.js -o test/example_seekable.js",
+          stop: "killall -- node */tsc -w -p",
+          browserify: "browserify lib/index.js --standalone EBML -o dist/EBML.js",
+          watchify: "watchify lib/index.js --standalone EBML -o dist/EBMl.js -v",
+          test: "tsc; espower lib/test.js > lib/test.tmp; mv -f lib/test.tmp lib/test.js; browserify lib/test.js -o test/test.js",
+          example: "tsc; browserify lib/example_seekable.js -o test/example_seekable.js",
+          examples: "tsc; for file in `find lib -name 'example_*.js' -type f -printf '%f\\n'`; do browserify lib/$file -o test/$file; done",
+          examples_bsd: "tsc; for file in `find lib -name 'example_*.js' -type f -print`; do browserify lib/$(basename $file) -o test/$(basename $file); done",
+          check: "tsc -w --noEmit -p ./",
+          lint: "tslint -c ./tslint.json --project ./tsconfig.json --type-check",
+          doc: "typedoc --mode modules --out doc --disableOutputCheck"
+        },
+        repository: {
+          type: "git",
+          url: "git+https://github.com/legokichi/ts-ebml.git"
+        },
+        keywords: [
+          "ebml",
+          "webm",
+          "mkv",
+          "matrosika",
+          "webp"
+        ],
+        author: "legokichi duckscallion",
+        license: "MIT",
+        bugs: {
+          url: "https://github.com/legokichi/ts-ebml/issues"
+        },
+        homepage: "https://github.com/legokichi/ts-ebml#readme",
+        dependencies: {
+          buffer: "^5.0.7",
+          commander: "^2.11.0",
+          ebml: "^2.2.1",
+          "ebml-block": "^1.1.0",
+          events: "^1.1.1",
+          "int64-buffer": "^0.1.9",
+          matroska: "^2.2.3"
+        },
+        devDependencies: {
+          "@types/commander": "^2.9.1",
+          "@types/qunit": "^2.0.31",
+          browserify: "^13.1.0",
+          empower: "^1.2.3",
+          "espower-cli": "^1.1.0",
+          "power-assert": "^1.4.4",
+          "power-assert-formatter": "^1.4.1",
+          "qunit-tap": "^1.5.1",
+          qunitjs: "^2.4.0",
+          tslint: "^3.15.1",
+          typedoc: "^0.5.3",
+          typescript: "^2.4.2",
+          watchify: "^3.7.0"
+        },
+        bin: "./lib/cli.js",
+        main: "./lib/index.js",
+        typings: "./lib/index.d.ts"
+      };
+    }
+  });
+
+  // node_modules/ts-ebml/lib/index.js
+  var require_lib2 = __commonJS({
+    "node_modules/ts-ebml/lib/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+      var EBMLDecoder_1 = require_EBMLDecoder();
+      exports.Decoder = EBMLDecoder_1.default;
+      var EBMLEncoder_1 = require_EBMLEncoder();
+      exports.Encoder = EBMLEncoder_1.default;
+      var EBMLReader_1 = require_EBMLReader();
+      exports.Reader = EBMLReader_1.default;
+      var tools = require_tools2();
+      exports.tools = tools;
+      var version = require_package().version;
+      exports.version = version;
+    }
+  });
 
   // node_modules/file-type/browser.js
   var import_node_buffer4 = __toESM(require_buffer(), 1);
@@ -5585,6 +10862,7 @@
     "amr",
     "pdf",
     "epub",
+    "elf",
     "exe",
     "swf",
     "rtf",
@@ -5730,6 +11008,7 @@
     "audio/wavpack",
     "audio/amr",
     "application/pdf",
+    "application/x-elf",
     "application/x-msdownload",
     "application/x-shockwave-flash",
     "application/rtf",
@@ -5909,6 +11188,12 @@
           mime: "application/x-compress"
         };
       }
+      if (this.check([71, 73, 70])) {
+        return {
+          ext: "gif",
+          mime: "image/gif"
+        };
+      }
       if (this.check([255, 216, 255])) {
         return {
           ext: "jpg",
@@ -5955,12 +11240,6 @@
         return {
           ext: "swf",
           mime: "application/x-shockwave-flash"
-        };
-      }
-      if (this.check([71, 73, 70])) {
-        return {
-          ext: "gif",
-          mime: "image/gif"
         };
       }
       if (this.checkString("FLIF")) {
@@ -6155,6 +11434,7 @@
         const brandMajor = this.buffer.toString("binary", 8, 12).replace("\0", " ").trim();
         switch (brandMajor) {
           case "avif":
+          case "avis":
             return { ext: "avif", mime: "image/avif" };
           case "mif1":
             return { ext: "heic", mime: "image/heif" };
@@ -6403,6 +11683,12 @@
         return {
           ext: "zst",
           mime: "application/zstd"
+        };
+      }
+      if (this.check([127, 69, 76, 70])) {
+        return {
+          ext: "elf",
+          mime: "application/x-elf"
         };
       }
       if (this.check([79, 84, 84, 79, 0])) {
@@ -6938,7 +12224,7 @@
   var import_crc_32 = __toESM(require_crc32());
   var import_buffer = __toESM(require_buffer());
   var concatAB = (...bufs) => {
-    let sz = bufs.map((e) => e.byteLength).reduce((a, b) => a + b);
+    const sz = bufs.map((e) => e.byteLength).reduce((a, b) => a + b);
     const ret = import_buffer.Buffer.alloc(sz);
     let ptr = 0;
     for (const b of bufs) {
@@ -6956,7 +12242,7 @@
     }
     async catchup() {
       while (this.repr.byteLength < this.req) {
-        let chunk = await this.reader.read();
+        const chunk = await this.reader.read();
         if (chunk.done)
           throw new Error("Unexpected EOF");
         this.repr = concatAB(this.repr, import_buffer.Buffer.from(chunk.value));
@@ -6966,8 +12252,8 @@
       while (true) {
         this.req += 8;
         await this.catchup();
-        let length = this.repr.readUInt32BE(this.ptr);
-        let name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
+        const length = this.repr.readUInt32BE(this.ptr);
+        const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
         this.ptr += 4;
         this.req += length + 4;
         await this.catchup();
@@ -6986,7 +12272,7 @@
       this.writer.write(import_buffer.Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
     }
     async insertchunk(chunk) {
-      let b = import_buffer.Buffer.alloc(4);
+      const b = import_buffer.Buffer.alloc(4);
       b.writeInt32BE(chunk[1].length - 4, 0);
       await this.writer.write(b);
       await this.writer.write(chunk[1]);
@@ -6998,19 +12284,155 @@
       await this.writer.close();
     }
   };
+  var CUM0 = import_buffer.Buffer.from("CUM\x000");
+  var extract = async (reader) => {
+    let magic = false;
+    const sneed = new PNGDecoder(reader);
+    try {
+      let lastIDAT = null;
+      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
+        switch (name) {
+          case "tEXt":
+            if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
+              magic = true;
+            break;
+          case "IDAT":
+            if (magic) {
+              lastIDAT = chunk;
+              break;
+            }
+          case "IEND":
+            if (!magic)
+              return;
+          default:
+            break;
+        }
+      }
+      if (lastIDAT) {
+        let data = lastIDAT.slice(4);
+        const fnsize = data.readUInt32LE(0);
+        const fn = data.slice(4, 4 + fnsize).toString();
+        data = data.slice(4 + fnsize);
+        return { filename: fn, data };
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      reader.releaseLock();
+    }
+  };
+  var buildChunk = (tag, data) => {
+    const ret = import_buffer.Buffer.alloc(data.byteLength + 4);
+    ret.write(tag.substr(0, 4), 0);
+    data.copy(ret, 4);
+    return ret;
+  };
+  var BufferWriteStream = () => {
+    let b = import_buffer.Buffer.from([]);
+    const ret = new WritableStream({
+      write(chunk) {
+        b = concatAB(b, chunk);
+      }
+    });
+    return [ret, () => b];
+  };
+  var inject = async (container, inj) => {
+    const [writestream, extract3] = BufferWriteStream();
+    const encoder = new PNGEncoder(writestream);
+    const decoder = new PNGDecoder(container.stream().getReader());
+    let magic = false;
+    for await (const [name, chunk, crc, offset] of decoder.chunks()) {
+      if (magic && name != "IDAT")
+        break;
+      if (!magic && name == "IDAT") {
+        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
+        magic = true;
+      }
+      await encoder.insertchunk([name, chunk, crc, offset]);
+    }
+    const injb = import_buffer.Buffer.alloc(4 + inj.name.length + inj.size);
+    injb.writeInt32LE(inj.name.length, 0);
+    injb.write(inj.name, 4);
+    import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
+    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer.Buffer.from([])), 0, 0]);
+    return extract3();
+  };
+
+  // src/webm.ts
+  var import_buffer2 = __toESM(require_buffer());
+  var ebml = __toESM(require_lib2());
+  var embed = (webm, data) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+    const enc = new ebml.Encoder();
+    const embed2 = chunks.findIndex((e) => e.name == "Targets" && e.type == "m" && e.isEnd);
+    if (embed2 == -1)
+      throw "Cannot embed, no tags section...";
+    chunks.splice(embed2 + 1, 0, ...[
+      {
+        type: "m",
+        isEnd: false,
+        name: "SimpleTag",
+        data: import_buffer2.Buffer.from("")
+      },
+      {
+        type: "8",
+        isEnd: false,
+        name: "TagName",
+        data: import_buffer2.Buffer.from("COOM")
+      },
+      {
+        type: "8",
+        isEnd: false,
+        name: "TagBinary",
+        data
+      },
+      {
+        type: "m",
+        isEnd: true,
+        name: "SimpleTag",
+        data: import_buffer2.Buffer.from("")
+      }
+    ]);
+    return import_buffer2.Buffer.from(enc.encode(chunks.filter((e) => e.name != "unknown")));
+  };
+  var extractBuff = (webm) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
+    const cl = chunks.find((e) => e.name == "Cluster");
+    if (cl && embed2 == -1)
+      return;
+    if (embed2 == -1)
+      return;
+    const chk = chunks[embed2 + 1];
+    if (chk.type == "b" && chk.name == "TagBinary")
+      return chk.data;
+  };
+  var extract2 = async (reader) => {
+    let total = import_buffer2.Buffer.from("");
+    let chunk;
+    do {
+      chunk = await reader.read();
+      if (chunk.value)
+        total = concatAB(total, import_buffer2.Buffer.from(chunk.value));
+    } while (!chunk.done);
+    const data = extractBuff(total);
+    if (!data)
+      return;
+    return { filename: "embedded", data };
+  };
+  var inject2 = async (container, inj) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
 
   // src/main.ts
-  var IDAT = import_buffer2.Buffer.from("IDAT");
-  var IEND = import_buffer2.Buffer.from("IEND");
-  var tEXt = import_buffer2.Buffer.from("tEXt");
-  var CUM0 = import_buffer2.Buffer.from("CUM\x000");
   var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
   function GM_fetch(...[url, opt]) {
     function blobTo(to, blob) {
       if (to == "arrayBuffer" && blob.arrayBuffer)
         return blob.arrayBuffer();
       return new Promise((resolve, reject) => {
-        var fileReader = new FileReader();
+        const fileReader = new FileReader();
         fileReader.onload = function(event) {
           if (!event)
             return;
@@ -7030,13 +12452,13 @@
       });
     }
     return new Promise((resolve, reject) => {
-      let gmopt = {
+      const gmopt = {
         url: url.toString(),
         data: opt?.body?.toString(),
         responseType: "blob",
         method: "GET",
         onload: (resp) => {
-          let blob = resp.response;
+          const blob = resp.response;
           const ref = resp;
           ref.blob = () => Promise.resolve(blob);
           ref.arrayBuffer = () => blobTo("arrayBuffer", blob);
@@ -7051,70 +12473,38 @@
       xmlhttprequest(gmopt);
     });
   }
-  var extractEmbedded = async (reader) => {
-    let magic = false;
-    let sneed = new PNGDecoder(reader);
-    try {
-      let lastIDAT = null;
-      for await (let [name, chunk, crc, offset] of sneed.chunks()) {
-        switch (name) {
-          case "tEXt":
-            if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
-              magic = true;
-            break;
-          case "IDAT":
-            if (magic) {
-              lastIDAT = chunk;
-              break;
-            }
-          case "IEND":
-            if (!magic)
-              throw "Didn't find tExt Chunk";
-          default:
-            break;
-        }
-      }
-      if (lastIDAT) {
-        let data = lastIDAT.slice(4);
-        let fnsize = data.readUInt32LE(0);
-        let fn = data.slice(4, 4 + fnsize).toString();
-        data = data.slice(4 + fnsize);
-        return { filename: fn, data };
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      reader.releaseLock();
-    }
-  };
+  var processors = [
+    [/\.png$/, extract, inject],
+    [/\.webm$/, extract2, inject2]
+  ];
   var processImage = async (src) => {
-    if (!src.match(/\.png$/))
+    const proc = processors.find((e) => src.match(e[0]));
+    if (!proc)
       return;
-    let resp = await GM_fetch(src);
-    let reader = (await resp.blob()).stream();
+    const resp = await GM_fetch(src);
+    const reader = (await resp.blob()).stream();
     if (!reader)
       return;
-    return await extractEmbedded(reader.getReader());
+    return await proc[1](reader.getReader());
   };
   var processPost = async (post) => {
     if (post.hasAttribute("data-processed"))
       return;
     post.setAttribute("data-processed", "true");
-    let thumb = post.querySelector(".fileThumb");
+    const thumb = post.querySelector(".fileThumb");
     if (!thumb)
       return;
-    console.log("Processing post", post);
-    let res = await processImage(thumb.href);
+    const res = await processImage(thumb.href);
     if (!res)
       return;
-    let replyBox = post.querySelector(".post");
+    const replyBox = post.querySelector(".post");
     replyBox?.classList.toggle("hasembed");
-    let fi = post.querySelector(".file-info");
-    let cf = `
+    const fi = post.querySelector(".file-info");
+    const cf = `
     <a class="fa fa-eye">
     </a>`;
-    let a = document.createRange().createContextualFragment(cf).children[0];
-    let type = await fileTypeFromBuffer(res.data);
+    const a = document.createRange().createContextualFragment(cf).children[0];
+    const type = await fileTypeFromBuffer(res.data);
     let cont;
     let w, h;
     if (type?.mime.startsWith("image")) {
@@ -7135,16 +12525,16 @@
       w = cont.width;
       h = cont.height;
     }
-    let contract = () => {
+    const contract = () => {
     };
-    let expand = () => {
+    const expand = () => {
       cont.style.width = `${w}px`;
       cont.style.height = `${h}px`;
       cont.style.maxWidth = "unset";
       cont.style.maxHeight = "unset";
     };
-    let imgcont = document.createElement("div");
-    let p = thumb.parentElement;
+    const imgcont = document.createElement("div");
+    const p = thumb.parentElement;
     p.removeChild(thumb);
     imgcont.appendChild(thumb);
     p.appendChild(imgcont);
@@ -7171,51 +12561,14 @@
     };
     fi.children[1].insertAdjacentElement("afterend", a);
   };
-  var buildChunk = (tag, data) => {
-    let ret = import_buffer2.Buffer.alloc(data.byteLength + 4);
-    ret.write(tag.substr(0, 4), 0);
-    data.copy(ret, 4);
-    return ret;
-  };
-  var BufferWriteStream = () => {
-    let b = import_buffer2.Buffer.from([]);
-    let ret = new WritableStream({
-      write(chunk) {
-        b = concatAB(b, chunk);
-      }
-    });
-    return [ret, () => b];
-  };
-  var buildInjection = async (container, inj) => {
-    let [writestream, extract] = BufferWriteStream();
-    let encoder = new PNGEncoder(writestream);
-    let decoder = new PNGDecoder(container.stream().getReader());
-    let magic = false;
-    for await (let [name, chunk, crc, offset] of decoder.chunks()) {
-      if (magic && name != "IDAT")
-        break;
-      if (!magic && name == "IDAT") {
-        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
-        magic = true;
-      }
-      await encoder.insertchunk([name, chunk, crc, offset]);
-    }
-    let injb = import_buffer2.Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32LE(inj.name.length, 0);
-    injb.write(inj.name, 4);
-    import_buffer2.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
-    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer2.Buffer.from([])), 0, 0]);
-    return { file: new Blob([extract()]), name: container.name };
-  };
   var startup = async () => {
     await Promise.all([...document.querySelectorAll(".postContainer")].map((e) => processPost(e)));
     document.addEventListener("PostsInserted", async (e) => {
-      let threadelement = e.target;
-      let posts = [...threadelement.querySelectorAll("postContainer")].filter((e2) => e2.hasAttribute("data-processed"));
+      const threadelement = e.target;
+      const posts = [...threadelement.querySelectorAll("postContainer")].filter((e2) => e2.hasAttribute("data-processed"));
       posts.map((e2) => processPost(e2));
     });
-    let getSelectedFile = () => {
+    const getSelectedFile = () => {
       return new Promise((res) => {
         document.addEventListener("QRFile", (e) => res(e.detail), { once: true });
         document.dispatchEvent(new CustomEvent("QRGetFile"));
@@ -7226,23 +12579,29 @@
       if (injected)
         return;
       injected = true;
-      let target = e.target;
-      let bts = target.querySelector("#qr-filename-container");
-      let i = document.createElement("i");
+      const target = e.target;
+      const bts = target.querySelector("#qr-filename-container");
+      const i = document.createElement("i");
       i.className = "fa fa-magnet";
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       a.appendChild(i);
       a.title = "Embed File (Select a file before...)";
       bts?.appendChild(a);
       a.onclick = async (e2) => {
-        let file = await getSelectedFile();
+        const file = await getSelectedFile();
         if (!file)
           return;
-        let input = document.createElement("input");
+        const input = document.createElement("input");
         input.setAttribute("type", "file");
         input.onchange = async (ev) => {
-          if (input.files)
-            document.dispatchEvent(new CustomEvent("QRSetFile", { detail: await buildInjection(file, input.files[0]) }));
+          if (input.files) {
+            const proc = processors.find((e3) => file.name.match(e3[0]));
+            if (!proc)
+              return;
+            document.dispatchEvent(new CustomEvent("QRSetFile", {
+              detail: await proc[2](file, input.files[0])
+            }));
+          }
         };
         input.click();
       };
