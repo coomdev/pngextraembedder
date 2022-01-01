@@ -12627,19 +12627,29 @@
       cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
       cont = document.createElement("video");
+    } else if (type?.mime.startsWith("audio")) {
+      cont = document.createElement("audio");
     } else
       return;
-    cont.src = URL.createObjectURL(new Blob([res.data]));
+    cont.src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
     await new Promise((res2) => {
-      cont.onload = res2;
+      if (cont instanceof HTMLImageElement)
+        cont.onload = res2;
+      else if (cont instanceof HTMLVideoElement)
+        cont.onloadedmetadata = res2;
+      else if (cont instanceof HTMLAudioElement)
+        cont.onloadedmetadata = res2;
     });
     if (cont instanceof HTMLImageElement) {
       w = cont.naturalWidth;
       h = cont.naturalHeight;
     }
     if (cont instanceof HTMLVideoElement) {
-      w = cont.width;
-      h = cont.height;
+      w = cont.videoWidth;
+      h = cont.videoHeight;
+    }
+    if (cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement) {
+      cont.controls = true;
     }
     const contract = () => {
     };
@@ -12716,7 +12726,7 @@
               return;
             const buff = await proc[2](file, input.files[0]);
             document.dispatchEvent(new CustomEvent("QRSetFile", {
-              detail: { file: new Blob([buff]), name: input.files[0].name }
+              detail: { file: new Blob([buff]), name: file.name }
             }));
           }
         };
