@@ -12627,8 +12627,12 @@
       cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
       cont = document.createElement("video");
+      cont.autoplay = true;
+      cont.loop = true;
+      cont.pause();
     } else if (type?.mime.startsWith("audio")) {
       cont = document.createElement("audio");
+      cont.autoplay = true;
     } else
       return;
     cont.src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
@@ -12679,8 +12683,14 @@
     a.onclick = () => {
       visible = !visible;
       if (visible) {
+        if (cont instanceof HTMLVideoElement) {
+          cont.play();
+        }
         imgcont.appendChild(cont);
       } else {
+        if (cont instanceof HTMLVideoElement) {
+          cont.pause();
+        }
         imgcont.removeChild(cont);
       }
       a.classList.toggle("disabled");
@@ -12724,7 +12734,7 @@
             try {
               const proc = processors.find((e3) => file.name.match(e3[0]));
               if (!proc)
-                throw new Error("Filetype not supported");
+                throw new Error("Container filetype not supported");
               const buff = await proc[2](file, input.files[0]);
               document.dispatchEvent(new CustomEvent("QRSetFile", {
                 detail: { file: new Blob([buff], { type }), name: file.name }
