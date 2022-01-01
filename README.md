@@ -1,7 +1,7 @@
 PNG Extra Embedder (PEE)
 ========================
 
-Can embed any file in a PNG and upload it through 4chanX.
+Can embed any file in a PNG/WebM and upload it through 4chanX.
 Requires 4chanX and violentmonkey.
 
 How to Build
@@ -48,3 +48,10 @@ The format used by Zip anon won't be supported because:
 - it isn't extensible (if change were to the storage format, an extension update wouldn't be backcompatible)
 - requires parsing the whole file to know if it has an embedded file
 - and includes a private chunk type that is functionally defective (stores the length of the last IDAT chunk as a mean to identify it, instead of assooming it's simply the last one)
+
+Bugs
+====
+
+- When embedding a file, 4ChanX complains about an unsupported format, but the file can still be posted just fine
+- Cannot expand a file that was embedded in a post that was inlined.
+- more to come
