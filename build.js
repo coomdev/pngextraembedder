@@ -8,7 +8,8 @@ const extheader = `// ==UserScript==
 // @version      0.1
 // @description  uhh
 // @author       You
-// @match        https://boards.4channel.org/g/thread/*
+// @match        https://boards.4channel.org/*/thread/*
+// @match        https://boards.4chan.org/*/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
