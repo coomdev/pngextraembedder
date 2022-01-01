@@ -201,6 +201,7 @@ const startup = async () => {
                 return;
             const input = document.createElement('input') as HTMLInputElement;
             input.setAttribute("type", "file");
+            const type = file.type;
             input.onchange = (async ev => {
                 if (input.files) {
                     const proc = processors.find(e => file.name.match(e[0]));
@@ -208,7 +209,15 @@ const startup = async () => {
                         return;
                     const buff = await proc[2](file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
-                        detail: { file: new Blob([buff]), name: file.name }
+                        //detail: { file: new Blob([buff]), name: file.name, type: file.type }
+                        detail: { file: new Blob([buff], { type }), name: file.name }
+                    }));
+                    document.dispatchEvent(new CustomEvent("CreateNotification", {
+                        detail: {
+                            type: 'success',
+                            content: 'File successfully embedded!',
+                            lifetime: 3
+                        }
                     }));
                 }
             });

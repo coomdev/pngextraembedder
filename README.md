@@ -52,6 +52,5 @@ The format used by Zip anon won't be supported because:
 Bugs
 ====
 
-- When embedding a file, 4ChanX complains about an unsupported format, but the file can still be posted just fine
 - Cannot expand a file that was embedded in a post that was inlined.
 - more to come
