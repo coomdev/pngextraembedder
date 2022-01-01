@@ -198,7 +198,7 @@ const startup = async () => {
                         return;
                     const buff = await proc[2](file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
-                        detail: { file: new Blob([buff]), name: input.files[0].name }
+                        detail: { file: new Blob([buff]), name: file.name }
                     }));
                 }
             });
