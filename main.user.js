@@ -12700,7 +12700,6 @@
       });
     };
     let injected = false;
-    debugger;
     document.addEventListener("QRDialogCreation", (e) => {
       if (injected)
         return;
@@ -12719,15 +12718,34 @@
           return;
         const input = document.createElement("input");
         input.setAttribute("type", "file");
+        const type = file.type;
         input.onchange = async (ev) => {
           if (input.files) {
-            const proc = processors.find((e3) => file.name.match(e3[0]));
-            if (!proc)
-              return;
-            const buff = await proc[2](file, input.files[0]);
-            document.dispatchEvent(new CustomEvent("QRSetFile", {
-              detail: { file: new Blob([buff]), name: file.name }
-            }));
+            try {
+              const proc = processors.find((e3) => file.name.match(e3[0]));
+              if (!proc)
+                throw new Error("Filetype not supported");
+              const buff = await proc[2](file, input.files[0]);
+              document.dispatchEvent(new CustomEvent("QRSetFile", {
+                detail: { file: new Blob([buff], { type }), name: file.name }
+              }));
+              document.dispatchEvent(new CustomEvent("CreateNotification", {
+                detail: {
+                  type: "success",
+                  content: "File successfully embedded!",
+                  lifetime: 3
+                }
+              }));
+            } catch (err) {
+              const e3 = err;
+              document.dispatchEvent(new CustomEvent("CreateNotification", {
+                detail: {
+                  type: "error",
+                  content: "Couldn't embed file: " + e3.message,
+                  lifetime: 3
+                }
+              }));
+            }
           }
         };
         input.click();
