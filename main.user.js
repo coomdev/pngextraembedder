@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         PNGFileEmbed
-// @namespace    https://tampermonkey.net/
-// @version      0.1
+// @name         PNGExtraEmbed
+// @namespace    https://coom.tech/
+// @version      0.36
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*/thread/*
 // @match        https://boards.4chan.org/*/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
+// @updateURL    https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
 // @run-at       document-start

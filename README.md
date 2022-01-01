@@ -53,4 +53,5 @@ Bugs
 ====
 
 - Cannot expand a file that was embedded in a post that was inlined.
+- fails to find files in new posts after a thread update
 - more to come
