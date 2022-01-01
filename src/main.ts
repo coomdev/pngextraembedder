@@ -87,19 +87,26 @@ const processPost = async (post: HTMLDivElement) => {
     </a>`;
     const a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
     const type = await fileTypeFromBuffer(res.data);
-    let cont: HTMLImageElement | HTMLVideoElement;
+    let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement;
     let w: number, h: number;
     if (type?.mime.startsWith("image")) {
         cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
         cont = document.createElement("video");
+    } else if (type?.mime.startsWith("audio")) {
+        cont = document.createElement("audio");
     } else
         return; // TODO: handle new file types??? Or direct "download"?
 
-    cont.src = URL.createObjectURL(new Blob([res.data]));
+    cont.src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
 
     await new Promise(res => {
-        cont.onload = res;
+        if (cont instanceof HTMLImageElement)
+            cont.onload = res;
+        else if (cont instanceof HTMLVideoElement)
+            cont.onloadedmetadata = res;
+        else if (cont instanceof HTMLAudioElement)
+            cont.onloadedmetadata = res;
     });
 
     if (cont instanceof HTMLImageElement) {
@@ -108,8 +115,12 @@ const processPost = async (post: HTMLDivElement) => {
     }
 
     if (cont instanceof HTMLVideoElement) {
-        w = cont.width;
-        h = cont.height;
+        w = cont.videoWidth;
+        h = cont.videoHeight;
+    }
+
+    if (cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement) {
+        cont.controls = true;
     }
 
     const contract = () => {
@@ -172,7 +183,6 @@ const startup = async () => {
     };
 
     let injected = false;
-    debugger;
     document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
         if (injected)
             return;
