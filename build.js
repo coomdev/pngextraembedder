@@ -10,13 +10,13 @@ const extheader = `// ==UserScript==
 // @author       You
 // @match        https://boards.4channel.org/g/thread/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
+// @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
 // ==/UserScript==
-
 `;
 
 (async () => {
