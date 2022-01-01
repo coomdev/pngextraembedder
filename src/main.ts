@@ -137,6 +137,8 @@ let processPost = async (post: HTMLDivElement) => {
     let res = await processImage(thumb.href);
     if (!res)
         return;
+    let replyBox = post.querySelector('.post');
+    replyBox?.classList.toggle('hasembed');
     // add buttons
     let fi = post.querySelector(".file-info")!;
     let cf = `
@@ -310,6 +312,9 @@ customStyles.appendChild(document.createTextNode(
     max-height:125px;
     cursor: pointer;
     
+}
+.hasembed {
+    border-right: 3px dashed deeppink !important;
 }
 `
 ));

@@ -7106,6 +7106,8 @@
     let res = await processImage(thumb.href);
     if (!res)
       return;
+    let replyBox = post.querySelector(".post");
+    replyBox?.classList.toggle("hasembed");
     let fi = post.querySelector(".file-info");
     let cf = `
     <a class="fa fa-eye">
@@ -7255,6 +7257,9 @@
     max-height:125px;
     cursor: pointer;
     
+}
+.hasembed {
+    border-right: 3px dashed deeppink !important;
 }
 `));
   document.documentElement.insertBefore(customStyles, null);
