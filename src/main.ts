@@ -93,8 +93,12 @@ const processPost = async (post: HTMLDivElement) => {
         cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
         cont = document.createElement("video");
+        cont.autoplay = true;
+        cont.loop = true;
+        cont.pause();
     } else if (type?.mime.startsWith("audio")) {
         cont = document.createElement("audio");
+        cont.autoplay = true;
     } else
         return; // TODO: handle new file types??? Or direct "download"?
 
@@ -156,8 +160,14 @@ const processPost = async (post: HTMLDivElement) => {
     a.onclick = () => {
         visible = !visible;
         if (visible) {
+            if (cont instanceof HTMLVideoElement) {
+                cont.play();
+            }
             imgcont.appendChild(cont);
         } else {
+            if (cont instanceof HTMLVideoElement) {
+                cont.pause();
+            }
             imgcont.removeChild(cont);
         }
         a.classList.toggle("disabled");
@@ -204,21 +214,32 @@ const startup = async () => {
             const type = file.type;
             input.onchange = (async ev => {
                 if (input.files) {
-                    const proc = processors.find(e => file.name.match(e[0]));
-                    if (!proc)
-                        return;
-                    const buff = await proc[2](file, input.files[0]);
-                    document.dispatchEvent(new CustomEvent('QRSetFile', {
-                        //detail: { file: new Blob([buff]), name: file.name, type: file.type }
-                        detail: { file: new Blob([buff], { type }), name: file.name }
-                    }));
-                    document.dispatchEvent(new CustomEvent("CreateNotification", {
-                        detail: {
-                            type: 'success',
-                            content: 'File successfully embedded!',
-                            lifetime: 3
-                        }
-                    }));
+                    try {
+                        const proc = processors.find(e => file.name.match(e[0]));
+                        if (!proc)
+                            throw new Error("Container filetype not supported");
+                        const buff = await proc[2](file, input.files[0]);
+                        document.dispatchEvent(new CustomEvent('QRSetFile', {
+                            //detail: { file: new Blob([buff]), name: file.name, type: file.type }
+                            detail: { file: new Blob([buff], { type }), name: file.name }
+                        }));
+                        document.dispatchEvent(new CustomEvent("CreateNotification", {
+                            detail: {
+                                type: 'success',
+                                content: 'File successfully embedded!',
+                                lifetime: 3
+                            }
+                        }));
+                    } catch (err) {
+                        const e = err as Error;
+                        document.dispatchEvent(new CustomEvent("CreateNotification", {
+                            detail: {
+                                type: 'error',
+                                content: "Couldn't embed file: " + e.message,
+                                lifetime: 3
+                            }
+                        }));
+                    }
                 }
             });
             input.click();
