@@ -13,6 +13,7 @@ const extheader = `// ==UserScript==
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
+// @grant        GM.xmlHttpRequest
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
