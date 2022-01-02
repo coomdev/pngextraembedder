@@ -7,6 +7,30 @@ type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
 const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (GM ? GM.xmlHttpRequest : GM_xmlhttpRequest);
 
+const headerStringToObject = (s: string) =>
+    Object.fromEntries(s.split('\n').map(e => {
+        const [name, ...rest] = e.split(':');
+        return [name.toLowerCase(), rest.join(':').trim()];
+    }));
+
+function GM_head(...[url, opt]: Parameters<typeof fetch>) {
+    return new Promise<string>((resolve, reject) => {
+        // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
+        const gmopt: Tampermonkey.Request<any> = {
+            url: url.toString(),
+            data: opt?.body?.toString(),
+            method: "HEAD",
+            onload: (resp) => {
+                resolve(resp.responseHeaders);
+            },
+            ontimeout: () => reject("fetch timeout"),
+            onerror: () => reject("fetch error"),
+            onabort: () => reject("fetch abort")
+        };
+        xmlhttprequest(gmopt);
+    });
+}
+
 function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
     function blobTo(to: string, blob: Blob) {
         if (to == "arrayBuffer" && blob.arrayBuffer)
@@ -32,6 +56,7 @@ function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
             url: url.toString(),
             data: opt?.body?.toString(),
             responseType: "blob",
+            headers: opt?.headers as any,
             method: "GET",
             onload: (resp) => {
                 const blob = resp.response as Blob;
@@ -50,6 +75,52 @@ function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
     });
 }
 
+async function* streamRemote(url: string, chunkSize = 128 * 1024, fetchRestOnNonCanceled = true) {
+    const headers = await GM_head(url);
+    const h = headerStringToObject(headers);
+    const size = +h['content-length'];
+    let ptr = 0;
+    let fetchSize = chunkSize;
+    while (ptr != size) {
+        const res = await GM_fetch(url, { headers: { range: `bytes=${ptr}-${ptr + fetchSize - 1}` } }) as any as Tampermonkey.Response<any>;
+        const obj = headerStringToObject(res.responseHeaders);
+        if (!('content-length' in obj))
+            return;
+        const len = +obj['content-length'];
+        console.log('completed read of ', len);
+        ptr += len;
+        if (fetchRestOnNonCanceled)
+            fetchSize = size;
+        yield Buffer.from(await (res as any).arrayBuffer());
+    }
+}
+
+function iteratorToStream<T>(iterator: AsyncGenerator<T>) {
+    return new ReadableStream<T>({
+        async pull(controller) {
+            const { value, done } = await iterator.next();
+
+            if (done) {
+                controller.close();
+            } else {
+                controller.enqueue(value);
+            }
+        },
+    });
+}
+
+// (async () => {
+//     const iter = streamRemote("https://i.4cdn.org/g/1641097404527.png", 16 * 1024, false);
+//     //const str = iteratorToStream(iter);
+//     const cum: Buffer[] = [];
+//     for await (const buf of iter) {
+//         console.log(buf.byteLength);
+//         cum.push(buf);
+//     }
+//     const total = cum.reduce((a, b) => png.concatAB(a, b));
+//     console.log(await fileTypeFromBuffer(total));
+// })();
+
 const processors: [RegExp,
     (reader: ReadableStreamDefaultReader<Uint8Array>) => Promise<{ filename: string; data: Buffer } | undefined>,
     (container: File, inj: File) => Promise<Buffer>][] = [
@@ -58,11 +129,15 @@ const processors: [RegExp,
     ];
 
 const processImage = async (src: string) => {
+    if (src.includes('/images/')) // thirdeye removes the original link and puts a non-existing link
+        return; // cant do shit about that.
     const proc = processors.find(e => src.match(e[0]));
     if (!proc)
         return;
-    const resp = await GM_fetch(src);
-    const reader = (await resp.blob()).stream();
+    // const resp = await GM_fetch(src);
+    // const reader = resp.body;
+    const iter = streamRemote(src);
+    const reader = iteratorToStream(iter);
     if (!reader)
         return;
     return await proc[1](reader.getReader());
@@ -101,7 +176,8 @@ const processPost = async (post: HTMLDivElement) => {
         cont.pause();
     } else if (type?.mime.startsWith("audio")) {
         cont = document.createElement("audio");
-        cont.autoplay = true;
+        cont.autoplay = false;
+        cont.pause();
     } else {
         // If type detection fails, you'd better have an extension
         if (!type)
