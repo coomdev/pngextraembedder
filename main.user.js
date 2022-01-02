@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.45
+// @version      0.46
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12914,6 +12914,8 @@
   var localSet = (key, value) => localStorage.setItem("__pee__" + key, JSON.stringify(value));
   var settings = writable(localLoad("settings", {
     apv: false,
+    xpv: false,
+    xpi: false,
     apa: false,
     blacklist: [],
     sources: []
@@ -12942,6 +12944,14 @@
     let label1;
     let input1;
     let t7;
+    let t8;
+    let label2;
+    let input2;
+    let t9;
+    let t10;
+    let label3;
+    let input3;
+    let t11;
     let mounted;
     let dispose;
     return {
@@ -12963,12 +12973,22 @@
         label1 = element("label");
         input1 = element("input");
         t7 = text("\n      Autoplay Audio");
+        t8 = space();
+        label2 = element("label");
+        input2 = element("input");
+        t9 = text("\n      Autoexpand Images on opening.");
+        t10 = space();
+        label3 = element("label");
+        input3 = element("input");
+        t11 = text("\n      Autoexpand Videos on opening.");
         attr(span, "class", "clickable svelte-6ot9e6");
         toggle_class(span, "glow", ctx[0]);
         attr(h1, "class", "svelte-6ot9e6");
         attr(hr, "class", "svelte-6ot9e6");
         attr(input0, "type", "checkbox");
         attr(input1, "type", "checkbox");
+        attr(input2, "type", "checkbox");
+        attr(input3, "type", "checkbox");
         attr(div0, "class", "content svelte-6ot9e6");
         attr(div1, "class", "backpanel svelte-6ot9e6");
         toggle_class(div1, "enabled", ctx[0]);
@@ -12992,11 +13012,23 @@
         append(label1, input1);
         input1.checked = ctx[1].apa;
         append(label1, t7);
+        append(div0, t8);
+        append(div0, label2);
+        append(label2, input2);
+        input2.checked = ctx[1].xpi;
+        append(label2, t9);
+        append(div0, t10);
+        append(div0, label3);
+        append(label3, input3);
+        input3.checked = ctx[1].xpv;
+        append(label3, t11);
         if (!mounted) {
           dispose = [
             listen(span, "click", ctx[3]),
             listen(input0, "change", ctx[4]),
-            listen(input1, "change", ctx[5])
+            listen(input1, "change", ctx[5]),
+            listen(input2, "change", ctx[6]),
+            listen(input3, "change", ctx[7])
           ];
           mounted = true;
         }
@@ -13010,6 +13042,12 @@
         }
         if (dirty & 2) {
           input1.checked = ctx2[1].apa;
+        }
+        if (dirty & 2) {
+          input2.checked = ctx2[1].xpi;
+        }
+        if (dirty & 2) {
+          input3.checked = ctx2[1].xpv;
         }
         if (dirty & 1) {
           toggle_class(div1, "enabled", ctx2[0]);
@@ -13049,13 +13087,23 @@
       $settings.apa = this.checked;
       settings.set($settings);
     }
+    function input2_change_handler() {
+      $settings.xpi = this.checked;
+      settings.set($settings);
+    }
+    function input3_change_handler() {
+      $settings.xpv = this.checked;
+      settings.set($settings);
+    }
     return [
       visible,
       $settings,
       opensettings,
       click_handler,
       input0_change_handler,
-      input1_change_handler
+      input1_change_handler,
+      input2_change_handler,
+      input3_change_handler
     ];
   }
   var App = class extends SvelteComponent {
@@ -13256,6 +13304,8 @@
     }
     const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
     const contract = () => {
+      if (cont instanceof HTMLAudioElement)
+        return;
       cont.style.width = `unset`;
       cont.style.height = `unset`;
       cont.style.maxWidth = "125px";
@@ -13279,6 +13329,7 @@
     a.classList.toggle("pee-button");
     let contracted = true;
     contract();
+    contract();
     cont.onclick = (e) => {
       contracted = !contracted;
       contracted ? contract() : expand();
@@ -13291,11 +13342,14 @@
         console.log(csettings);
         if (cont instanceof HTMLVideoElement && csettings.apv || cont instanceof HTMLAudioElement && csettings.apa)
           cont.play();
+        if (cont instanceof HTMLImageElement && csettings.xpi || cont instanceof HTMLVideoElement && csettings.xpv)
+          expand();
         imgcont.appendChild(cont);
       } else {
         if (playable) {
           cont.pause();
         }
+        contract();
         imgcont.removeChild(cont);
       }
       a.classList.toggle("disabled");

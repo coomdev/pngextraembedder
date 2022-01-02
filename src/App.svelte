@@ -22,6 +22,14 @@
       <input type="checkbox" bind:checked={$settings.apa} />
       Autoplay Audio
     </label>
+    <label>
+      <input type="checkbox" bind:checked={$settings.xpi} />
+      Autoexpand Images on opening.
+    </label>
+    <label>
+      <input type="checkbox" bind:checked={$settings.xpv} />
+      Autoexpand Videos on opening.
+    </label>
   </div>
 </div>
 

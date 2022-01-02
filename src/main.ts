@@ -232,6 +232,8 @@ const processPost = async (post: HTMLDivElement) => {
     const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
 
     const contract = () => {
+        if (cont instanceof HTMLAudioElement)
+            return;
         cont.style.width = `unset`;
         cont.style.height = `unset`;
         cont.style.maxWidth = "125px";
@@ -258,6 +260,7 @@ const processPost = async (post: HTMLDivElement) => {
     a.classList.toggle("pee-button");
     let contracted = true;
     contract();
+    contract();
     cont.onclick = (e) => {
         contracted = !contracted;
         (contracted) ? contract() : expand();
@@ -272,11 +275,15 @@ const processPost = async (post: HTMLDivElement) => {
             if ((cont instanceof HTMLVideoElement && csettings.apv) ||
                 (cont instanceof HTMLAudioElement && csettings.apa))
                 cont.play();
+            if ((cont instanceof HTMLImageElement && csettings.xpi) ||
+                (cont instanceof HTMLVideoElement && csettings.xpv))
+                expand();
             imgcont.appendChild(cont);
         } else {
             if (playable) {
                 (cont as any).pause();
             }
+            contract();
             imgcont.removeChild(cont);
         }
         a!.classList.toggle("disabled");

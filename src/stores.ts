@@ -10,6 +10,8 @@ const localSet = (key: string, value: any) =>
 
 export const settings = writable(localLoad('settings', {
     apv: false,
+    xpv: false,
+    xpi: false,
     apa: false,
     blacklist: [],
     sources: []
