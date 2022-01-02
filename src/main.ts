@@ -89,7 +89,7 @@ const processPost = async (post: HTMLDivElement) => {
         inlining = false;
         a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
     } const type = await fileTypeFromBuffer(res.data);
-    let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement;
+    let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLAnchorElement;
     let w: number, h: number;
     if (type?.mime.startsWith("image")) {
         cont = document.createElement("img");
@@ -101,14 +101,25 @@ const processPost = async (post: HTMLDivElement) => {
     } else if (type?.mime.startsWith("audio")) {
         cont = document.createElement("audio");
         cont.autoplay = true;
-    } else
-        return; // TODO: handle new file types??? Or direct "download"?
+    } else if (type) {
+        cont = document.createElement('a');
+        let fn = res.filename;
+        if (!fn.includes('.'))
+            fn += '.' + type.ext;
+        cont.download = fn;
+        cont.textContent = "Download " + cont.download;
+    } else {
+        return; // don't know what kind of file: don't touch
+    }
 
     let src: string | null;
     src = post.getAttribute('data-processed');
     if (!src)
         src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
-    cont.src = src;
+    if (!(cont instanceof HTMLAnchorElement))
+        cont.src = src;
+    else
+        cont.href = src;
 
     await new Promise(res => {
         if (cont instanceof HTMLImageElement)
@@ -117,6 +128,8 @@ const processPost = async (post: HTMLDivElement) => {
             cont.onloadedmetadata = res;
         else if (cont instanceof HTMLAudioElement)
             cont.onloadedmetadata = res;
+        else
+            res(void 0); // Don't know what this is: don't wait
     });
 
     if (cont instanceof HTMLImageElement) {
@@ -181,7 +194,7 @@ const processPost = async (post: HTMLDivElement) => {
     };
     if (!inlining)
         fi.children[1].insertAdjacentElement('afterend', a);
-    post.setAttribute('data-processed', cont.src);
+    post.setAttribute('data-processed', src);
 };
 
 const startup = async () => {

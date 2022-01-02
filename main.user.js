@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.37
+// @version      0.38
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*/thread/*
@@ -12637,13 +12637,25 @@
     } else if (type?.mime.startsWith("audio")) {
       cont = document.createElement("audio");
       cont.autoplay = true;
-    } else
+    } else if (type) {
+      cont = document.createElement("a");
+      let fn = res.filename;
+      if (!fn.includes("."))
+        fn += "." + type.ext;
+      cont.download = fn;
+      a.textContent = "Download " + cont.download;
+    } else {
+      debugger;
       return;
+    }
     let src;
     src = post.getAttribute("data-processed");
     if (!src)
       src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
-    cont.src = src;
+    if (!(cont instanceof HTMLAnchorElement))
+      cont.src = src;
+    else
+      cont.href = src;
     await new Promise((res2) => {
       if (cont instanceof HTMLImageElement)
         cont.onload = res2;
@@ -12651,6 +12663,8 @@
         cont.onloadedmetadata = res2;
       else if (cont instanceof HTMLAudioElement)
         cont.onloadedmetadata = res2;
+      else
+        res2(void 0);
     });
     if (cont instanceof HTMLImageElement) {
       w = cont.naturalWidth;
@@ -12706,7 +12720,7 @@
     };
     if (!inlining)
       fi.children[1].insertAdjacentElement("afterend", a);
-    post.setAttribute("data-processed", cont.src);
+    post.setAttribute("data-processed", src);
   };
   var startup = async () => {
     const mo = new MutationObserver((reco) => {
