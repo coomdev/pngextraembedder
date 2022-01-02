@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.43
+// @version      0.45
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -3734,14 +3734,14 @@
           opts = {};
         callback = once(callback || noop2);
         var readable = opts.readable || opts.readable !== false && stream.readable;
-        var writable = opts.writable || opts.writable !== false && stream.writable;
+        var writable2 = opts.writable || opts.writable !== false && stream.writable;
         var onlegacyfinish = function onlegacyfinish2() {
           if (!stream.writable)
             onfinish();
         };
         var writableEnded = stream._writableState && stream._writableState.finished;
         var onfinish = function onfinish2() {
-          writable = false;
+          writable2 = false;
           writableEnded = true;
           if (!readable)
             callback.call(stream);
@@ -3750,7 +3750,7 @@
         var onend = function onend2() {
           readable = false;
           readableEnded = true;
-          if (!writable)
+          if (!writable2)
             callback.call(stream);
         };
         var onerror = function onerror2(err) {
@@ -3763,7 +3763,7 @@
               err = new ERR_STREAM_PREMATURE_CLOSE();
             return callback.call(stream, err);
           }
-          if (writable && !writableEnded) {
+          if (writable2 && !writableEnded) {
             if (!stream._writableState || !stream._writableState.ended)
               err = new ERR_STREAM_PREMATURE_CLOSE();
             return callback.call(stream, err);
@@ -3779,7 +3779,7 @@
             onrequest();
           else
             stream.on("request", onrequest);
-        } else if (writable && !stream._writableState) {
+        } else if (writable2 && !stream._writableState) {
           stream.on("end", onlegacyfinish);
           stream.on("close", onlegacyfinish);
         }
@@ -12568,6 +12568,16 @@
   function is_empty(obj) {
     return Object.keys(obj).length === 0;
   }
+  function subscribe(store, ...callbacks) {
+    if (store == null) {
+      return noop;
+    }
+    const unsub = store.subscribe(...callbacks);
+    return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
+  }
+  function component_subscribe(component, store, callback) {
+    component.$$.on_destroy.push(subscribe(store, callback));
+  }
   var is_hydrating = false;
   function start_hydrating() {
     is_hydrating = true;
@@ -12851,6 +12861,67 @@
     }
   };
 
+  // src/stores.ts
+  init_esbuild_inject();
+
+  // node_modules/svelte/store/index.mjs
+  init_esbuild_inject();
+  var subscriber_queue = [];
+  function writable(value, start = noop) {
+    let stop;
+    const subscribers = /* @__PURE__ */ new Set();
+    function set(new_value) {
+      if (safe_not_equal(value, new_value)) {
+        value = new_value;
+        if (stop) {
+          const run_queue = !subscriber_queue.length;
+          for (const subscriber of subscribers) {
+            subscriber[1]();
+            subscriber_queue.push(subscriber, value);
+          }
+          if (run_queue) {
+            for (let i = 0; i < subscriber_queue.length; i += 2) {
+              subscriber_queue[i][0](subscriber_queue[i + 1]);
+            }
+            subscriber_queue.length = 0;
+          }
+        }
+      }
+    }
+    function update2(fn) {
+      set(fn(value));
+    }
+    function subscribe2(run2, invalidate = noop) {
+      const subscriber = [run2, invalidate];
+      subscribers.add(subscriber);
+      if (subscribers.size === 1) {
+        stop = start(set) || noop;
+      }
+      run2(value);
+      return () => {
+        subscribers.delete(subscriber);
+        if (subscribers.size === 0) {
+          stop();
+          stop = null;
+        }
+      };
+    }
+    return { set, update: update2, subscribe: subscribe2 };
+  }
+
+  // src/stores.ts
+  var localLoad = (key, def) => "__pee__" + key in localStorage ? JSON.parse(localStorage.getItem("__pee__" + key)) : def;
+  var localSet = (key, value) => localStorage.setItem("__pee__" + key, JSON.stringify(value));
+  var settings = writable(localLoad("settings", {
+    apv: false,
+    apa: false,
+    blacklist: [],
+    sources: []
+  }));
+  settings.subscribe((newVal) => {
+    localSet("settings", newVal);
+  });
+
   // src/App.svelte
   function add_css(target) {
     append_styles(target, "svelte-6ot9e6", ".enabled.svelte-6ot9e6{display:block}.disabled.svelte-6ot9e6{display:none}.glow.svelte-6ot9e6{text-shadow:0 0 4px red}.clickable.svelte-6ot9e6{cursor:pointer}.content.svelte-6ot9e6{display:flex;flex-direction:column}hr.svelte-6ot9e6{width:100%}h1.svelte-6ot9e6{text-align:center}.backpanel.svelte-6ot9e6{position:absolute;right:32px;padding:10px;width:10%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2)}.clickable.svelte-6ot9e6:hover{text-shadow:0 0 2px palevioletred}");
@@ -12962,24 +13033,25 @@
     };
   }
   function instance($$self, $$props, $$invalidate) {
-    "use strict";
+    let $settings;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(1, $settings = $$value));
     let visible = false;
     function opensettings() {
       $$invalidate(0, visible = !visible);
     }
-    let settings = { apv: false, apa: false };
+    console.log($settings);
     const click_handler = () => opensettings();
     function input0_change_handler() {
-      settings.apv = this.checked;
-      $$invalidate(1, settings);
+      $settings.apv = this.checked;
+      settings.set($settings);
     }
     function input1_change_handler() {
-      settings.apa = this.checked;
-      $$invalidate(1, settings);
+      $settings.apa = this.checked;
+      settings.set($settings);
     }
     return [
       visible,
-      settings,
+      $settings,
       opensettings,
       click_handler,
       input0_change_handler,
@@ -12995,6 +13067,8 @@
   var App_default = App;
 
   // src/main.ts
+  var csettings;
+  settings.subscribe((b) => csettings = b);
   var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : GM ? GM.xmlHttpRequest : GM_xmlhttpRequest;
   var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
@@ -13137,10 +13211,12 @@
     } else if (type?.mime.startsWith("video")) {
       cont = document.createElement("video");
       cont.loop = true;
+      cont.controls = true;
       cont.pause();
     } else if (type?.mime.startsWith("audio")) {
       cont = document.createElement("audio");
       cont.autoplay = false;
+      cont.controls = true;
       cont.pause();
     } else {
       if (!type)
@@ -13178,10 +13254,12 @@
       w = cont.videoWidth;
       h = cont.videoHeight;
     }
-    if (cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement) {
-      cont.controls = true;
-    }
+    const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
     const contract = () => {
+      cont.style.width = `unset`;
+      cont.style.height = `unset`;
+      cont.style.maxWidth = "125px";
+      cont.style.maxHeight = "125px";
     };
     const expand = () => {
       cont.style.width = `${w}px`;
@@ -13210,12 +13288,12 @@
     a.onclick = () => {
       visible = !visible;
       if (visible) {
-        if (cont instanceof HTMLVideoElement) {
+        console.log(csettings);
+        if (cont instanceof HTMLVideoElement && csettings.apv || cont instanceof HTMLAudioElement && csettings.apa)
           cont.play();
-        }
         imgcont.appendChild(cont);
       } else {
-        if (cont instanceof HTMLVideoElement) {
+        if (playable) {
           cont.pause();
         }
         imgcont.removeChild(cont);
@@ -13248,63 +13326,63 @@
       target: button
     });
     scts?.appendChild(button);
-    const getSelectedFile = () => {
-      return new Promise((res) => {
-        document.addEventListener("QRFile", (e) => res(e.detail), { once: true });
-        document.dispatchEvent(new CustomEvent("QRGetFile"));
-      });
-    };
-    document.addEventListener("QRDialogCreation", (e) => {
-      const target = e.target;
-      const bts = target.querySelector("#qr-filename-container");
-      const i = document.createElement("i");
-      i.className = "fa fa-magnet";
-      const a = document.createElement("a");
-      a.appendChild(i);
-      a.title = "Embed File (Select a file before...)";
-      bts?.appendChild(a);
-      a.onclick = async (e2) => {
-        const file = await getSelectedFile();
-        if (!file)
-          return;
-        const input = document.createElement("input");
-        input.setAttribute("type", "file");
-        const type = file.type;
-        input.onchange = async (ev) => {
-          if (input.files) {
-            try {
-              const proc = processors.find((e3) => file.name.match(e3[0]));
-              if (!proc)
-                throw new Error("Container filetype not supported");
-              const buff = await proc[2](file, input.files[0]);
-              document.dispatchEvent(new CustomEvent("QRSetFile", {
-                detail: { file: new Blob([buff], { type }), name: file.name }
-              }));
-              document.dispatchEvent(new CustomEvent("CreateNotification", {
-                detail: {
-                  type: "success",
-                  content: "File successfully embedded!",
-                  lifetime: 3
-                }
-              }));
-            } catch (err) {
-              const e3 = err;
-              document.dispatchEvent(new CustomEvent("CreateNotification", {
-                detail: {
-                  type: "error",
-                  content: "Couldn't embed file: " + e3.message,
-                  lifetime: 3
-                }
-              }));
-            }
-          }
-        };
-        input.click();
-      };
-    }, { once: true });
     await Promise.all(posts.map((e) => processPost(e)));
   };
+  var getSelectedFile = () => {
+    return new Promise((res) => {
+      document.addEventListener("QRFile", (e) => res(e.detail), { once: true });
+      document.dispatchEvent(new CustomEvent("QRGetFile"));
+    });
+  };
   document.addEventListener("4chanXInitFinished", startup);
+  document.addEventListener("QRDialogCreation", (e) => {
+    const target = e.target;
+    const bts = target.querySelector("#qr-filename-container");
+    const i = document.createElement("i");
+    i.className = "fa fa-magnet";
+    const a = document.createElement("a");
+    a.appendChild(i);
+    a.title = "Embed File (Select a file before...)";
+    bts?.appendChild(a);
+    a.onclick = async (e2) => {
+      const file = await getSelectedFile();
+      if (!file)
+        return;
+      const input = document.createElement("input");
+      input.setAttribute("type", "file");
+      const type = file.type;
+      input.onchange = async (ev) => {
+        if (input.files) {
+          try {
+            const proc = processors.find((e3) => file.name.match(e3[0]));
+            if (!proc)
+              throw new Error("Container filetype not supported");
+            const buff = await proc[2](file, input.files[0]);
+            document.dispatchEvent(new CustomEvent("QRSetFile", {
+              detail: { file: new Blob([buff], { type }), name: file.name }
+            }));
+            document.dispatchEvent(new CustomEvent("CreateNotification", {
+              detail: {
+                type: "success",
+                content: "File successfully embedded!",
+                lifetime: 3
+              }
+            }));
+          } catch (err) {
+            const e3 = err;
+            document.dispatchEvent(new CustomEvent("CreateNotification", {
+              detail: {
+                type: "error",
+                content: "Couldn't embed file: " + e3.message,
+                lifetime: 3
+              }
+            }));
+          }
+        }
+      };
+      input.click();
+    };
+  }, { once: true });
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(`
 .pee-hidden {

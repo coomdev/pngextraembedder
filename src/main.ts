@@ -3,6 +3,11 @@ import { fileTypeFromBuffer } from 'file-type';
 import * as png from "./png";
 import * as webm from "./webm";
 import App from "./App.svelte";
+import { settings } from "./stores";
+
+let csettings: any;
+
+settings.subscribe(b => csettings = b);
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -175,10 +180,12 @@ const processPost = async (post: HTMLDivElement) => {
         cont = document.createElement("video");
         //cont.autoplay = true;
         cont.loop = true;
+        cont.controls = true;
         cont.pause();
     } else if (type?.mime.startsWith("audio")) {
         cont = document.createElement("audio");
         cont.autoplay = false;
+        cont.controls = true;
         cont.pause();
     } else {
         // If type detection fails, you'd better have an extension
@@ -222,12 +229,13 @@ const processPost = async (post: HTMLDivElement) => {
         h = cont.videoHeight;
     }
 
-    if (cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement) {
-        cont.controls = true;
-    }
+    const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
 
     const contract = () => {
-        // ugh
+        cont.style.width = `unset`;
+        cont.style.height = `unset`;
+        cont.style.maxWidth = "125px";
+        cont.style.maxHeight = "125px";
     };
 
     const expand = () => {
@@ -260,13 +268,14 @@ const processPost = async (post: HTMLDivElement) => {
     a.onclick = () => {
         visible = !visible;
         if (visible) {
-            if (cont instanceof HTMLVideoElement) {
+            console.log(csettings);
+            if ((cont instanceof HTMLVideoElement && csettings.apv) ||
+                (cont instanceof HTMLAudioElement && csettings.apa))
                 cont.play();
-            }
             imgcont.appendChild(cont);
         } else {
-            if (cont instanceof HTMLVideoElement) {
-                cont.pause();
+            if (playable) {
+                (cont as any).pause();
             }
             imgcont.removeChild(cont);
         }
@@ -312,67 +321,66 @@ const startup = async () => {
     });
     scts?.appendChild(button);
 
-    const getSelectedFile = () => {
-        return new Promise<File>(res => {
-            document.addEventListener('QRFile', e => res((e as any).detail), { once: true });
-            document.dispatchEvent(new CustomEvent('QRGetFile'));
-        });
-    };
-
-    document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
-        const target = e.target as HTMLDivElement;
-        const bts = target.querySelector('#qr-filename-container');
-        const i = document.createElement('i');
-        i.className = "fa fa-magnet";
-        const a = document.createElement('a');
-        a.appendChild(i);
-        a.title = "Embed File (Select a file before...)";
-        bts?.appendChild(a);
-        a.onclick = async (e) => {
-            const file = await getSelectedFile();
-            if (!file)
-                return;
-            const input = document.createElement('input') as HTMLInputElement;
-            input.setAttribute("type", "file");
-            const type = file.type;
-            input.onchange = (async ev => {
-                if (input.files) {
-                    try {
-                        const proc = processors.find(e => file.name.match(e[0]));
-                        if (!proc)
-                            throw new Error("Container filetype not supported");
-                        const buff = await proc[2](file, input.files[0]);
-                        document.dispatchEvent(new CustomEvent('QRSetFile', {
-                            //detail: { file: new Blob([buff]), name: file.name, type: file.type }
-                            detail: { file: new Blob([buff], { type }), name: file.name }
-                        }));
-                        document.dispatchEvent(new CustomEvent("CreateNotification", {
-                            detail: {
-                                type: 'success',
-                                content: 'File successfully embedded!',
-                                lifetime: 3
-                            }
-                        }));
-                    } catch (err) {
-                        const e = err as Error;
-                        document.dispatchEvent(new CustomEvent("CreateNotification", {
-                            detail: {
-                                type: 'error',
-                                content: "Couldn't embed file: " + e.message,
-                                lifetime: 3
-                            }
-                        }));
-                    }
-                }
-            });
-            input.click();
-        };
-    }), { once: true });
-
     await Promise.all(posts.map(e => processPost(e as any)));
 };
 
+const getSelectedFile = () => {
+    return new Promise<File>(res => {
+        document.addEventListener('QRFile', e => res((e as any).detail), { once: true });
+        document.dispatchEvent(new CustomEvent('QRGetFile'));
+    });
+};
 document.addEventListener('4chanXInitFinished', startup);
+
+document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
+    const target = e.target as HTMLDivElement;
+    const bts = target.querySelector('#qr-filename-container');
+    const i = document.createElement('i');
+    i.className = "fa fa-magnet";
+    const a = document.createElement('a');
+    a.appendChild(i);
+    a.title = "Embed File (Select a file before...)";
+    bts?.appendChild(a);
+    a.onclick = async (e) => {
+        const file = await getSelectedFile();
+        if (!file)
+            return;
+        const input = document.createElement('input') as HTMLInputElement;
+        input.setAttribute("type", "file");
+        const type = file.type;
+        input.onchange = (async ev => {
+            if (input.files) {
+                try {
+                    const proc = processors.find(e => file.name.match(e[0]));
+                    if (!proc)
+                        throw new Error("Container filetype not supported");
+                    const buff = await proc[2](file, input.files[0]);
+                    document.dispatchEvent(new CustomEvent('QRSetFile', {
+                        //detail: { file: new Blob([buff]), name: file.name, type: file.type }
+                        detail: { file: new Blob([buff], { type }), name: file.name }
+                    }));
+                    document.dispatchEvent(new CustomEvent("CreateNotification", {
+                        detail: {
+                            type: 'success',
+                            content: 'File successfully embedded!',
+                            lifetime: 3
+                        }
+                    }));
+                } catch (err) {
+                    const e = err as Error;
+                    document.dispatchEvent(new CustomEvent("CreateNotification", {
+                        detail: {
+                            type: 'error',
+                            content: "Couldn't embed file: " + e.message,
+                            lifetime: 3
+                        }
+                    }));
+                }
+            }
+        });
+        input.click();
+    };
+}), { once: true });
 
 const customStyles = document.createElement('style');
 customStyles.appendChild(document.createTextNode(

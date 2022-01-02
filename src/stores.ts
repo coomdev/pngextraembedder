@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 
 const localLoad = (key: string, def: any) =>
-    key in localStorage
+    ('__pee__' + key) in localStorage
         ? JSON.parse(localStorage.getItem('__pee__' + key)!)
         : def;
 

@@ -1,13 +1,10 @@
 <script lang="ts">
+  import { settings } from './stores'
   let visible = false
   function opensettings() {
     visible = !visible
   }
-
-  let settings = {
-    apv: false,
-    apa: false,
-  }
+  console.log($settings)
 </script>
 
 <span class="clickable" class:glow={visible} on:click={() => opensettings()}>
@@ -18,11 +15,11 @@
     <h1>PEE Settings</h1>
     <hr />
     <label>
-      <input type="checkbox" bind:checked={settings.apv} />
+      <input type="checkbox" bind:checked={$settings.apv} />
       Autoplay Videos
     </label>
     <label>
-      <input type="checkbox" bind:checked={settings.apa} />
+      <input type="checkbox" bind:checked={$settings.apa} />
       Autoplay Audio
     </label>
   </div>
