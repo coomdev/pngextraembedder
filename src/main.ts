@@ -289,13 +289,19 @@ const startup = async () => {
         for (const rec of reco)
             if (rec.type == "childList")
                 rec.addedNodes.forEach(e => {
-                    const el = (e as any).querySelector(".postContainer");
+                    if (!(e instanceof HTMLElement))
+                        return;
+                    const el = (e as any).querySelectorAll(".postContainer");
                     if (el)
-                        processPost(el as any);
+                        [...el].map(el => processPost(el as any));
                 });
     });
 
-    mo.observe(document.querySelector('.thread')!, { childList: true, subtree: true });
+    document.querySelectorAll('.board').forEach(e => {
+        mo.observe(e!, { childList: true, subtree: true });
+    });
+    const posts = [...document.querySelectorAll('.postContainer')];
+    await Promise.all(posts.map(e => processPost(e as any)));
 
     const getSelectedFile = () => {
         return new Promise<File>(res => {
@@ -357,9 +363,6 @@ const startup = async () => {
             input.click();
         };
     }));
-
-    await Promise.all([...document.querySelectorAll('.postContainer')].map(e => processPost(e as any)));
-
 };
 
 document.addEventListener('4chanXInitFinished', startup);

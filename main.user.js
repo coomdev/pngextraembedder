@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.41
+// @version      0.42
 // @description  uhh
 // @author       You
-// @match        https://boards.4channel.org/*/thread/*
-// @match        https://boards.4chan.org/*/thread/*
+// @match        https://boards.4channel.org/*
+// @match        https://boards.4chan.org/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @updateURL    https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.user.js
@@ -12624,7 +12624,6 @@
       if (!("content-length" in obj))
         return;
       const len = +obj["content-length"];
-      console.log("completed read of ", len);
       ptr += len;
       if (fetchRestOnNonCanceled)
         fetchSize = size;
@@ -12781,12 +12780,18 @@
       for (const rec of reco)
         if (rec.type == "childList")
           rec.addedNodes.forEach((e) => {
-            const el = e.querySelector(".postContainer");
+            if (!(e instanceof HTMLElement))
+              return;
+            const el = e.querySelectorAll(".postContainer");
             if (el)
-              processPost(el);
+              [...el].map((el2) => processPost(el2));
           });
     });
-    mo.observe(document.querySelector(".thread"), { childList: true, subtree: true });
+    document.querySelectorAll(".board").forEach((e) => {
+      mo.observe(e, { childList: true, subtree: true });
+    });
+    const posts = [...document.querySelectorAll(".postContainer")];
+    await Promise.all(posts.map((e) => processPost(e)));
     const getSelectedFile = () => {
       return new Promise((res) => {
         document.addEventListener("QRFile", (e) => res(e.detail), { once: true });
@@ -12845,7 +12850,6 @@
         input.click();
       };
     });
-    await Promise.all([...document.querySelectorAll(".postContainer")].map((e) => processPost(e)));
   };
   document.addEventListener("4chanXInitFinished", startup);
   var customStyles = document.createElement("style");
