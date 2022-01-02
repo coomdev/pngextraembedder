@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import { fileTypeFromBuffer } from 'file-type';
 import * as png from "./png";
 import * as webm from "./webm";
+import App from "./App.svelte";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -142,6 +143,9 @@ const processImage = async (src: string) => {
     return await proc[1](reader.getReader());
 };
 
+const textToElement = <T = HTMLElement>(s: string) =>
+    document.createRange().createContextualFragment(s).children[0] as any as T;
+
 const processPost = async (post: HTMLDivElement) => {
     const thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
     if (!thumb)
@@ -153,15 +157,14 @@ const processPost = async (post: HTMLDivElement) => {
     replyBox?.classList.toggle('hasembed');
     // add buttons
     const fi = post.querySelector(".file-info")!;
-    const cf = `
-    <a class="fa fa-eye">
-    </a>`;
     let a: HTMLAnchorElement | null;
     a = fi.querySelector('.fa.fa-eye');
     let inlining = true;
     if (!a) {
         inlining = false;
-        a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
+        a = textToElement<HTMLAnchorElement>(`
+        <a class="fa fa-eye">
+        </a>`);
     }
     let type = await fileTypeFromBuffer(res.data);
     let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLAnchorElement;
@@ -301,7 +304,13 @@ const startup = async () => {
         mo.observe(e!, { childList: true, subtree: true });
     });
     const posts = [...document.querySelectorAll('.postContainer')];
-    await Promise.all(posts.map(e => processPost(e as any)));
+
+    const scts = document.getElementById('shortcuts');
+    const button = textToElement(`<span></span>`);
+    const app = new App({
+        target: button
+    });
+    scts?.appendChild(button);
 
     const getSelectedFile = () => {
         return new Promise<File>(res => {
@@ -310,11 +319,7 @@ const startup = async () => {
         });
     };
 
-    let injected = false;
     document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
-        if (injected)
-            return;
-        injected = true;
         const target = e.target as HTMLDivElement;
         const bts = target.querySelector('#qr-filename-container');
         const i = document.createElement('i');
@@ -362,7 +367,9 @@ const startup = async () => {
             });
             input.click();
         };
-    }));
+    }), { once: true });
+
+    await Promise.all(posts.map(e => processPost(e as any)));
 };
 
 document.addEventListener('4chanXInitFinished', startup);
@@ -370,6 +377,10 @@ document.addEventListener('4chanXInitFinished', startup);
 const customStyles = document.createElement('style');
 customStyles.appendChild(document.createTextNode(
     `
+.pee-hidden {
+    display: none;
+}
+
 .extractedImg {
     width:auto;
     height:auto;
@@ -383,6 +394,7 @@ customStyles.appendChild(document.createTextNode(
 }
 `
 ));
+
 document.documentElement.insertBefore(customStyles, null);
 
 // onload = () => {
