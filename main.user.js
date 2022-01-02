@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.38
+// @version      0.39
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*/thread/*
@@ -12624,7 +12624,7 @@
       inlining = false;
       a = document.createRange().createContextualFragment(cf).children[0];
     }
-    const type = await fileTypeFromBuffer(res.data);
+    let type = await fileTypeFromBuffer(res.data);
     let cont;
     let w, h;
     if (type?.mime.startsWith("image")) {
@@ -12637,16 +12637,15 @@
     } else if (type?.mime.startsWith("audio")) {
       cont = document.createElement("audio");
       cont.autoplay = true;
-    } else if (type) {
+    } else {
+      if (!type)
+        type = { mime: "application/unknown", "ext": "data" };
       cont = document.createElement("a");
       let fn = res.filename;
       if (!fn.includes("."))
         fn += "." + type.ext;
       cont.download = fn;
-      a.textContent = "Download " + cont.download;
-    } else {
-      debugger;
-      return;
+      cont.textContent = "Download " + cont.download;
     }
     let src;
     src = post.getAttribute("data-processed");

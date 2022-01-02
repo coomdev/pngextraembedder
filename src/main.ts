@@ -88,7 +88,8 @@ const processPost = async (post: HTMLDivElement) => {
     if (!a) {
         inlining = false;
         a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
-    } const type = await fileTypeFromBuffer(res.data);
+    }
+    let type = await fileTypeFromBuffer(res.data);
     let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLAnchorElement;
     let w: number, h: number;
     if (type?.mime.startsWith("image")) {
@@ -101,15 +102,16 @@ const processPost = async (post: HTMLDivElement) => {
     } else if (type?.mime.startsWith("audio")) {
         cont = document.createElement("audio");
         cont.autoplay = true;
-    } else if (type) {
+    } else {
+        // If type detection fails, you'd better have an extension
+        if (!type)
+            type = { mime: "application/unknown" as any, 'ext': "data" as any };
         cont = document.createElement('a');
         let fn = res.filename;
         if (!fn.includes('.'))
             fn += '.' + type.ext;
         cont.download = fn;
         cont.textContent = "Download " + cont.download;
-    } else {
-        return; // don't know what kind of file: don't touch
     }
 
     let src: string | null;
