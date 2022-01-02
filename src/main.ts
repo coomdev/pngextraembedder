@@ -87,7 +87,6 @@ async function* streamRemote(url: string, chunkSize = 128 * 1024, fetchRestOnNon
         if (!('content-length' in obj))
             return;
         const len = +obj['content-length'];
-        console.log('completed read of ', len);
         ptr += len;
         if (fetchRestOnNonCanceled)
             fetchSize = size;
@@ -171,7 +170,7 @@ const processPost = async (post: HTMLDivElement) => {
         cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
         cont = document.createElement("video");
-        cont.autoplay = true;
+        //cont.autoplay = true;
         cont.loop = true;
         cont.pause();
     } else if (type?.mime.startsWith("audio")) {

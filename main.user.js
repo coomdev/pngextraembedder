@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.40
+// @version      0.41
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*/thread/*
@@ -12686,7 +12686,6 @@
       cont = document.createElement("img");
     } else if (type?.mime.startsWith("video")) {
       cont = document.createElement("video");
-      cont.autoplay = true;
       cont.loop = true;
       cont.pause();
     } else if (type?.mime.startsWith("audio")) {
