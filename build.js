@@ -19,7 +19,6 @@ const extheader = `// ==UserScript==
 // @match        https://boards.4chan.org/*
 // @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
-// @updateURL    https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
 // @run-at       document-start
@@ -65,5 +64,6 @@ const extheader = `// ==UserScript==
 
   console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
   writeFileSync('./main.user.js', extheader + readFileSync('./dist/main.js'));
+  writeFileSync('./main.meta.js', extheader);
 
 })();
