@@ -407,6 +407,14 @@ customStyles.appendChild(document.createTextNode(
 .hasembed {
     border-right: 3px dashed deeppink !important;
 }
+
+.expanded-image > .post > .file .fileThumb > img[data-md5] {
+    display: none;
+}
+
+.expanded-image > .post > .file .fileThumb  .full-image {
+    display: inline;
+}
 `
 ));
 
