@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.52
+// @version      0.53
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -13452,7 +13452,8 @@
     cursor: pointer;
     
 }
-.hasembed {
+
+.postContainer > div.hasembed {
     border-right: 3px dashed deeppink !important;
 }
 

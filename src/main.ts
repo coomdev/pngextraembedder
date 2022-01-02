@@ -407,7 +407,8 @@ customStyles.appendChild(document.createTextNode(
     cursor: pointer;
     
 }
-.hasembed {
+
+.postContainer > div.hasembed {
     border-right: 3px dashed deeppink !important;
 }
 
