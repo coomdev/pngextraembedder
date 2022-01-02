@@ -1,9 +1,13 @@
 /* eslint-disable */
 
-const { spawnSync } = require('child_process');
-const { writeFileSync, readFileSync } = require('fs');
+import { spawnSync } from 'child_process';
+import { writeFileSync, readFileSync } from 'fs'
 
-let res = spawnSync("git",  ["rev-list", "--count", "HEAD"]);
+import esbuild from "esbuild";
+import esbuildSvelte from "esbuild-svelte";
+import sveltePreprocess from "svelte-preprocess";
+
+let res = spawnSync("git", ["rev-list", "--count", "HEAD"]);
 let rev = +res.stdout;
 const extheader = `// ==UserScript==
 // @name         PNGExtraEmbed
@@ -26,7 +30,8 @@ const extheader = `// ==UserScript==
 `;
 
 (async () => {
-  let res = await require('esbuild').build({
+  let res;/*
+  res = await esbuild.build({
     entryPoints: ['src/main.ts'],
     bundle: true,
     outfile: 'dist/main.js',
@@ -38,4 +43,27 @@ const extheader = `// ==UserScript==
   });
   console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
   writeFileSync('./main.user.js', extheader + readFileSync('./dist/main.js'));
+  */
+
+  res = await esbuild
+    .build({
+      entryPoints: ["src/main.ts"],
+      bundle: true,
+      outfile: "./dist/main.js",
+      define: {
+        global: 'window'
+      },
+      inject: ['./esbuild.inject.js'],
+      plugins: [
+        esbuildSvelte({
+          compilerOptions: { css: true },
+          preprocess: sveltePreprocess(),
+        })
+      ],
+      metafile: true
+    })
+
+  console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
+  writeFileSync('./main.user.js', extheader + readFileSync('./dist/main.js'));
+
 })();

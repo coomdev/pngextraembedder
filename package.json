@@ -2,25 +2,34 @@
   "name": "coomext",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./build.js",
+    "ver": "tsc -v",
     "watch": "esbuild src/main.ts --bundle --outfile=dist/main.js --define:global=window --watch"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/tampermonkey": "^4.0.5",
+    "@tsconfig/svelte": "^3.0.0",
     "buffer": "^6.0.3",
     "crc-32": "^1.2.0",
+    "esbuild-svelte": "^0.6.0",
     "events": "^3.3.0",
     "file-type": "^17.0.2",
     "readable-stream": "^3.6.0",
-    "ts-ebml": "^2.0.2"
+    "svelte-preprocess": "^4.10.1",
+    "ts-ebml": "^2.0.2",
+    "typescript": "^4.5.4"
   },
   "devDependencies": {
-    "esbuild": "^0.14.7"
+    "@types/tampermonkey": "^4.0.5",
+    "esbuild": "^0.14.7",
+    "esbuild-css-modules-plugin": "^2.0.9",
+    "svelte": "^3.44.3",
+    "svelte-check": "^2.2.11"
   },
   "browser": {
     "node:buffer": "buffer",
