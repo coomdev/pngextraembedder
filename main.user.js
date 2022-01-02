@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.51
+// @version      0.52
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -13364,7 +13364,9 @@
           rec.addedNodes.forEach((e) => {
             if (!(e instanceof HTMLElement))
               return;
-            const el = e.querySelectorAll(".postContainer");
+            let el = e.querySelectorAll(".postContainer");
+            if (!el && e.classList.contains("postContainer"))
+              el = e;
             if (el)
               [...el].map((el2) => processPost(el2));
           });

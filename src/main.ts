@@ -310,7 +310,10 @@ const startup = async () => {
                 rec.addedNodes.forEach(e => {
                     if (!(e instanceof HTMLElement))
                         return;
-                    const el = (e as any).querySelectorAll(".postContainer");
+                    // apparently querySelector cannot select the root element if it matches
+                    let el = (e as any).querySelectorAll(".postContainer");
+                    if (!el && e.classList.contains('postContainer'))
+                        el = e;
                     if (el)
                         [...el].map(el => processPost(el as any));
                 });
