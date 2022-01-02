@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.36
+// @version      0.37
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*/thread/*
@@ -12605,9 +12605,6 @@
     return await proc[1](reader.getReader());
   };
   var processPost = async (post) => {
-    if (post.hasAttribute("data-processed"))
-      return;
-    post.setAttribute("data-processed", "true");
     const thumb = post.querySelector(".fileThumb");
     if (!thumb)
       return;
@@ -12620,7 +12617,13 @@
     const cf = `
     <a class="fa fa-eye">
     </a>`;
-    const a = document.createRange().createContextualFragment(cf).children[0];
+    let a;
+    a = fi.querySelector(".fa.fa-eye");
+    let inlining = true;
+    if (!a) {
+      inlining = false;
+      a = document.createRange().createContextualFragment(cf).children[0];
+    }
     const type = await fileTypeFromBuffer(res.data);
     let cont;
     let w, h;
@@ -12636,7 +12639,11 @@
       cont.autoplay = true;
     } else
       return;
-    cont.src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
+    let src;
+    src = post.getAttribute("data-processed");
+    if (!src)
+      src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
+    cont.src = src;
     await new Promise((res2) => {
       if (cont instanceof HTMLImageElement)
         cont.onload = res2;
@@ -12673,6 +12680,7 @@
     thumb.style.gap = "5px";
     thumb.style.flexDirection = "column";
     a.classList.toggle("disabled");
+    a.classList.toggle("pee-button");
     let contracted = true;
     contract();
     cont.onclick = (e) => {
@@ -12696,14 +12704,21 @@
       }
       a.classList.toggle("disabled");
     };
-    fi.children[1].insertAdjacentElement("afterend", a);
+    if (!inlining)
+      fi.children[1].insertAdjacentElement("afterend", a);
+    post.setAttribute("data-processed", cont.src);
   };
   var startup = async () => {
-    document.addEventListener("PostsInserted", async (e) => {
-      const threadelement = e.target;
-      const posts = [...threadelement.querySelectorAll("postContainer")].filter((e2) => e2.hasAttribute("data-processed"));
-      posts.map((e2) => processPost(e2));
+    const mo = new MutationObserver((reco) => {
+      for (const rec of reco)
+        if (rec.type == "childList")
+          rec.addedNodes.forEach((e) => {
+            const el = e.querySelector(".postContainer");
+            if (el)
+              processPost(el);
+          });
     });
+    mo.observe(document.querySelector(".thread"), { childList: true, subtree: true });
     const getSelectedFile = () => {
       return new Promise((res) => {
         document.addEventListener("QRFile", (e) => res(e.detail), { once: true });

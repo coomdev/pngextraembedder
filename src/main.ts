@@ -69,9 +69,6 @@ const processImage = async (src: string) => {
 };
 
 const processPost = async (post: HTMLDivElement) => {
-    if (post.hasAttribute('data-processed'))
-        return;
-    post.setAttribute('data-processed', "true");
     const thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
     if (!thumb)
         return;
@@ -85,8 +82,13 @@ const processPost = async (post: HTMLDivElement) => {
     const cf = `
     <a class="fa fa-eye">
     </a>`;
-    const a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
-    const type = await fileTypeFromBuffer(res.data);
+    let a: HTMLAnchorElement | null;
+    a = fi.querySelector('.fa.fa-eye');
+    let inlining = true;
+    if (!a) {
+        inlining = false;
+        a = document.createRange().createContextualFragment(cf).children[0] as HTMLAnchorElement;
+    } const type = await fileTypeFromBuffer(res.data);
     let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement;
     let w: number, h: number;
     if (type?.mime.startsWith("image")) {
@@ -102,7 +104,11 @@ const processPost = async (post: HTMLDivElement) => {
     } else
         return; // TODO: handle new file types??? Or direct "download"?
 
-    cont.src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
+    let src: string | null;
+    src = post.getAttribute('data-processed');
+    if (!src)
+        src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
+    cont.src = src;
 
     await new Promise(res => {
         if (cont instanceof HTMLImageElement)
@@ -148,6 +154,7 @@ const processPost = async (post: HTMLDivElement) => {
     thumb.style.gap = "5px";
     thumb.style.flexDirection = "column";
     a.classList.toggle("disabled");
+    a.classList.toggle("pee-button");
     let contracted = true;
     contract();
     cont.onclick = (e) => {
@@ -170,20 +177,35 @@ const processPost = async (post: HTMLDivElement) => {
             }
             imgcont.removeChild(cont);
         }
-        a.classList.toggle("disabled");
+        a!.classList.toggle("disabled");
     };
-    fi.children[1].insertAdjacentElement('afterend', a);
+    if (!inlining)
+        fi.children[1].insertAdjacentElement('afterend', a);
+    post.setAttribute('data-processed', cont.src);
 };
 
 const startup = async () => {
 
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
-    document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
-        const threadelement = e.target as HTMLDivElement;
-        const posts = [...threadelement.querySelectorAll("postContainer")].filter(e => e.hasAttribute('data-processed'));
-        posts.map(e => processPost(e as any));
-    }));
+    // Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
+    // document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
+    //     const threadelement = e.target as HTMLDivElement;
+    //     const posts = [...threadelement.querySelectorAll(".postContainer")].filter(e => !e.hasAttribute('data-processed'));
+    //     posts.map(e => processPost(e as any));
+    // }));threadelement
+
+    const mo = new MutationObserver(reco => {
+        for (const rec of reco)
+            if (rec.type == "childList")
+                rec.addedNodes.forEach(e => {
+                    const el = (e as any).querySelector(".postContainer");
+                    if (el)
+                        processPost(el as any);
+                });
+    });
+
+    mo.observe(document.querySelector('.thread')!, { childList: true, subtree: true });
 
     const getSelectedFile = () => {
         return new Promise<File>(res => {
