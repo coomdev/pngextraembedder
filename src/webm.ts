@@ -126,6 +126,7 @@ const extractBuff = (webm: Buffer) => {
 export const extract = async (reader: ReadableStreamDefaultReader<Uint8Array>): Promise<{ filename: string; data: Buffer } | undefined> => {
     let total = Buffer.from('');
     let chunk: ReadableStreamDefaultReadResult<Uint8Array>;
+    // todo: early reject
     do {
         chunk = await reader.read();
         if (chunk.value)

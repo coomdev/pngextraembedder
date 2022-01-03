@@ -129,7 +129,7 @@ const buildChunk = (tag: string, data: Buffer) => {
     return ret;
 };
 
-const BufferWriteStream = () => {
+export const BufferWriteStream = () => {
     let b = Buffer.from([]);
     const ret = new WritableStream<Buffer>({
         write(chunk) {

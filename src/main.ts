@@ -1,9 +1,11 @@
 import { Buffer } from "buffer";
 import { fileTypeFromBuffer } from 'file-type';
-import * as png from "./png";
-import * as webm from "./webm";
 import App from "./App.svelte";
 import { settings } from "./stores";
+
+import * as png from "./png";
+import * as webm from "./webm";
+import * as gif from "./gif";
 
 let csettings: any;
 
@@ -11,7 +13,7 @@ settings.subscribe(b => csettings = b);
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T
 
-const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (GM ? GM.xmlHttpRequest : GM_xmlhttpRequest);
+const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest);
 
 const headerStringToObject = (s: string) =>
     Object.fromEntries(s.split('\n').map(e => {
@@ -114,28 +116,15 @@ function iteratorToStream<T>(iterator: AsyncGenerator<T>) {
     });
 }
 
-// (async () => {
-//     const iter = streamRemote("https://i.4cdn.org/g/1641097404527.png", 16 * 1024, false);
-//     //const str = iteratorToStream(iter);
-//     const cum: Buffer[] = [];
-//     for await (const buf of iter) {
-//         console.log(buf.byteLength);
-//         cum.push(buf);
-//     }
-//     const total = cum.reduce((a, b) => png.concatAB(a, b));
-//     console.log(await fileTypeFromBuffer(total));
-// })();
-
 const processors: [RegExp,
     (reader: ReadableStreamDefaultReader<Uint8Array>) => Promise<{ filename: string; data: Buffer } | undefined>,
     (container: File, inj: File) => Promise<Buffer>][] = [
         [/\.png$/, png.extract, png.inject],
-        [/\.webm$/, webm.extract, webm.inject]
+        [/\.webm$/, webm.extract, webm.inject],
+        [/\.gif$/, gif.extract, gif.inject],
     ];
 
 const processImage = async (src: string) => {
-    if (src.includes('/images/')) // thirdeye removes the original link and puts a non-existing link
-        return; // cant do shit about that.
     const proc = processors.find(e => src.match(e[0]));
     if (!proc)
         return;
@@ -153,9 +142,10 @@ const textToElement = <T = HTMLElement>(s: string) =>
 
 const processPost = async (post: HTMLDivElement) => {
     const thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
-    if (!thumb)
+    const origlink = post.querySelector('.file-info > a') as HTMLAnchorElement;
+    if (!thumb || !origlink)
         return;
-    const res = await processImage(thumb.href);
+    const res = await processImage(origlink.href);
     if (!res)
         return;
     const replyBox = post.querySelector('.post');
@@ -295,14 +285,16 @@ const processPost = async (post: HTMLDivElement) => {
 
 const startup = async () => {
 
-    //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
+    await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     // Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
-    // document.addEventListener('PostsInserted', <any>(async (e: CustomEvent<string>) => {
-    //     const threadelement = e.target as HTMLDivElement;
-    //     const posts = [...threadelement.querySelectorAll(".postContainer")].filter(e => !e.hasAttribute('data-processed'));
-    //     posts.map(e => processPost(e as any));
-    // }));threadelement
+    document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
+        let newPosts = e.detail.newPosts;
+        for (const post of newPosts) {
+            let postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1)) as HTMLDivElement;
+            processPost(postContainer);
+        }
+    }));
 
     const mo = new MutationObserver(reco => {
         for (const rec of reco)
@@ -423,19 +415,24 @@ customStyles.appendChild(document.createTextNode(
 ));
 
 document.documentElement.insertBefore(customStyles, null);
+// import * as gif from './gif';
 
 // onload = () => {
 //     let container = document.getElementById("container") as HTMLInputElement;
 //     let injection = document.getElementById("injection") as HTMLInputElement;
-
 //     container.onchange = injection.onchange = async () => {
 //         if (container.files?.length && injection.files?.length) {
-//             let res = await buildInjection(container.files[0], injection.files[0]);
+//             let res = await gif.inject(container.files[0], injection.files[0]);
 //             let result = document.getElementById("result") as HTMLImageElement;
 //             let extracted = document.getElementById("extracted") as HTMLImageElement;
-//             result.src = URL.createObjectURL(res.file);
-//             let embedded = await extractEmbedded(res.file.stream().getReader());
+//             let res2 = new Blob([res], { type: 'image/gif' });
+//             result.src = URL.createObjectURL(res2);
+//             let embedded = await gif.extract(res2.stream().getReader());
 //             extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
+//             let dlr = document.getElementById("dlr") as HTMLAnchorElement;
+//             let dle = document.getElementById("dle") as HTMLAnchorElement;
+//             dlr.href = result.src;
+//             dle.href = extracted.src;
 //         }
 //     }
 // }
