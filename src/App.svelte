@@ -78,6 +78,7 @@ import { onDestroy } from 'svelte';
     border-radius: 5px;
     background-color: rgba(0, 0, 0, 0.2);
     pointer-events: all;
+    backdrop-filter: blur(9px);
   }
 
   .clickable:hover {

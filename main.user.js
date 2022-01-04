@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.56
+// @version      0.57
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12716,14 +12716,9 @@
         const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
         this.ptr += 4;
         this.req += length + 4;
+        await this.catchup();
         const pos = this.ptr;
-        yield [name, async () => {
-          await this.catchup();
-          return this.repr.slice(pos, pos + length + 4);
-        }, async () => {
-          await this.catchup();
-          return this.repr.readUInt32BE(this.ptr + length + 4);
-        }, this.ptr];
+        yield [name, this.repr.slice(pos, pos + length + 4), this.repr.readUInt32BE(this.ptr + length + 4), this.ptr];
         this.ptr += length + 8;
         if (name == "IEND")
           break;
@@ -12741,7 +12736,7 @@
       const b = import_buffer.Buffer.alloc(4);
       b.writeInt32BE(chunk[1].length - 4, 0);
       await this.writer.write(b);
-      const buff = await chunk[1]();
+      const buff = chunk[1];
       await this.writer.write(buff);
       b.writeInt32BE((0, import_crc_32.buf)(buff), 0);
       await this.writer.write(b);
@@ -12771,13 +12766,13 @@
         let buff;
         switch (name) {
           case "tEXt":
-            buff = await chunk();
+            buff = chunk;
             if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
               magic2 = true;
             break;
           case "IDAT":
             if (magic2) {
-              lastIDAT = await chunk();
+              lastIDAT = chunk;
               break;
             }
           case "IEND":
@@ -12824,7 +12819,7 @@
       if (magic2 && name != "IDAT")
         break;
       if (!magic2 && name == "IDAT") {
-        await encoder.insertchunk(["tEXt", () => buildChunk("tEXt", CUM0), () => 0, 0]);
+        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
         magic2 = true;
       }
       await encoder.insertchunk([name, chunk, crc, offset]);
@@ -12833,8 +12828,8 @@
     injb.writeInt32LE(inj.name.length, 0);
     injb.write(inj.name, 4);
     import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", () => buildChunk("IDAT", injb), () => 0, 0]);
-    await encoder.insertchunk(["IEND", () => buildChunk("IEND", import_buffer.Buffer.from([])), () => 0, 0]);
+    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer.Buffer.from([])), 0, 0]);
     return extract4();
   };
   var has_embed = async (png) => {
@@ -12845,7 +12840,7 @@
         let buff;
         switch (name) {
           case "tEXt":
-            buff = await chunk();
+            buff = chunk;
             if (buff.slice(4, 4 + CUM0.length).equals(CUM0)) {
               return true;
             }
@@ -13066,7 +13061,6 @@
 
   // src/requests.ts
   init_esbuild_inject();
-  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest;
   var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
     return [name.toLowerCase(), rest.join(":").trim()];
@@ -13143,7 +13137,7 @@
 
   // src/App.svelte
   function add_css(target) {
-    append_styles(target, "svelte-1ev9gch", ".enabled.svelte-1ev9gch{display:block}.disabled.svelte-1ev9gch{display:none}.content.svelte-1ev9gch{display:flex;flex-direction:column}hr.svelte-1ev9gch{width:100%}h1.svelte-1ev9gch{text-align:center}.backpanel.svelte-1ev9gch{position:absolute;right:32px;padding:10px;width:10%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2);pointer-events:all}");
+    append_styles(target, "svelte-1rfqgjc", ".enabled.svelte-1rfqgjc{display:block}.disabled.svelte-1rfqgjc{display:none}.content.svelte-1rfqgjc{display:flex;flex-direction:column}hr.svelte-1rfqgjc{width:100%}h1.svelte-1rfqgjc{text-align:center}.backpanel.svelte-1rfqgjc{position:absolute;right:32px;padding:10px;width:10%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2);pointer-events:all;backdrop-filter:blur(9px)}");
   }
   function create_fragment(ctx) {
     let div1;
@@ -13193,14 +13187,14 @@
         label3 = element("label");
         input3 = element("input");
         t9 = text("\n      Autoexpand Videos on opening.");
-        attr(h1, "class", "svelte-1ev9gch");
-        attr(hr, "class", "svelte-1ev9gch");
+        attr(h1, "class", "svelte-1rfqgjc");
+        attr(hr, "class", "svelte-1rfqgjc");
         attr(input0, "type", "checkbox");
         attr(input1, "type", "checkbox");
         attr(input2, "type", "checkbox");
         attr(input3, "type", "checkbox");
-        attr(div0, "class", "content svelte-1ev9gch");
-        attr(div1, "class", "backpanel svelte-1ev9gch");
+        attr(div0, "class", "content svelte-1rfqgjc");
+        attr(div1, "class", "backpanel svelte-1rfqgjc");
         toggle_class(div1, "enabled", ctx[0]);
         toggle_class(div1, "disabled", !ctx[0]);
       },
@@ -13687,6 +13681,25 @@
 }
 `));
   document.documentElement.insertBefore(customStyles, null);
+  onload = () => {
+    const container = document.getElementById("container");
+    const injection = document.getElementById("injection");
+    container.onchange = injection.onchange = async () => {
+      if (container.files?.length && injection.files?.length) {
+        const res = await inject(container.files[0], injection.files[0]);
+        const result = document.getElementById("result");
+        const extracted = document.getElementById("extracted");
+        const res2 = new Blob([res], { type: "image/gif" });
+        result.src = URL.createObjectURL(res2);
+        const embedded = await extract(res);
+        extracted.src = URL.createObjectURL(new Blob([embedded?.data]));
+        const dlr = document.getElementById("dlr");
+        const dle = document.getElementById("dle");
+        dlr.href = result.src;
+        dle.href = extracted.src;
+      }
+    };
+  };
 })();
 /*!
  * The buffer module from node.js, for the browser.

@@ -1,7 +1,7 @@
 import { buf } from "crc-32";
 import { Buffer } from "buffer";
 
-export type PNGChunk = [string, () => Buffer | Promise<Buffer>, () => number | Promise<number>, number];
+export type PNGChunk = [string, Buffer, number, number];
 
 export class PNGDecoder {
     repr: Buffer;
@@ -32,15 +32,9 @@ export class PNGDecoder {
             const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
             this.ptr += 4;
             this.req += length + 4; // crc
-            //await this.catchup();
+            await this.catchup();
             const pos = this.ptr;
-            yield [name, async () => {
-                await this.catchup();
-                return this.repr.slice(pos, pos + length + 4);
-            }, async () => {
-                await this.catchup();
-                return this.repr.readUInt32BE(this.ptr + length + 4);
-            }, this.ptr] as PNGChunk;
+            yield [name, this.repr.slice(pos, pos + length + 4), this.repr.readUInt32BE(this.ptr + length + 4), this.ptr] as PNGChunk;
             this.ptr += length + 8;
             if (name == 'IEND')
                 break;
@@ -64,7 +58,7 @@ export class PNGEncoder {
         const b = Buffer.alloc(4);
         b.writeInt32BE(chunk[1].length - 4, 0);
         await this.writer.write(b); // write length
-        const buff = await chunk[1]();
+        const buff = chunk[1];
         await this.writer.write(buff); // chunk includes chunkname
         b.writeInt32BE(buf(buff), 0);
         await this.writer.write(b);
@@ -99,13 +93,13 @@ export const extract = async (png: Buffer) => {
             switch (name) {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
-                    buff = await chunk();
+                    buff = chunk;
                     if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
                         magic = true;
                     break;
                 case 'IDAT':
                     if (magic) {
-                        lastIDAT = await chunk();
+                        lastIDAT = chunk;
                         break;
                     }
                 // eslint-disable-next-line no-fallthrough
@@ -159,7 +153,7 @@ export const inject = async (container: File, inj: File) => {
         if (magic && name != "IDAT")
             break;
         if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", () => buildChunk("tEXt", CUM0), () => 0, 0]);
+            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
             magic = true;
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
@@ -168,8 +162,8 @@ export const inject = async (container: File, inj: File) => {
     injb.writeInt32LE(inj.name.length, 0);
     injb.write(inj.name, 4);
     Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", () => buildChunk("IDAT", injb), () => 0, 0]);
-    await encoder.insertchunk(["IEND", () => buildChunk("IEND", Buffer.from([])), () => 0, 0]);
+    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
+    await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
     return extract();
 };
 
@@ -182,7 +176,7 @@ export const has_embed = async (png: Buffer) => {
             switch (name) {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
-                    buff = await chunk();
+                    buff = chunk;
                     if (buff.slice(4, 4 + CUM0.length).equals(CUM0)) {
                         return true;
                     } break;
