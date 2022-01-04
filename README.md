@@ -1,7 +1,7 @@
 PNG Extra Embedder (PEE)
 ========================
 
-Can embed any file in a PNG/WebM and upload it through 4chanX.
+Can embed any file in a PNG/WebM/GIF and upload it through 4chanX.
 Requires 4chanX and violentmonkey.
 
 How to Build

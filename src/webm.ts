@@ -1,6 +1,5 @@
 import { Buffer } from "buffer";
 import * as ebml from "ts-ebml";
-import { concatAB } from "./png";
 
 // unused, but will in case 4chan does file sig checks
 //const password = Buffer.from("NOA");
@@ -71,9 +70,9 @@ const embed = (webm: Buffer, data: Buffer) => {
             chunks.splice(embed + 1, 0, ...stack as any);
             tags = findEnclosingTag(chunks, n);
         }
-        embed = tags![1];    
+        embed = tags![1];
     };
-    
+
     findOrInsert('Tags');
     findOrInsert('Tag');
     findOrInsert('Targets');
@@ -108,7 +107,7 @@ const embed = (webm: Buffer, data: Buffer) => {
     return Buffer.from(enc.encode(chunks.filter(e => e.name != "unknown")));
 };
 
-const extractBuff = (webm: Buffer) => {
+export const extract = (webm: Buffer) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
 
@@ -120,23 +119,21 @@ const extractBuff = (webm: Buffer) => {
         return;
     const chk = chunks[embed + 1];
     if (chk.type == "b" && chk.name == "TagBinary")
-        return chk.data;
-};
-
-export const extract = async (reader: ReadableStreamDefaultReader<Uint8Array>): Promise<{ filename: string; data: Buffer } | undefined> => {
-    let total = Buffer.from('');
-    let chunk: ReadableStreamDefaultReadResult<Uint8Array>;
-    // todo: early reject
-    do {
-        chunk = await reader.read();
-        if (chunk.value)
-            total = concatAB(total, Buffer.from(chunk.value));
-    } while (!chunk.done);
-    const data = extractBuff(total);
-    if (!data)
-        return;
-    return { filename: 'embedded', data };
+        return { filename: 'string', data: chk.data };
 };
 
 export const inject = async (container: File, inj: File): Promise<Buffer> =>
     embed(Buffer.from(await container.arrayBuffer()), Buffer.from(await inj.arrayBuffer()));
+
+export const has_embed = (webm: Buffer) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+
+    const embed = chunks.findIndex(e => e.name == "TagName" && e.type == '8' && e.value == "COOM");
+    const cl = chunks.find(e => e.name == "Cluster");
+    if (cl && embed == -1)
+        return false; // Tags appear before Cluster, so if we have a Cluster and no coomtag, then it's a definite no
+    if (embed == -1) // Found no coomtag, but no cluster, so it might be further
+        return;
+    return true;
+};

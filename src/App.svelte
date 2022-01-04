@@ -1,10 +1,20 @@
 <script lang="ts">
+import { onDestroy } from 'svelte';
+
   import { settings } from './stores'
   let visible = false
   function opensettings() {
     visible = !visible
   }
-  console.log($settings)
+
+  let penisEvent = () => {
+    visible = !visible;
+  }
+  document.addEventListener('penis', penisEvent);
+
+  onDestroy(() => {
+    document.removeEventListener('penis', penisEvent);
+  });
 </script>
 
 <span class="clickable" class:glow={visible} on:click={() => opensettings()}>

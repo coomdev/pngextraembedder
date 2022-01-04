@@ -1,89 +1,21 @@
 import { Buffer } from "buffer";
 import { fileTypeFromBuffer } from 'file-type';
-import App from "./App.svelte";
 import { settings } from "./stores";
 
 import * as png from "./png";
 import * as webm from "./webm";
 import * as gif from "./gif";
 
-let csettings: any;
+import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
+import App from "./App.svelte";
+import SettingsButton from './SettingsButton.svelte';
+
+let csettings: any;
 settings.subscribe(b => csettings = b);
 
-type Awaited<T> = T extends PromiseLike<infer U> ? U : T
-
-const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest);
-
-const headerStringToObject = (s: string) =>
-    Object.fromEntries(s.split('\n').map(e => {
-        const [name, ...rest] = e.split(':');
-        return [name.toLowerCase(), rest.join(':').trim()];
-    }));
-
-function GM_head(...[url, opt]: Parameters<typeof fetch>) {
-    return new Promise<string>((resolve, reject) => {
-        // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
-        const gmopt: Tampermonkey.Request<any> = {
-            url: url.toString(),
-            data: opt?.body?.toString(),
-            method: "HEAD",
-            onload: (resp) => {
-                resolve(resp.responseHeaders);
-            },
-            ontimeout: () => reject("fetch timeout"),
-            onerror: () => reject("fetch error"),
-            onabort: () => reject("fetch abort")
-        };
-        xmlhttprequest(gmopt);
-    });
-}
-
-function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
-    function blobTo(to: string, blob: Blob) {
-        if (to == "arrayBuffer" && blob.arrayBuffer)
-            return blob.arrayBuffer();
-        return new Promise((resolve, reject) => {
-            const fileReader = new FileReader();
-            fileReader.onload = function (event) {
-                if (!event) return;
-                if (to == "base64")
-                    resolve(event.target!.result);
-                else
-                    resolve(event.target!.result);
-            };
-            if (to == "arrayBuffer") fileReader.readAsArrayBuffer(blob);
-            else if (to == "base64") fileReader.readAsDataURL(blob); // "data:*/*;base64,......"
-            else if (to == "text") fileReader.readAsText(blob, "utf-8");
-            else reject("unknown to");
-        });
-    }
-    return new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
-        // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
-        const gmopt: Tampermonkey.Request<any> = {
-            url: url.toString(),
-            data: opt?.body?.toString(),
-            responseType: "blob",
-            headers: opt?.headers as any,
-            method: "GET",
-            onload: (resp) => {
-                const blob = resp.response as Blob;
-                const ref = resp as any as Awaited<ReturnType<typeof fetch>>;
-                ref.blob = () => Promise.resolve(blob);
-                ref.arrayBuffer = () => blobTo("arrayBuffer", blob) as Promise<ArrayBuffer>;
-                ref.text = () => blobTo("text", blob) as Promise<string>;
-                ref.json = async () => JSON.parse(await (blobTo("text", blob) as Promise<any>));
-                resolve(resp as any);
-            },
-            ontimeout: () => reject("fetch timeout"),
-            onerror: () => reject("fetch error"),
-            onabort: () => reject("fetch abort")
-        };
-        xmlhttprequest(gmopt);
-    });
-}
-
-async function* streamRemote(url: string, chunkSize = 128 * 1024, fetchRestOnNonCanceled = true) {
+// most pngs are encoded with 65k idat chunks
+async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonCanceled = true) {
     const headers = await GM_head(url);
     const h = headerStringToObject(headers);
     const size = +h['content-length'];
@@ -92,49 +24,59 @@ async function* streamRemote(url: string, chunkSize = 128 * 1024, fetchRestOnNon
     while (ptr != size) {
         const res = await GM_fetch(url, { headers: { range: `bytes=${ptr}-${ptr + fetchSize - 1}` } }) as any as Tampermonkey.Response<any>;
         const obj = headerStringToObject(res.responseHeaders);
-        if (!('content-length' in obj))
-            return;
-        const len = +obj['content-length'];
+        if (!('content-length' in obj)) {
+            console.warn("no content lenght???", url);
+            break;
+        } const len = +obj['content-length'];
         ptr += len;
         if (fetchRestOnNonCanceled)
             fetchSize = size;
-        yield Buffer.from(await (res as any).arrayBuffer());
+        const val = Buffer.from(await (res as any).arrayBuffer());
+        const e = (yield val) as boolean;
+        if (e) {
+            break;
+        }
     }
+    //console.log("streaming ended, ", ptr, size);
 }
 
-function iteratorToStream<T>(iterator: AsyncGenerator<T>) {
-    return new ReadableStream<T>({
-        async pull(controller) {
-            const { value, done } = await iterator.next();
-
-            if (done) {
-                controller.close();
-            } else {
-                controller.enqueue(value);
-            }
-        },
-    });
-}
-
+type EmbeddedFile = { filename: string; data: Buffer };
 const processors: [RegExp,
-    (reader: ReadableStreamDefaultReader<Uint8Array>) => Promise<{ filename: string; data: Buffer } | undefined>,
+    (b: Buffer) => (boolean | undefined) | Promise<boolean | undefined>,
+    (b: Buffer) => EmbeddedFile | undefined | Promise<EmbeddedFile | undefined>,
     (container: File, inj: File) => Promise<Buffer>][] = [
-        [/\.png$/, png.extract, png.inject],
-        [/\.webm$/, webm.extract, webm.inject],
-        [/\.gif$/, gif.extract, gif.inject],
+        [/\.png$/, png.has_embed, png.extract, png.inject],
+        [/\.webm$/, webm.has_embed, webm.extract, webm.inject],
+        [/\.gif$/, gif.has_embed, gif.extract, gif.inject],
     ];
 
 const processImage = async (src: string) => {
     const proc = processors.find(e => src.match(e[0]));
     if (!proc)
         return;
-    // const resp = await GM_fetch(src);
-    // const reader = resp.body;
     const iter = streamRemote(src);
-    const reader = iteratorToStream(iter);
-    if (!reader)
+    if (!iter)
         return;
-    return await proc[1](reader.getReader());
+    let cumul = Buffer.alloc(0);
+    let found: boolean | undefined;
+    let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
+    do {
+        const { value, done } = await iter.next(found === false);
+        if (done) {
+            chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
+        } else {
+            chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
+        }
+        if (!done)
+            cumul = Buffer.concat([cumul, value!]);
+        found = await proc[1](cumul);
+    } while (found !== false && !chunk.done);
+    await iter.next(false);
+    if (found === false) {
+        //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
+        return;
+    }
+    return await proc[2](cumul);
 };
 
 const textToElement = <T = HTMLElement>(s: string) =>
@@ -289,13 +231,14 @@ const startup = async () => {
 
     // Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
     document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
-        let newPosts = e.detail.newPosts;
+        const newPosts = e.detail.newPosts;
         for (const post of newPosts) {
-            let postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1)) as HTMLDivElement;
+            const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1)) as HTMLDivElement;
             processPost(postContainer);
         }
     }));
 
+    // keep this to handle posts getting inlined
     const mo = new MutationObserver(reco => {
         for (const rec of reco)
             if (rec.type == "childList")
@@ -318,10 +261,14 @@ const startup = async () => {
 
     const scts = document.getElementById('shortcuts');
     const button = textToElement(`<span></span>`);
-    const app = new App({
+    const settingsButton = new SettingsButton({
         target: button
     });
     scts?.appendChild(button);
+
+    const appHost = textToElement(`<div class="pee-settings"></div>`);
+    const appInstance = new App({ target: appHost });
+    document.body.append(appHost);
 
     await Promise.all(posts.map(e => processPost(e as any)));
 };
@@ -332,6 +279,7 @@ const getSelectedFile = () => {
         document.dispatchEvent(new CustomEvent('QRGetFile'));
     });
 };
+
 document.addEventListener('4chanXInitFinished', startup);
 
 document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
@@ -356,7 +304,7 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => 
                     const proc = processors.find(e => file.name.match(e[0]));
                     if (!proc)
                         throw new Error("Container filetype not supported");
-                    const buff = await proc[2](file, input.files[0]);
+                    const buff = await proc[3](file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
                         //detail: { file: new Blob([buff]), name: file.name, type: file.type }
                         detail: { file: new Blob([buff], { type }), name: file.name }

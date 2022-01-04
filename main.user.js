@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.54
+// @version      0.55
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -2296,8 +2296,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance2, Constructor) {
-        if (!(instance2 instanceof Constructor)) {
+      function _classCallCheck(instance3, Constructor) {
+        if (!(instance3 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -12300,7 +12300,10 @@
   var supportedExtensions = new Set(extensions);
   var supportedMimeTypes = new Set(mimeTypes);
 
-  // src/App.svelte
+  // src/stores.ts
+  init_esbuild_inject();
+
+  // node_modules/svelte/store/index.mjs
   init_esbuild_inject();
 
   // node_modules/svelte/internal/index.mjs
@@ -12401,6 +12404,14 @@
   function set_current_component(component) {
     current_component = component;
   }
+  function get_current_component() {
+    if (!current_component)
+      throw new Error("Function called outside component initialization");
+    return current_component;
+  }
+  function onDestroy(fn) {
+    get_current_component().$$.on_destroy.push(fn);
+  }
   var dirty_components = [];
   var binding_callbacks = [];
   var render_callbacks = [];
@@ -12499,7 +12510,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance2, create_fragment2, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance3, create_fragment3, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -12522,7 +12533,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance2 ? instance2(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance3 ? instance3(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -12535,7 +12546,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment2 ? create_fragment2($$.ctx) : false;
+    $$.fragment = create_fragment3 ? create_fragment3($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -12618,11 +12629,7 @@
     }
   };
 
-  // src/stores.ts
-  init_esbuild_inject();
-
   // node_modules/svelte/store/index.mjs
-  init_esbuild_inject();
   var subscriber_queue = [];
   function writable(value, start = noop) {
     let stop;
@@ -12680,6 +12687,459 @@
   settings.subscribe((newVal) => {
     localSet("settings", newVal);
   });
+
+  // src/png.ts
+  init_esbuild_inject();
+  var import_crc_32 = __toESM(require_crc32(), 1);
+  var import_buffer = __toESM(require_buffer(), 1);
+  var PNGDecoder = class {
+    constructor(reader) {
+      this.reader = reader;
+      this.req = 8;
+      this.ptr = 8;
+      this.repr = import_buffer.Buffer.from([]);
+    }
+    async catchup() {
+      while (this.repr.byteLength < this.req) {
+        const chunk = await this.reader.read();
+        if (chunk.done) {
+          throw new Error(`Unexpected EOF, got ${this.repr.byteLength}, required ${this.req}, ${chunk.value}`);
+        }
+        this.repr = import_buffer.Buffer.concat([this.repr, chunk.value]);
+      }
+    }
+    async *chunks() {
+      while (true) {
+        this.req += 8;
+        await this.catchup();
+        const length = this.repr.readUInt32BE(this.ptr);
+        const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
+        this.ptr += 4;
+        this.req += length + 4;
+        const pos = this.ptr;
+        yield [name, async () => {
+          await this.catchup();
+          return this.repr.slice(pos, pos + length + 4);
+        }, async () => {
+          await this.catchup();
+          return this.repr.readUInt32BE(this.ptr + length + 4);
+        }, this.ptr];
+        this.ptr += length + 8;
+        if (name == "IEND")
+          break;
+      }
+    }
+    async dtor() {
+    }
+  };
+  var PNGEncoder = class {
+    constructor(bytes) {
+      this.writer = bytes.getWriter();
+      this.writer.write(import_buffer.Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    }
+    async insertchunk(chunk) {
+      const b = import_buffer.Buffer.alloc(4);
+      b.writeInt32BE(chunk[1].length - 4, 0);
+      await this.writer.write(b);
+      const buff = await chunk[1]();
+      await this.writer.write(buff);
+      b.writeInt32BE((0, import_crc_32.buf)(buff), 0);
+      await this.writer.write(b);
+    }
+    async dtor() {
+      this.writer.releaseLock();
+      await this.writer.close();
+    }
+  };
+  var CUM0 = import_buffer.Buffer.from("CUM\x000");
+  var BufferReadStream = (b) => {
+    const ret = new ReadableStream({
+      pull(cont) {
+        cont.enqueue(b);
+        cont.close();
+      }
+    });
+    return ret;
+  };
+  var extract = async (png) => {
+    let magic2 = false;
+    const reader = BufferReadStream(png).getReader();
+    const sneed = new PNGDecoder(reader);
+    try {
+      let lastIDAT = null;
+      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
+        let buff;
+        switch (name) {
+          case "tEXt":
+            buff = await chunk();
+            if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
+              magic2 = true;
+            break;
+          case "IDAT":
+            if (magic2) {
+              lastIDAT = await chunk();
+              break;
+            }
+          case "IEND":
+            if (!magic2)
+              return;
+          default:
+            break;
+        }
+      }
+      if (lastIDAT) {
+        let data = lastIDAT.slice(4);
+        const fnsize = data.readUInt32LE(0);
+        const fn = data.slice(4, 4 + fnsize).toString();
+        data = data.slice(4 + fnsize);
+        return { filename: fn, data };
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      reader.releaseLock();
+    }
+  };
+  var buildChunk = (tag, data) => {
+    const ret = import_buffer.Buffer.alloc(data.byteLength + 4);
+    ret.write(tag.substr(0, 4), 0);
+    data.copy(ret, 4);
+    return ret;
+  };
+  var BufferWriteStream = () => {
+    let b = import_buffer.Buffer.from([]);
+    const ret = new WritableStream({
+      write(chunk) {
+        b = import_buffer.Buffer.concat([b, chunk]);
+      }
+    });
+    return [ret, () => b];
+  };
+  var inject = async (container, inj) => {
+    const [writestream, extract4] = BufferWriteStream();
+    const encoder = new PNGEncoder(writestream);
+    const decoder = new PNGDecoder(container.stream().getReader());
+    let magic2 = false;
+    for await (const [name, chunk, crc, offset] of decoder.chunks()) {
+      if (magic2 && name != "IDAT")
+        break;
+      if (!magic2 && name == "IDAT") {
+        await encoder.insertchunk(["tEXt", () => buildChunk("tEXt", CUM0), () => 0, 0]);
+        magic2 = true;
+      }
+      await encoder.insertchunk([name, chunk, crc, offset]);
+    }
+    const injb = import_buffer.Buffer.alloc(4 + inj.name.length + inj.size);
+    injb.writeInt32LE(inj.name.length, 0);
+    injb.write(inj.name, 4);
+    import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
+    await encoder.insertchunk(["IDAT", () => buildChunk("IDAT", injb), () => 0, 0]);
+    await encoder.insertchunk(["IEND", () => buildChunk("IEND", import_buffer.Buffer.from([])), () => 0, 0]);
+    return extract4();
+  };
+  var has_embed = async (png) => {
+    const reader = BufferReadStream(png).getReader();
+    const sneed = new PNGDecoder(reader);
+    try {
+      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
+        let buff;
+        switch (name) {
+          case "tEXt":
+            buff = await chunk();
+            if (buff.slice(4, 4 + CUM0.length).equals(CUM0)) {
+              return true;
+            }
+            break;
+          case "IDAT":
+          case "IEND":
+            return false;
+          default:
+            break;
+        }
+      }
+    } catch (e) {
+      return;
+    } finally {
+      reader.releaseLock();
+    }
+  };
+
+  // src/webm.ts
+  init_esbuild_inject();
+  var import_buffer2 = __toESM(require_buffer(), 1);
+  var ebml = __toESM(require_lib2(), 1);
+  var findEnclosingTag = (ch, name) => {
+    const first = ch.findIndex((e) => e.type == "m" && e.name == name);
+    if (first < 0)
+      return;
+    const second = ch.slice(first).findIndex((e) => e.type == "m" && e.name == name);
+    if (second < 0)
+      return;
+    return [
+      first,
+      first + second
+    ];
+  };
+  var embed = (webm, data) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+    const enc = new ebml.Encoder();
+    let embed2 = chunks.findIndex((e) => e.name == "Tracks" && e.type == "m" && e.isEnd);
+    const findOrInsert = (n) => {
+      let tags = findEnclosingTag(chunks, n);
+      const stack = [];
+      if (!tags) {
+        stack.push({
+          type: "m",
+          isEnd: false,
+          name: n,
+          data: import_buffer2.Buffer.from("")
+        });
+        stack.push({
+          type: "m",
+          isEnd: true,
+          name: n,
+          data: import_buffer2.Buffer.from("")
+        });
+        chunks.splice(embed2 + 1, 0, ...stack);
+        tags = findEnclosingTag(chunks, n);
+      }
+      embed2 = tags[1];
+    };
+    findOrInsert("Tags");
+    findOrInsert("Tag");
+    findOrInsert("Targets");
+    embed2++;
+    chunks.splice(embed2 + 1, 0, ...[
+      {
+        type: "m",
+        isEnd: false,
+        name: "SimpleTag",
+        data: import_buffer2.Buffer.from("")
+      },
+      {
+        type: "8",
+        isEnd: false,
+        name: "TagName",
+        data: import_buffer2.Buffer.from("COOM")
+      },
+      {
+        type: "8",
+        isEnd: false,
+        name: "TagBinary",
+        data
+      },
+      {
+        type: "m",
+        isEnd: true,
+        name: "SimpleTag",
+        data: import_buffer2.Buffer.from("")
+      }
+    ]);
+    return import_buffer2.Buffer.from(enc.encode(chunks.filter((e) => e.name != "unknown")));
+  };
+  var extract2 = (webm) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
+    const cl = chunks.find((e) => e.name == "Cluster");
+    if (cl && embed2 == -1)
+      return;
+    if (embed2 == -1)
+      return;
+    const chk = chunks[embed2 + 1];
+    if (chk.type == "b" && chk.name == "TagBinary")
+      return { filename: "string", data: chk.data };
+  };
+  var inject2 = async (container, inj) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
+  var has_embed2 = (webm) => {
+    const dec = new ebml.Decoder();
+    const chunks = dec.decode(webm);
+    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
+    const cl = chunks.find((e) => e.name == "Cluster");
+    if (cl && embed2 == -1)
+      return false;
+    if (embed2 == -1)
+      return;
+    return true;
+  };
+
+  // src/gif.ts
+  init_esbuild_inject();
+  var import_buffer3 = __toESM(require_buffer(), 1);
+  var netscape = import_buffer3.Buffer.from("!\xFF\vNETSCAPE2.0", "ascii");
+  var magic = import_buffer3.Buffer.from("!\xFF\vCOOMTECH0.1", "ascii");
+  var extractBuff = (gif) => {
+    const field = gif.readUInt8(10);
+    const gcte = !!(field & 1 << 7);
+    let end = 13;
+    if (gcte) {
+      end += 3 * (1 << (field & 7) + 1);
+    }
+    while (gif.readUInt8(end) == "!".charCodeAt(0)) {
+      if (magic.compare(gif, end, end + magic.byteLength) != 0) {
+        end += 3 + gif.readUInt8(end + 2);
+        while (true) {
+          const v = gif.readUInt8(end++);
+          if (!v)
+            break;
+          end += v;
+        }
+      } else {
+        let count = end + magic.byteLength;
+        let t = 0;
+        let v = 0;
+        while ((v = gif.readUInt8(count)) != 0) {
+          t += v;
+          count += v + 1;
+        }
+        const buff = import_buffer3.Buffer.alloc(t);
+        count = end + magic.byteLength;
+        t = 0;
+        while ((v = gif.readUInt8(count)) != 0) {
+          gif.copy(buff, t, count + 1, count + 1 + v);
+          t += v;
+          count += v + 1;
+        }
+        return { filename: "embedded", data: buff };
+      }
+    }
+  };
+  var extract3 = extractBuff;
+  var write_embedding = async (writer, inj) => {
+    await writer.write(magic);
+    const byte = import_buffer3.Buffer.from([0]);
+    let size = inj.byteLength;
+    let ws;
+    let offset = 0;
+    while (size != 0) {
+      ws = size >= 255 ? 255 : size;
+      byte.writeUInt8(ws, 0);
+      await writer.write(byte);
+      await writer.write(inj.slice(offset, offset + ws));
+      size -= ws;
+      offset += ws;
+    }
+    byte.writeUInt8(0, 0);
+    await writer.write(byte);
+  };
+  var inject3 = async (container, inj) => {
+    const [writestream, extract4] = BufferWriteStream();
+    const writer = writestream.getWriter();
+    const contbuff = import_buffer3.Buffer.from(await container.arrayBuffer());
+    const field = contbuff.readUInt8(10);
+    const gcte = !!(field & 1 << 7);
+    let endo = 13;
+    if (gcte)
+      endo += 3 * (1 << (field & 7) + 1);
+    if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
+      endo += netscape.byteLength;
+    await writer.write(contbuff.slice(0, endo));
+    await write_embedding(writer, import_buffer3.Buffer.from(await inj.arrayBuffer()));
+    await writer.write(contbuff.slice(endo));
+    return extract4();
+  };
+  var has_embed3 = (gif) => {
+    const field = gif.readUInt8(10);
+    const gcte = !!(field & 1 << 7);
+    let end = 13;
+    if (gcte) {
+      end += 3 * (1 << (field & 7) + 1);
+    }
+    while (end < gif.byteLength && gif.readUInt8(end) == "!".charCodeAt(0)) {
+      if (magic.compare(gif, end, end + magic.byteLength) != 0) {
+        end += 3 + gif.readUInt8(end + 2);
+        while (true) {
+          const v = gif.readUInt8(end++);
+          if (!v)
+            break;
+          end += v;
+        }
+      } else {
+        return true;
+      }
+    }
+    if (end >= gif.byteLength)
+      return;
+    return false;
+  };
+
+  // src/requests.ts
+  init_esbuild_inject();
+  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+  var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
+    const [name, ...rest] = e.split(":");
+    return [name.toLowerCase(), rest.join(":").trim()];
+  }));
+  function GM_head(...[url, opt]) {
+    return new Promise((resolve, reject) => {
+      const gmopt = {
+        url: url.toString(),
+        data: opt?.body?.toString(),
+        method: "HEAD",
+        onload: (resp) => {
+          resolve(resp.responseHeaders);
+        },
+        ontimeout: () => reject("fetch timeout"),
+        onerror: () => reject("fetch error"),
+        onabort: () => reject("fetch abort")
+      };
+      xmlhttprequest(gmopt);
+    });
+  }
+  function GM_fetch(...[url, opt]) {
+    function blobTo(to, blob) {
+      if (to == "arrayBuffer" && blob.arrayBuffer)
+        return blob.arrayBuffer();
+      return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onload = function(event) {
+          if (!event)
+            return;
+          if (to == "base64")
+            resolve(event.target.result);
+          else
+            resolve(event.target.result);
+        };
+        if (to == "arrayBuffer")
+          fileReader.readAsArrayBuffer(blob);
+        else if (to == "base64")
+          fileReader.readAsDataURL(blob);
+        else if (to == "text")
+          fileReader.readAsText(blob, "utf-8");
+        else
+          reject("unknown to");
+      });
+    }
+    return new Promise((resolve, reject) => {
+      const gmopt = {
+        url: url.toString(),
+        data: opt?.body?.toString(),
+        responseType: "blob",
+        headers: opt?.headers,
+        method: "GET",
+        onload: (resp) => {
+          const blob = resp.response;
+          const ref = resp;
+          ref.blob = () => Promise.resolve(blob);
+          ref.arrayBuffer = () => blobTo("arrayBuffer", blob);
+          ref.text = () => blobTo("text", blob);
+          ref.json = async () => JSON.parse(await blobTo("text", blob));
+          resolve(resp);
+        },
+        ontimeout: () => reject("fetch timeout"),
+        onerror: () => reject("fetch error"),
+        onabort: () => reject("fetch abort")
+      };
+      xmlhttprequest(gmopt);
+    });
+  }
+
+  // src/App.svelte
+  init_esbuild_inject();
+
+  // node_modules/svelte/index.mjs
+  init_esbuild_inject();
 
   // src/App.svelte
   function add_css(target) {
@@ -12834,7 +13294,13 @@
     function opensettings() {
       $$invalidate(0, visible = !visible);
     }
-    console.log($settings);
+    let penisEvent = () => {
+      $$invalidate(0, visible = !visible);
+    };
+    document.addEventListener("penis", penisEvent);
+    onDestroy(() => {
+      document.removeEventListener("penis", penisEvent);
+    });
     const click_handler = () => opensettings();
     function input0_change_handler() {
       $settings.apv = this.checked;
@@ -12871,408 +13337,65 @@
   };
   var App_default = App;
 
-  // src/png.ts
+  // src/SettingsButton.svelte
   init_esbuild_inject();
-  var import_crc_32 = __toESM(require_crc32(), 1);
-  var import_buffer = __toESM(require_buffer(), 1);
-  var concatAB = (...bufs) => {
-    const sz = bufs.map((e) => e.byteLength).reduce((a, b) => a + b);
-    const ret = import_buffer.Buffer.alloc(sz);
-    let ptr = 0;
-    for (const b of bufs) {
-      b.copy(ret, ptr);
-      ptr += b.byteLength;
-    }
-    return ret;
-  };
-  var PNGDecoder = class {
-    constructor(reader) {
-      this.reader = reader;
-      this.req = 8;
-      this.ptr = 8;
-      this.repr = import_buffer.Buffer.from([]);
-    }
-    async catchup() {
-      while (this.repr.byteLength < this.req) {
-        const chunk = await this.reader.read();
-        if (chunk.done)
-          throw new Error("Unexpected EOF");
-        this.repr = concatAB(this.repr, import_buffer.Buffer.from(chunk.value));
-      }
-    }
-    async *chunks() {
-      while (true) {
-        this.req += 8;
-        await this.catchup();
-        const length = this.repr.readUInt32BE(this.ptr);
-        const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
-        this.ptr += 4;
-        this.req += length + 4;
-        await this.catchup();
-        yield [name, this.repr.slice(this.ptr, this.ptr + length + 4), this.repr.readUInt32BE(this.ptr + length + 4), this.ptr];
-        this.ptr += length + 8;
-        if (name == "IEND")
-          break;
-      }
-    }
-    async dtor() {
-    }
-  };
-  var PNGEncoder = class {
-    constructor(bytes) {
-      this.writer = bytes.getWriter();
-      this.writer.write(import_buffer.Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-    }
-    async insertchunk(chunk) {
-      const b = import_buffer.Buffer.alloc(4);
-      b.writeInt32BE(chunk[1].length - 4, 0);
-      await this.writer.write(b);
-      await this.writer.write(chunk[1]);
-      b.writeInt32BE((0, import_crc_32.buf)(chunk[1]), 0);
-      await this.writer.write(b);
-    }
-    async dtor() {
-      this.writer.releaseLock();
-      await this.writer.close();
-    }
-  };
-  var CUM0 = import_buffer.Buffer.from("CUM\x000");
-  var extract = async (reader) => {
-    let magic2 = false;
-    const sneed = new PNGDecoder(reader);
-    try {
-      let lastIDAT = null;
-      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
-        switch (name) {
-          case "tEXt":
-            if (chunk.slice(4, 4 + CUM0.length).equals(CUM0))
-              magic2 = true;
-            break;
-          case "IDAT":
-            if (magic2) {
-              lastIDAT = chunk;
-              break;
-            }
-          case "IEND":
-            if (!magic2)
-              return;
-          default:
-            break;
+  function add_css2(target) {
+    append_styles(target, "svelte-101vs6b", ".glow.svelte-101vs6b{text-shadow:0 0 4px red}.clickable.svelte-101vs6b{cursor:pointer}.clickable.svelte-101vs6b:hover{text-shadow:0 0 2px palevioletred}");
+  }
+  function create_fragment2(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        span = element("span");
+        span.textContent = "[PEE Settings]";
+        attr(span, "class", "clickable svelte-101vs6b");
+        toggle_class(span, "glow", ctx[0]);
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[2]);
+          mounted = true;
         }
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & 1) {
+          toggle_class(span, "glow", ctx2[0]);
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
       }
-      if (lastIDAT) {
-        let data = lastIDAT.slice(4);
-        const fnsize = data.readUInt32LE(0);
-        const fn = data.slice(4, 4 + fnsize).toString();
-        data = data.slice(4 + fnsize);
-        return { filename: fn, data };
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      reader.releaseLock();
-    }
-  };
-  var buildChunk = (tag, data) => {
-    const ret = import_buffer.Buffer.alloc(data.byteLength + 4);
-    ret.write(tag.substr(0, 4), 0);
-    data.copy(ret, 4);
-    return ret;
-  };
-  var BufferWriteStream = () => {
-    let b = import_buffer.Buffer.from([]);
-    const ret = new WritableStream({
-      write(chunk) {
-        b = concatAB(b, chunk);
-      }
-    });
-    return [ret, () => b];
-  };
-  var inject = async (container, inj) => {
-    const [writestream, extract4] = BufferWriteStream();
-    const encoder = new PNGEncoder(writestream);
-    const decoder = new PNGDecoder(container.stream().getReader());
-    let magic2 = false;
-    for await (const [name, chunk, crc, offset] of decoder.chunks()) {
-      if (magic2 && name != "IDAT")
-        break;
-      if (!magic2 && name == "IDAT") {
-        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
-        magic2 = true;
-      }
-      await encoder.insertchunk([name, chunk, crc, offset]);
-    }
-    const injb = import_buffer.Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32LE(inj.name.length, 0);
-    injb.write(inj.name, 4);
-    import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
-    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer.Buffer.from([])), 0, 0]);
-    return extract4();
-  };
-
-  // src/webm.ts
-  init_esbuild_inject();
-  var import_buffer2 = __toESM(require_buffer(), 1);
-  var ebml = __toESM(require_lib2(), 1);
-  var findEnclosingTag = (ch, name) => {
-    const first = ch.findIndex((e) => e.type == "m" && e.name == name);
-    if (first < 0)
-      return;
-    const second = ch.slice(first).findIndex((e) => e.type == "m" && e.name == name);
-    if (second < 0)
-      return;
-    return [
-      first,
-      first + second
-    ];
-  };
-  var embed = (webm, data) => {
-    const dec = new ebml.Decoder();
-    const chunks = dec.decode(webm);
-    const enc = new ebml.Encoder();
-    let embed2 = chunks.findIndex((e) => e.name == "Tracks" && e.type == "m" && e.isEnd);
-    const findOrInsert = (n) => {
-      let tags = findEnclosingTag(chunks, n);
-      const stack = [];
-      if (!tags) {
-        stack.push({
-          type: "m",
-          isEnd: false,
-          name: n,
-          data: import_buffer2.Buffer.from("")
-        });
-        stack.push({
-          type: "m",
-          isEnd: true,
-          name: n,
-          data: import_buffer2.Buffer.from("")
-        });
-        chunks.splice(embed2 + 1, 0, ...stack);
-        tags = findEnclosingTag(chunks, n);
-      }
-      embed2 = tags[1];
     };
-    findOrInsert("Tags");
-    findOrInsert("Tag");
-    findOrInsert("Targets");
-    embed2++;
-    chunks.splice(embed2 + 1, 0, ...[
-      {
-        type: "m",
-        isEnd: false,
-        name: "SimpleTag",
-        data: import_buffer2.Buffer.from("")
-      },
-      {
-        type: "8",
-        isEnd: false,
-        name: "TagName",
-        data: import_buffer2.Buffer.from("COOM")
-      },
-      {
-        type: "8",
-        isEnd: false,
-        name: "TagBinary",
-        data
-      },
-      {
-        type: "m",
-        isEnd: true,
-        name: "SimpleTag",
-        data: import_buffer2.Buffer.from("")
-      }
-    ]);
-    return import_buffer2.Buffer.from(enc.encode(chunks.filter((e) => e.name != "unknown")));
-  };
-  var extractBuff = (webm) => {
-    const dec = new ebml.Decoder();
-    const chunks = dec.decode(webm);
-    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
-    const cl = chunks.find((e) => e.name == "Cluster");
-    if (cl && embed2 == -1)
-      return;
-    if (embed2 == -1)
-      return;
-    const chk = chunks[embed2 + 1];
-    if (chk.type == "b" && chk.name == "TagBinary")
-      return chk.data;
-  };
-  var extract2 = async (reader) => {
-    let total = import_buffer2.Buffer.from("");
-    let chunk;
-    do {
-      chunk = await reader.read();
-      if (chunk.value)
-        total = concatAB(total, import_buffer2.Buffer.from(chunk.value));
-    } while (!chunk.done);
-    const data = extractBuff(total);
-    if (!data)
-      return;
-    return { filename: "embedded", data };
-  };
-  var inject2 = async (container, inj) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
-
-  // src/gif.ts
-  init_esbuild_inject();
-  var import_buffer3 = __toESM(require_buffer(), 1);
-  var netscape = import_buffer3.Buffer.from("!\xFF\vNETSCAPE2.0\0\0\0");
-  var magic = import_buffer3.Buffer.from("!\xFF\vCOOMTECH0.1", "ascii");
-  var extractBuff2 = (gif) => {
-    let field = gif.readUInt8(10);
-    let gcte = !!(field & 1 << 7);
-    let end = 13;
-    if (gcte) {
-      end += 3 * (1 << (field & 7) + 1);
+  }
+  function instance2($$self, $$props, $$invalidate) {
+    "use strict";
+    let visible = false;
+    function opensettings() {
+      $$invalidate(0, visible = !visible);
     }
-    while (gif.readUInt8(end) == "!".charCodeAt(0)) {
-      if (magic.compare(gif, end, end + magic.byteLength) != 0) {
-        end += 3 + gif.readUInt8(end + 2);
-        while (1) {
-          let v = gif.readUInt8(end++);
-          if (!v)
-            break;
-          end += v;
-        }
-      } else {
-        let count = end + magic.byteLength;
-        let t = 0;
-        let v = 0;
-        while ((v = gif.readUInt8(count)) != 0) {
-          t += v;
-          count += v + 1;
-        }
-        let buff = import_buffer3.Buffer.alloc(t);
-        count = end + magic.byteLength;
-        t = 0;
-        while ((v = gif.readUInt8(count)) != 0) {
-          gif.copy(buff, t, count + 1, count + 1 + v);
-          t += v;
-          count += v + 1;
-        }
-        return buff;
-      }
+    const click_handler = () => opensettings();
+    return [visible, opensettings, click_handler];
+  }
+  var SettingsButton = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance2, create_fragment2, safe_not_equal, {}, add_css2);
     }
   };
-  var extract3 = async (reader) => {
-    let total = import_buffer3.Buffer.from("");
-    let chunk;
-    do {
-      chunk = await reader.read();
-      if (chunk.value)
-        total = concatAB(total, import_buffer3.Buffer.from(chunk.value));
-    } while (!chunk.done);
-    const data = extractBuff2(total);
-    if (!data)
-      return;
-    return { filename: "embedded", data };
-  };
-  var write_embedding = async (writer, inj) => {
-    await writer.write(magic);
-    const byte = import_buffer3.Buffer.from([0]);
-    let size = inj.byteLength;
-    let ws;
-    let offset = 0;
-    while (size != 0) {
-      ws = size >= 255 ? 255 : size;
-      byte.writeUInt8(ws, 0);
-      await writer.write(byte);
-      await writer.write(inj.slice(offset, offset + ws));
-      size -= ws;
-      offset += ws;
-    }
-    byte.writeUInt8(0, 0);
-    await writer.write(byte);
-  };
-  var inject3 = async (container, inj) => {
-    const [writestream, extract4] = BufferWriteStream();
-    const writer = writestream.getWriter();
-    let contbuff = import_buffer3.Buffer.from(await container.arrayBuffer());
-    let field = contbuff.readUInt8(10);
-    let gcte = !!(field & 1 << 7);
-    let endo = 13;
-    if (gcte)
-      endo += 3 * (1 << (field & 7) + 1);
-    if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
-      endo += netscape.byteLength;
-    await writer.write(contbuff.slice(0, endo));
-    await write_embedding(writer, import_buffer3.Buffer.from(await inj.arrayBuffer()));
-    await writer.write(contbuff.slice(endo));
-    return extract4();
-  };
+  var SettingsButton_default = SettingsButton;
 
   // src/main.ts
   var csettings;
   settings.subscribe((b) => csettings = b);
-  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest;
-  var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
-    const [name, ...rest] = e.split(":");
-    return [name.toLowerCase(), rest.join(":").trim()];
-  }));
-  function GM_head(...[url, opt]) {
-    return new Promise((resolve, reject) => {
-      const gmopt = {
-        url: url.toString(),
-        data: opt?.body?.toString(),
-        method: "HEAD",
-        onload: (resp) => {
-          resolve(resp.responseHeaders);
-        },
-        ontimeout: () => reject("fetch timeout"),
-        onerror: () => reject("fetch error"),
-        onabort: () => reject("fetch abort")
-      };
-      xmlhttprequest(gmopt);
-    });
-  }
-  function GM_fetch(...[url, opt]) {
-    function blobTo(to, blob) {
-      if (to == "arrayBuffer" && blob.arrayBuffer)
-        return blob.arrayBuffer();
-      return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = function(event) {
-          if (!event)
-            return;
-          if (to == "base64")
-            resolve(event.target.result);
-          else
-            resolve(event.target.result);
-        };
-        if (to == "arrayBuffer")
-          fileReader.readAsArrayBuffer(blob);
-        else if (to == "base64")
-          fileReader.readAsDataURL(blob);
-        else if (to == "text")
-          fileReader.readAsText(blob, "utf-8");
-        else
-          reject("unknown to");
-      });
-    }
-    return new Promise((resolve, reject) => {
-      const gmopt = {
-        url: url.toString(),
-        data: opt?.body?.toString(),
-        responseType: "blob",
-        headers: opt?.headers,
-        method: "GET",
-        onload: (resp) => {
-          const blob = resp.response;
-          const ref = resp;
-          ref.blob = () => Promise.resolve(blob);
-          ref.arrayBuffer = () => blobTo("arrayBuffer", blob);
-          ref.text = () => blobTo("text", blob);
-          ref.json = async () => JSON.parse(await blobTo("text", blob));
-          resolve(resp);
-        },
-        ontimeout: () => reject("fetch timeout"),
-        onerror: () => reject("fetch error"),
-        onabort: () => reject("fetch abort")
-      };
-      xmlhttprequest(gmopt);
-    });
-  }
-  async function* streamRemote(url, chunkSize = 128 * 1024, fetchRestOnNonCanceled = true) {
+  async function* streamRemote(url, chunkSize = 16 * 1024, fetchRestOnNonCanceled = true) {
     const headers = await GM_head(url);
     const h = headerStringToObject(headers);
     const size = +h["content-length"];
@@ -13281,41 +13404,52 @@
     while (ptr != size) {
       const res = await GM_fetch(url, { headers: { range: `bytes=${ptr}-${ptr + fetchSize - 1}` } });
       const obj = headerStringToObject(res.responseHeaders);
-      if (!("content-length" in obj))
-        return;
+      if (!("content-length" in obj)) {
+        console.warn("no content lenght???", url);
+        break;
+      }
       const len = +obj["content-length"];
       ptr += len;
       if (fetchRestOnNonCanceled)
         fetchSize = size;
-      yield import_buffer4.Buffer.from(await res.arrayBuffer());
+      const val = import_buffer4.Buffer.from(await res.arrayBuffer());
+      const e = yield val;
+      if (e) {
+        break;
+      }
     }
   }
-  function iteratorToStream(iterator) {
-    return new ReadableStream({
-      async pull(controller) {
-        const { value, done } = await iterator.next();
-        if (done) {
-          controller.close();
-        } else {
-          controller.enqueue(value);
-        }
-      }
-    });
-  }
   var processors = [
-    [/\.png$/, extract, inject],
-    [/\.webm$/, extract2, inject2],
-    [/\.gif$/, extract3, inject3]
+    [/\.png$/, has_embed, extract, inject],
+    [/\.webm$/, has_embed2, extract2, inject2],
+    [/\.gif$/, has_embed3, extract3, inject3]
   ];
   var processImage = async (src) => {
     const proc = processors.find((e) => src.match(e[0]));
     if (!proc)
       return;
     const iter = streamRemote(src);
-    const reader = iteratorToStream(iter);
-    if (!reader)
+    if (!iter)
       return;
-    return await proc[1](reader.getReader());
+    let cumul = import_buffer4.Buffer.alloc(0);
+    let found;
+    let chunk = { done: true };
+    do {
+      const { value, done } = await iter.next(found === false);
+      if (done) {
+        chunk = { done: true };
+      } else {
+        chunk = { done: false, value };
+      }
+      if (!done)
+        cumul = import_buffer4.Buffer.concat([cumul, value]);
+      found = await proc[1](cumul);
+    } while (found !== false && !chunk.done);
+    await iter.next(false);
+    if (found === false) {
+      return;
+    }
+    return await proc[2](cumul);
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var processPost = async (post) => {
@@ -13448,9 +13582,9 @@
   var startup = async () => {
     await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));
     document.addEventListener("ThreadUpdate", async (e) => {
-      let newPosts = e.detail.newPosts;
+      const newPosts = e.detail.newPosts;
       for (const post of newPosts) {
-        let postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
+        const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
         processPost(postContainer);
       }
     });
@@ -13473,10 +13607,13 @@
     const posts = [...document.querySelectorAll(".postContainer")];
     const scts = document.getElementById("shortcuts");
     const button = textToElement(`<span></span>`);
-    const app = new App_default({
+    const settingsButton = new SettingsButton_default({
       target: button
     });
     scts?.appendChild(button);
+    const appHost = textToElement(`<div class="pee-settings"></div>`);
+    const appInstance = new App_default({ target: appHost });
+    document.body.append(appHost);
     await Promise.all(posts.map((e) => processPost(e)));
   };
   var getSelectedFile = () => {
@@ -13508,7 +13645,7 @@
             const proc = processors.find((e3) => file.name.match(e3[0]));
             if (!proc)
               throw new Error("Container filetype not supported");
-            const buff = await proc[2](file, input.files[0]);
+            const buff = await proc[3](file, input.files[0]);
             document.dispatchEvent(new CustomEvent("QRSetFile", {
               detail: { file: new Blob([buff], { type }), name: file.name }
             }));
