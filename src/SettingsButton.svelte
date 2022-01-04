@@ -2,6 +2,7 @@
   let visible = false;
   function opensettings() {
     visible = !visible
+    document.dispatchEvent(new CustomEvent("penis"));
   }
 </script>
 

@@ -2,24 +2,19 @@
 import { onDestroy } from 'svelte';
 
   import { settings } from './stores'
-  let visible = false
-  function opensettings() {
-    visible = !visible
-  }
 
+  let visible = false;
   let penisEvent = () => {
+    console.log("bepis")
     visible = !visible;
   }
   document.addEventListener('penis', penisEvent);
-
+  console.log("app loaded")
   onDestroy(() => {
     document.removeEventListener('penis', penisEvent);
   });
 </script>
 
-<span class="clickable" class:glow={visible} on:click={() => opensettings()}>
-  [PEE Settings]
-</span>
 <div class="backpanel" class:enabled={visible} class:disabled={!visible}>
   <div class="content">
     <h1>PEE Settings</h1>
@@ -82,6 +77,7 @@ import { onDestroy } from 'svelte';
     border: 1px solid;
     border-radius: 5px;
     background-color: rgba(0, 0, 0, 0.2);
+    pointer-events: all;
   }
 
   .clickable:hover {

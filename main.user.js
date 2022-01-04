@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.55
+// @version      0.56
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -13143,117 +13143,104 @@
 
   // src/App.svelte
   function add_css(target) {
-    append_styles(target, "svelte-6ot9e6", ".enabled.svelte-6ot9e6{display:block}.disabled.svelte-6ot9e6{display:none}.glow.svelte-6ot9e6{text-shadow:0 0 4px red}.clickable.svelte-6ot9e6{cursor:pointer}.content.svelte-6ot9e6{display:flex;flex-direction:column}hr.svelte-6ot9e6{width:100%}h1.svelte-6ot9e6{text-align:center}.backpanel.svelte-6ot9e6{position:absolute;right:32px;padding:10px;width:10%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2)}.clickable.svelte-6ot9e6:hover{text-shadow:0 0 2px palevioletred}");
+    append_styles(target, "svelte-1ev9gch", ".enabled.svelte-1ev9gch{display:block}.disabled.svelte-1ev9gch{display:none}.content.svelte-1ev9gch{display:flex;flex-direction:column}hr.svelte-1ev9gch{width:100%}h1.svelte-1ev9gch{text-align:center}.backpanel.svelte-1ev9gch{position:absolute;right:32px;padding:10px;width:10%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2);pointer-events:all}");
   }
   function create_fragment(ctx) {
-    let span;
-    let t1;
     let div1;
     let div0;
     let h1;
-    let t3;
+    let t1;
     let hr;
-    let t4;
+    let t2;
     let label0;
     let input0;
-    let t5;
-    let t6;
+    let t3;
+    let t4;
     let label1;
     let input1;
-    let t7;
-    let t8;
+    let t5;
+    let t6;
     let label2;
     let input2;
-    let t9;
-    let t10;
+    let t7;
+    let t8;
     let label3;
     let input3;
-    let t11;
+    let t9;
     let mounted;
     let dispose;
     return {
       c() {
-        span = element("span");
-        span.textContent = "[PEE Settings]";
-        t1 = space();
         div1 = element("div");
         div0 = element("div");
         h1 = element("h1");
         h1.textContent = "PEE Settings";
-        t3 = space();
+        t1 = space();
         hr = element("hr");
-        t4 = space();
+        t2 = space();
         label0 = element("label");
         input0 = element("input");
-        t5 = text("\n      Autoplay Videos");
-        t6 = space();
+        t3 = text("\n      Autoplay Videos");
+        t4 = space();
         label1 = element("label");
         input1 = element("input");
-        t7 = text("\n      Autoplay Audio");
-        t8 = space();
+        t5 = text("\n      Autoplay Audio");
+        t6 = space();
         label2 = element("label");
         input2 = element("input");
-        t9 = text("\n      Autoexpand Images on opening.");
-        t10 = space();
+        t7 = text("\n      Autoexpand Images on opening.");
+        t8 = space();
         label3 = element("label");
         input3 = element("input");
-        t11 = text("\n      Autoexpand Videos on opening.");
-        attr(span, "class", "clickable svelte-6ot9e6");
-        toggle_class(span, "glow", ctx[0]);
-        attr(h1, "class", "svelte-6ot9e6");
-        attr(hr, "class", "svelte-6ot9e6");
+        t9 = text("\n      Autoexpand Videos on opening.");
+        attr(h1, "class", "svelte-1ev9gch");
+        attr(hr, "class", "svelte-1ev9gch");
         attr(input0, "type", "checkbox");
         attr(input1, "type", "checkbox");
         attr(input2, "type", "checkbox");
         attr(input3, "type", "checkbox");
-        attr(div0, "class", "content svelte-6ot9e6");
-        attr(div1, "class", "backpanel svelte-6ot9e6");
+        attr(div0, "class", "content svelte-1ev9gch");
+        attr(div1, "class", "backpanel svelte-1ev9gch");
         toggle_class(div1, "enabled", ctx[0]);
         toggle_class(div1, "disabled", !ctx[0]);
       },
       m(target, anchor) {
-        insert(target, span, anchor);
-        insert(target, t1, anchor);
         insert(target, div1, anchor);
         append(div1, div0);
         append(div0, h1);
-        append(div0, t3);
+        append(div0, t1);
         append(div0, hr);
-        append(div0, t4);
+        append(div0, t2);
         append(div0, label0);
         append(label0, input0);
         input0.checked = ctx[1].apv;
-        append(label0, t5);
-        append(div0, t6);
+        append(label0, t3);
+        append(div0, t4);
         append(div0, label1);
         append(label1, input1);
         input1.checked = ctx[1].apa;
-        append(label1, t7);
-        append(div0, t8);
+        append(label1, t5);
+        append(div0, t6);
         append(div0, label2);
         append(label2, input2);
         input2.checked = ctx[1].xpi;
-        append(label2, t9);
-        append(div0, t10);
+        append(label2, t7);
+        append(div0, t8);
         append(div0, label3);
         append(label3, input3);
         input3.checked = ctx[1].xpv;
-        append(label3, t11);
+        append(label3, t9);
         if (!mounted) {
           dispose = [
-            listen(span, "click", ctx[3]),
-            listen(input0, "change", ctx[4]),
-            listen(input1, "change", ctx[5]),
-            listen(input2, "change", ctx[6]),
-            listen(input3, "change", ctx[7])
+            listen(input0, "change", ctx[2]),
+            listen(input1, "change", ctx[3]),
+            listen(input2, "change", ctx[4]),
+            listen(input3, "change", ctx[5])
           ];
           mounted = true;
         }
       },
       p(ctx2, [dirty]) {
-        if (dirty & 1) {
-          toggle_class(span, "glow", ctx2[0]);
-        }
         if (dirty & 2) {
           input0.checked = ctx2[1].apv;
         }
@@ -13277,10 +13264,6 @@
       o: noop,
       d(detaching) {
         if (detaching)
-          detach(span);
-        if (detaching)
-          detach(t1);
-        if (detaching)
           detach(div1);
         mounted = false;
         run_all(dispose);
@@ -13291,17 +13274,15 @@
     let $settings;
     component_subscribe($$self, settings, ($$value) => $$invalidate(1, $settings = $$value));
     let visible = false;
-    function opensettings() {
-      $$invalidate(0, visible = !visible);
-    }
     let penisEvent = () => {
+      console.log("bepis");
       $$invalidate(0, visible = !visible);
     };
     document.addEventListener("penis", penisEvent);
+    console.log("app loaded");
     onDestroy(() => {
       document.removeEventListener("penis", penisEvent);
     });
-    const click_handler = () => opensettings();
     function input0_change_handler() {
       $settings.apv = this.checked;
       settings.set($settings);
@@ -13321,8 +13302,6 @@
     return [
       visible,
       $settings,
-      opensettings,
-      click_handler,
       input0_change_handler,
       input1_change_handler,
       input2_change_handler,
@@ -13380,6 +13359,7 @@
     let visible = false;
     function opensettings() {
       $$invalidate(0, visible = !visible);
+      document.dispatchEvent(new CustomEvent("penis"));
     }
     const click_handler = () => opensettings();
     return [visible, opensettings, click_handler];
@@ -13696,6 +13676,14 @@
 
 .expanded-image > .post > .file .fileThumb  .full-image {
     display: inline;
+}
+
+.pee-settings {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 `));
   document.documentElement.insertBefore(customStyles, null);

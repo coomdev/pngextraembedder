@@ -359,6 +359,14 @@ customStyles.appendChild(document.createTextNode(
 .expanded-image > .post > .file .fileThumb  .full-image {
     display: inline;
 }
+
+.pee-settings {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
 `
 ));
 
