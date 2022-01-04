@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.57
+// @version      0.58
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -13061,6 +13061,7 @@
 
   // src/requests.ts
   init_esbuild_inject();
+  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest;
   var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
     return [name.toLowerCase(), rest.join(":").trim()];
@@ -13681,25 +13682,6 @@
 }
 `));
   document.documentElement.insertBefore(customStyles, null);
-  onload = () => {
-    const container = document.getElementById("container");
-    const injection = document.getElementById("injection");
-    container.onchange = injection.onchange = async () => {
-      if (container.files?.length && injection.files?.length) {
-        const res = await inject(container.files[0], injection.files[0]);
-        const result = document.getElementById("result");
-        const extracted = document.getElementById("extracted");
-        const res2 = new Blob([res], { type: "image/gif" });
-        result.src = URL.createObjectURL(res2);
-        const embedded = await extract(res);
-        extracted.src = URL.createObjectURL(new Blob([embedded?.data]));
-        const dlr = document.getElementById("dlr");
-        const dle = document.getElementById("dle");
-        dlr.href = result.src;
-        dle.href = extracted.src;
-      }
-    };
-  };
 })();
 /*!
  * The buffer module from node.js, for the browser.
