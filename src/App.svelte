@@ -20,20 +20,16 @@ import { onDestroy } from 'svelte';
     <h1>PEE Settings</h1>
     <hr />
     <label>
-      <input type="checkbox" bind:checked={$settings.apv} />
-      Autoplay Videos
-    </label>
-    <label>
-      <input type="checkbox" bind:checked={$settings.apa} />
-      Autoplay Audio
-    </label>
-    <label>
       <input type="checkbox" bind:checked={$settings.xpi} />
       Autoexpand Images on opening.
     </label>
     <label>
       <input type="checkbox" bind:checked={$settings.xpv} />
       Autoexpand Videos on opening.
+    </label>
+    <label>
+      <input type="checkbox" bind:checked={$settings.loop} />
+      Loop media content.
     </label>
   </div>
 </div>

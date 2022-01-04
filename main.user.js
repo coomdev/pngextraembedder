@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.58
+// @version      0.60
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -2296,8 +2296,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance3, Constructor) {
-        if (!(instance3 instanceof Constructor)) {
+      function _classCallCheck(instance4, Constructor) {
+        if (!(instance4 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -12325,6 +12325,14 @@
   function safe_not_equal(a, b) {
     return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
   }
+  var src_url_equal_anchor;
+  function src_url_equal(element_src, url) {
+    if (!src_url_equal_anchor) {
+      src_url_equal_anchor = document.createElement("a");
+    }
+    src_url_equal_anchor.href = url;
+    return element_src === src_url_equal_anchor.href;
+  }
   function is_empty(obj) {
     return Object.keys(obj).length === 0;
   }
@@ -12397,6 +12405,11 @@
   function children(element2) {
     return Array.from(element2.childNodes);
   }
+  function set_data(text2, data) {
+    data = "" + data;
+    if (text2.wholeText !== data)
+      text2.data = data;
+  }
   function toggle_class(element2, name, toggle) {
     element2.classList[toggle ? "add" : "remove"](name);
   }
@@ -12408,6 +12421,9 @@
     if (!current_component)
       throw new Error("Function called outside component initialization");
     return current_component;
+  }
+  function beforeUpdate(fn) {
+    get_current_component().$$.before_update.push(fn);
   }
   function onDestroy(fn) {
     get_current_component().$$.on_destroy.push(fn);
@@ -12510,7 +12526,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance3, create_fragment3, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance4, create_fragment4, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -12533,7 +12549,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance3 ? instance3(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance4 ? instance4(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -12546,7 +12562,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment3 ? create_fragment3($$.ctx) : false;
+    $$.fragment = create_fragment4 ? create_fragment4($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -12677,10 +12693,9 @@
   var localLoad = (key, def) => "__pee__" + key in localStorage ? JSON.parse(localStorage.getItem("__pee__" + key)) : def;
   var localSet = (key, value) => localStorage.setItem("__pee__" + key, JSON.stringify(value));
   var settings = writable(localLoad("settings", {
-    apv: false,
+    loop: true,
     xpv: false,
     xpi: false,
-    apa: false,
     blacklist: [],
     sources: []
   }));
@@ -13158,10 +13173,6 @@
     let label2;
     let input2;
     let t7;
-    let t8;
-    let label3;
-    let input3;
-    let t9;
     let mounted;
     let dispose;
     return {
@@ -13175,25 +13186,20 @@
         t2 = space();
         label0 = element("label");
         input0 = element("input");
-        t3 = text("\n      Autoplay Videos");
+        t3 = text("\n      Autoexpand Images on opening.");
         t4 = space();
         label1 = element("label");
         input1 = element("input");
-        t5 = text("\n      Autoplay Audio");
+        t5 = text("\n      Autoexpand Videos on opening.");
         t6 = space();
         label2 = element("label");
         input2 = element("input");
-        t7 = text("\n      Autoexpand Images on opening.");
-        t8 = space();
-        label3 = element("label");
-        input3 = element("input");
-        t9 = text("\n      Autoexpand Videos on opening.");
+        t7 = text("\n      Loop media content.");
         attr(h1, "class", "svelte-1rfqgjc");
         attr(hr, "class", "svelte-1rfqgjc");
         attr(input0, "type", "checkbox");
         attr(input1, "type", "checkbox");
         attr(input2, "type", "checkbox");
-        attr(input3, "type", "checkbox");
         attr(div0, "class", "content svelte-1rfqgjc");
         attr(div1, "class", "backpanel svelte-1rfqgjc");
         toggle_class(div1, "enabled", ctx[0]);
@@ -13208,45 +13214,36 @@
         append(div0, t2);
         append(div0, label0);
         append(label0, input0);
-        input0.checked = ctx[1].apv;
+        input0.checked = ctx[1].xpi;
         append(label0, t3);
         append(div0, t4);
         append(div0, label1);
         append(label1, input1);
-        input1.checked = ctx[1].apa;
+        input1.checked = ctx[1].xpv;
         append(label1, t5);
         append(div0, t6);
         append(div0, label2);
         append(label2, input2);
-        input2.checked = ctx[1].xpi;
+        input2.checked = ctx[1].loop;
         append(label2, t7);
-        append(div0, t8);
-        append(div0, label3);
-        append(label3, input3);
-        input3.checked = ctx[1].xpv;
-        append(label3, t9);
         if (!mounted) {
           dispose = [
             listen(input0, "change", ctx[2]),
             listen(input1, "change", ctx[3]),
-            listen(input2, "change", ctx[4]),
-            listen(input3, "change", ctx[5])
+            listen(input2, "change", ctx[4])
           ];
           mounted = true;
         }
       },
       p(ctx2, [dirty]) {
         if (dirty & 2) {
-          input0.checked = ctx2[1].apv;
+          input0.checked = ctx2[1].xpi;
         }
         if (dirty & 2) {
-          input1.checked = ctx2[1].apa;
+          input1.checked = ctx2[1].xpv;
         }
         if (dirty & 2) {
-          input2.checked = ctx2[1].xpi;
-        }
-        if (dirty & 2) {
-          input3.checked = ctx2[1].xpv;
+          input2.checked = ctx2[1].loop;
         }
         if (dirty & 1) {
           toggle_class(div1, "enabled", ctx2[0]);
@@ -13279,19 +13276,15 @@
       document.removeEventListener("penis", penisEvent);
     });
     function input0_change_handler() {
-      $settings.apv = this.checked;
-      settings.set($settings);
-    }
-    function input1_change_handler() {
-      $settings.apa = this.checked;
-      settings.set($settings);
-    }
-    function input2_change_handler() {
       $settings.xpi = this.checked;
       settings.set($settings);
     }
-    function input3_change_handler() {
+    function input1_change_handler() {
       $settings.xpv = this.checked;
+      settings.set($settings);
+    }
+    function input2_change_handler() {
+      $settings.loop = this.checked;
       settings.set($settings);
     }
     return [
@@ -13299,8 +13292,7 @@
       $settings,
       input0_change_handler,
       input1_change_handler,
-      input2_change_handler,
-      input3_change_handler
+      input2_change_handler
     ];
   }
   var App = class extends SvelteComponent {
@@ -13366,6 +13358,554 @@
     }
   };
   var SettingsButton_default = SettingsButton;
+
+  // src/Embedding.svelte
+  init_esbuild_inject();
+  function add_css3(target) {
+    append_styles(target, "svelte-l97pnn", ".place.svelte-l97pnn.svelte-l97pnn{cursor:pointer;max-width:90vw;max-height:90vh}.hoverer.svelte-l97pnn.svelte-l97pnn{display:none;position:fixed;pointer-events:none}.visible.svelte-l97pnn.svelte-l97pnn{display:block;z-index:1}.contract.svelte-l97pnn>img.svelte-l97pnn,.contract.svelte-l97pnn>video.svelte-l97pnn{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-l97pnn:not(.contract)>video.svelte-l97pnn,.place.svelte-l97pnn:not(.contract)>img.svelte-l97pnn,.hoverer.svelte-l97pnn>video.svelte-l97pnn,.hoverer.svelte-l97pnn>img.svelte-l97pnn{max-width:90vw;max-height:90vh}");
+  }
+  function create_if_block_5(ctx) {
+    let img;
+    let img_alt_value;
+    let img_src_value;
+    return {
+      c() {
+        img = element("img");
+        attr(img, "alt", img_alt_value = ctx[0].filename);
+        if (!src_url_equal(img.src, img_src_value = ctx[5]))
+          attr(img, "src", img_src_value);
+        attr(img, "class", "svelte-l97pnn");
+      },
+      m(target, anchor) {
+        insert(target, img, anchor);
+        ctx[19](img);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
+          attr(img, "alt", img_alt_value);
+        }
+        if (dirty & 32 && !src_url_equal(img.src, img_src_value = ctx2[5])) {
+          attr(img, "src", img_src_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(img);
+        ctx[19](null);
+      }
+    };
+  }
+  function create_if_block_4(ctx) {
+    let audio;
+    let audio_loop_value;
+    let audio_alt_value;
+    let audio_src_value;
+    return {
+      c() {
+        audio = element("audio");
+        audio.loop = audio_loop_value = ctx[13].loop;
+        attr(audio, "alt", audio_alt_value = ctx[0].filename);
+        if (!src_url_equal(audio.src, audio_src_value = ctx[5]))
+          attr(audio, "src", audio_src_value);
+      },
+      m(target, anchor) {
+        insert(target, audio, anchor);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 8192 && audio_loop_value !== (audio_loop_value = ctx2[13].loop)) {
+          audio.loop = audio_loop_value;
+        }
+        if (dirty & 1 && audio_alt_value !== (audio_alt_value = ctx2[0].filename)) {
+          attr(audio, "alt", audio_alt_value);
+        }
+        if (dirty & 32 && !src_url_equal(audio.src, audio_src_value = ctx2[5])) {
+          attr(audio, "src", audio_src_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(audio);
+      }
+    };
+  }
+  function create_if_block_3(ctx) {
+    let video;
+    let video_loop_value;
+    let video_src_value;
+    return {
+      c() {
+        video = element("video");
+        video.loop = video_loop_value = ctx[13].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[5]))
+          attr(video, "src", video_src_value);
+        attr(video, "class", "svelte-l97pnn");
+      },
+      m(target, anchor) {
+        insert(target, video, anchor);
+        ctx[20](video);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 8192 && video_loop_value !== (video_loop_value = ctx2[13].loop)) {
+          video.loop = video_loop_value;
+        }
+        if (dirty & 32 && !src_url_equal(video.src, video_src_value = ctx2[5])) {
+          attr(video, "src", video_src_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(video);
+        ctx[20](null);
+      }
+    };
+  }
+  function create_if_block_2(ctx) {
+    let button;
+    let t0;
+    let t1_value = ctx[0].filename + "";
+    let t1;
+    return {
+      c() {
+        button = element("button");
+        t0 = text("Download ");
+        t1 = text(t1_value);
+      },
+      m(target, anchor) {
+        insert(target, button, anchor);
+        append(button, t0);
+        append(button, t1);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1 && t1_value !== (t1_value = ctx2[0].filename + ""))
+          set_data(t1, t1_value);
+      },
+      d(detaching) {
+        if (detaching)
+          detach(button);
+      }
+    };
+  }
+  function create_if_block_1(ctx) {
+    let img;
+    let img_alt_value;
+    let img_src_value;
+    return {
+      c() {
+        img = element("img");
+        attr(img, "alt", img_alt_value = ctx[0].filename);
+        if (!src_url_equal(img.src, img_src_value = ctx[5]))
+          attr(img, "src", img_src_value);
+        attr(img, "class", "svelte-l97pnn");
+      },
+      m(target, anchor) {
+        insert(target, img, anchor);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
+          attr(img, "alt", img_alt_value);
+        }
+        if (dirty & 32 && !src_url_equal(img.src, img_src_value = ctx2[5])) {
+          attr(img, "src", img_src_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(img);
+      }
+    };
+  }
+  function create_if_block(ctx) {
+    let video;
+    let video_loop_value;
+    let video_src_value;
+    return {
+      c() {
+        video = element("video");
+        video.loop = video_loop_value = ctx[13].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[5]))
+          attr(video, "src", video_src_value);
+        attr(video, "class", "svelte-l97pnn");
+      },
+      m(target, anchor) {
+        insert(target, video, anchor);
+        ctx[23](video);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 8192 && video_loop_value !== (video_loop_value = ctx2[13].loop)) {
+          video.loop = video_loop_value;
+        }
+        if (dirty & 32 && !src_url_equal(video.src, video_src_value = ctx2[5])) {
+          attr(video, "src", video_src_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(video);
+        ctx[23](null);
+      }
+    };
+  }
+  function create_fragment3(ctx) {
+    let div0;
+    let t0;
+    let t1;
+    let t2;
+    let t3;
+    let div1;
+    let t4;
+    let mounted;
+    let dispose;
+    let if_block0 = ctx[2] && create_if_block_5(ctx);
+    let if_block1 = ctx[3] && create_if_block_4(ctx);
+    let if_block2 = ctx[1] && create_if_block_3(ctx);
+    let if_block3 = ctx[4] && create_if_block_2(ctx);
+    let if_block4 = ctx[2] && create_if_block_1(ctx);
+    let if_block5 = ctx[1] && create_if_block(ctx);
+    return {
+      c() {
+        div0 = element("div");
+        if (if_block0)
+          if_block0.c();
+        t0 = space();
+        if (if_block1)
+          if_block1.c();
+        t1 = space();
+        if (if_block2)
+          if_block2.c();
+        t2 = space();
+        if (if_block3)
+          if_block3.c();
+        t3 = space();
+        div1 = element("div");
+        if (if_block4)
+          if_block4.c();
+        t4 = space();
+        if (if_block5)
+          if_block5.c();
+        attr(div0, "class", "place fileThumb svelte-l97pnn");
+        toggle_class(div0, "contract", ctx[6]);
+        attr(div1, "class", "hoverer svelte-l97pnn");
+        toggle_class(div1, "visible", ctx[7] && ctx[6]);
+      },
+      m(target, anchor) {
+        insert(target, div0, anchor);
+        if (if_block0)
+          if_block0.m(div0, null);
+        append(div0, t0);
+        if (if_block1)
+          if_block1.m(div0, null);
+        append(div0, t1);
+        if (if_block2)
+          if_block2.m(div0, null);
+        append(div0, t2);
+        if (if_block3)
+          if_block3.m(div0, null);
+        ctx[22](div0);
+        insert(target, t3, anchor);
+        insert(target, div1, anchor);
+        if (if_block4)
+          if_block4.m(div1, null);
+        append(div1, t4);
+        if (if_block5)
+          if_block5.m(div1, null);
+        ctx[24](div1);
+        if (!mounted) {
+          dispose = [
+            listen(div0, "click", ctx[21]),
+            listen(div0, "mouseover", ctx[15]),
+            listen(div0, "mouseout", ctx[16]),
+            listen(div0, "mousemove", ctx[17]),
+            listen(div0, "wheel", ctx[18])
+          ];
+          mounted = true;
+        }
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[2]) {
+          if (if_block0) {
+            if_block0.p(ctx2, dirty);
+          } else {
+            if_block0 = create_if_block_5(ctx2);
+            if_block0.c();
+            if_block0.m(div0, t0);
+          }
+        } else if (if_block0) {
+          if_block0.d(1);
+          if_block0 = null;
+        }
+        if (ctx2[3]) {
+          if (if_block1) {
+            if_block1.p(ctx2, dirty);
+          } else {
+            if_block1 = create_if_block_4(ctx2);
+            if_block1.c();
+            if_block1.m(div0, t1);
+          }
+        } else if (if_block1) {
+          if_block1.d(1);
+          if_block1 = null;
+        }
+        if (ctx2[1]) {
+          if (if_block2) {
+            if_block2.p(ctx2, dirty);
+          } else {
+            if_block2 = create_if_block_3(ctx2);
+            if_block2.c();
+            if_block2.m(div0, t2);
+          }
+        } else if (if_block2) {
+          if_block2.d(1);
+          if_block2 = null;
+        }
+        if (ctx2[4]) {
+          if (if_block3) {
+            if_block3.p(ctx2, dirty);
+          } else {
+            if_block3 = create_if_block_2(ctx2);
+            if_block3.c();
+            if_block3.m(div0, null);
+          }
+        } else if (if_block3) {
+          if_block3.d(1);
+          if_block3 = null;
+        }
+        if (dirty & 64) {
+          toggle_class(div0, "contract", ctx2[6]);
+        }
+        if (ctx2[2]) {
+          if (if_block4) {
+            if_block4.p(ctx2, dirty);
+          } else {
+            if_block4 = create_if_block_1(ctx2);
+            if_block4.c();
+            if_block4.m(div1, t4);
+          }
+        } else if (if_block4) {
+          if_block4.d(1);
+          if_block4 = null;
+        }
+        if (ctx2[1]) {
+          if (if_block5) {
+            if_block5.p(ctx2, dirty);
+          } else {
+            if_block5 = create_if_block(ctx2);
+            if_block5.c();
+            if_block5.m(div1, null);
+          }
+        } else if (if_block5) {
+          if_block5.d(1);
+          if_block5 = null;
+        }
+        if (dirty & 192) {
+          toggle_class(div1, "visible", ctx2[7] && ctx2[6]);
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching)
+          detach(div0);
+        if (if_block0)
+          if_block0.d();
+        if (if_block1)
+          if_block1.d();
+        if (if_block2)
+          if_block2.d();
+        if (if_block3)
+          if_block3.d();
+        ctx[22](null);
+        if (detaching)
+          detach(t3);
+        if (detaching)
+          detach(div1);
+        if (if_block4)
+          if_block4.d();
+        if (if_block5)
+          if_block5.d();
+        ctx[24](null);
+        mounted = false;
+        run_all(dispose);
+      }
+    };
+  }
+  function hasAudio(video) {
+    return video.mozHasAudio || Boolean(video.webkitAudioDecodedByteCount) || Boolean(video.audioTracks && video.audioTracks.length);
+  }
+  function instance3($$self, $$props, $$invalidate) {
+    let $settings;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(13, $settings = $$value));
+    let { file } = $$props;
+    let isVideo = false;
+    let isImage = false;
+    let isAudio = false;
+    let isFile = false;
+    let url = "";
+    let settled = false;
+    let contracted = true;
+    let hovering = false;
+    let place;
+    let hoverElem;
+    let imgElem;
+    let videoElem;
+    let hoverVideo;
+    let dims = [0, 0];
+    beforeUpdate(async () => {
+      if (settled)
+        return;
+      settled = true;
+      const type = await fileTypeFromBuffer(file.data);
+      $$invalidate(5, url = URL.createObjectURL(new Blob([file.data], { type: type?.mime })));
+      if (!type) {
+        $$invalidate(4, isFile = true);
+        return;
+      }
+      $$invalidate(1, isVideo = type.mime.startsWith("video/"));
+      $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
+      $$invalidate(2, isImage = type.mime.startsWith("image/"));
+      if (isImage)
+        $$invalidate(6, contracted = !$settings.xpi);
+      if (isVideo) {
+        $$invalidate(6, contracted = !$settings.xpv);
+      }
+    });
+    function bepis() {
+      $$invalidate(6, contracted = !contracted);
+      if (hovering)
+        hoverStop();
+      if (contracted && isVideo) {
+        $$invalidate(11, videoElem.controls = false, videoElem);
+        videoElem.pause();
+      }
+      if (!contracted && isVideo) {
+        $$invalidate(11, videoElem.controls = true, videoElem);
+        setTimeout(() => videoElem.play(), 10);
+      }
+    }
+    function hoverStart(ev) {
+      if (!isImage && !isVideo)
+        return;
+      if (!contracted)
+        return;
+      const [sw, sh] = [visualViewport.width, visualViewport.height];
+      let [iw, ih] = [0, 0];
+      if (isImage) {
+        ;
+        [iw, ih] = [imgElem.naturalWidth, imgElem.naturalHeight];
+      } else {
+        ;
+        [iw, ih] = [videoElem.videoWidth, videoElem.videoHeight];
+      }
+      let scale = Math.min(1, sw / iw, sh / ih);
+      dims = [~~(iw * scale), ~~(ih * scale)];
+      $$invalidate(9, hoverElem.style.width = `${dims[0]}px`, hoverElem);
+      $$invalidate(9, hoverElem.style.height = `${dims[1]}px`, hoverElem);
+      $$invalidate(7, hovering = true);
+      if (isVideo)
+        hoverVideo.play();
+    }
+    function hoverStop(ev) {
+      $$invalidate(7, hovering = false);
+      if (isVideo)
+        hoverVideo.pause();
+    }
+    function hoverUpdate(ev) {
+      if (!contracted)
+        return;
+      const [sw, sh] = [visualViewport.width, visualViewport.height];
+      let width = dims[0];
+      let height = dims[1] + 25;
+      let { clientX, clientY } = ev;
+      let top = Math.max(0, clientY * (sh - height) / sh);
+      let threshold = sw / 2;
+      let marginX = (clientX <= threshold ? clientX : sw - clientX) + 45;
+      marginX = Math.min(marginX, sw - width);
+      marginX = marginX + "px";
+      let [left, right] = clientX <= threshold ? [marginX, ""] : ["", marginX];
+      let { style } = hoverElem;
+      style.top = top + "px";
+      style.left = left;
+      style.right = right;
+    }
+    function adjustAudio(ev) {
+      if (!isVideo)
+        return;
+      if (hasAudio(videoElem)) {
+        let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
+        $$invalidate(11, videoElem.volume = Math.max(0, Math.min(1, vol)), videoElem);
+        $$invalidate(12, hoverVideo.volume = videoElem.volume, hoverVideo);
+        ev.preventDefault();
+      }
+    }
+    function img_binding($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        imgElem = $$value;
+        $$invalidate(10, imgElem);
+      });
+    }
+    function video_binding($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        videoElem = $$value;
+        $$invalidate(11, videoElem);
+      });
+    }
+    const click_handler = () => bepis();
+    function div0_binding($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        place = $$value;
+        $$invalidate(8, place);
+      });
+    }
+    function video_binding_1($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        hoverVideo = $$value;
+        $$invalidate(12, hoverVideo);
+      });
+    }
+    function div1_binding($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        hoverElem = $$value;
+        $$invalidate(9, hoverElem);
+      });
+    }
+    $$self.$$set = ($$props2) => {
+      if ("file" in $$props2)
+        $$invalidate(0, file = $$props2.file);
+    };
+    return [
+      file,
+      isVideo,
+      isImage,
+      isAudio,
+      isFile,
+      url,
+      contracted,
+      hovering,
+      place,
+      hoverElem,
+      imgElem,
+      videoElem,
+      hoverVideo,
+      $settings,
+      bepis,
+      hoverStart,
+      hoverStop,
+      hoverUpdate,
+      adjustAudio,
+      img_binding,
+      video_binding,
+      click_handler,
+      div0_binding,
+      video_binding_1,
+      div1_binding
+    ];
+  }
+  var Embedding = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0 }, add_css3);
+    }
+  };
+  var Embedding_default = Embedding;
 
   // src/main.ts
   var csettings;
@@ -13437,122 +13977,26 @@
       return;
     const replyBox = post.querySelector(".post");
     replyBox?.classList.toggle("hasembed");
-    const fi = post.querySelector(".file-info");
-    let a;
-    a = fi.querySelector(".fa.fa-eye");
-    let inlining = true;
-    if (!a) {
-      inlining = false;
-      a = textToElement(`
-        <a class="fa fa-eye">
-        </a>`);
-    }
-    let type = await fileTypeFromBuffer(res.data);
-    let cont;
-    let w, h;
-    if (type?.mime.startsWith("image")) {
-      cont = document.createElement("img");
-    } else if (type?.mime.startsWith("video")) {
-      cont = document.createElement("video");
-      cont.loop = true;
-      cont.controls = true;
-      cont.pause();
-    } else if (type?.mime.startsWith("audio")) {
-      cont = document.createElement("audio");
-      cont.autoplay = false;
-      cont.controls = true;
-      cont.pause();
-    } else {
-      if (!type)
-        type = { mime: "application/unknown", "ext": "data" };
-      cont = document.createElement("a");
-      let fn = res.filename;
-      if (!fn.includes("."))
-        fn += "." + type.ext;
-      cont.download = fn;
-      cont.textContent = "Download " + cont.download;
-    }
-    let src;
-    src = post.getAttribute("data-processed");
-    if (!src)
-      src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
-    if (!(cont instanceof HTMLAnchorElement))
-      cont.src = src;
-    else
-      cont.href = src;
-    await new Promise((res2) => {
-      if (cont instanceof HTMLImageElement)
-        cont.onload = res2;
-      else if (cont instanceof HTMLVideoElement)
-        cont.onloadedmetadata = res2;
-      else if (cont instanceof HTMLAudioElement)
-        cont.onloadedmetadata = res2;
-      else
-        res2(void 0);
-    });
-    if (cont instanceof HTMLImageElement) {
-      w = cont.naturalWidth;
-      h = cont.naturalHeight;
-    }
-    if (cont instanceof HTMLVideoElement) {
-      w = cont.videoWidth;
-      h = cont.videoHeight;
-    }
-    const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
-    const contract = () => {
-      if (cont instanceof HTMLAudioElement)
-        return;
-      cont.style.width = `unset`;
-      cont.style.height = `unset`;
-      cont.style.maxWidth = "125px";
-      cont.style.maxHeight = "125px";
-    };
-    const expand = () => {
-      cont.style.width = `${w}px`;
-      cont.style.height = `${h}px`;
-      cont.style.maxWidth = "unset";
-      cont.style.maxHeight = "unset";
-    };
-    const imgcont = document.createElement("div");
+    const ft = post.querySelector(".fileThumb");
+    const ahem = ft.querySelector(".place");
+    const imgcont = ahem || document.createElement("div");
     const p = thumb.parentElement;
-    p.removeChild(thumb);
-    imgcont.appendChild(thumb);
-    p.appendChild(imgcont);
-    thumb.style.display = "flex";
-    thumb.style.gap = "5px";
-    thumb.style.flexDirection = "column";
-    a.classList.toggle("disabled");
-    a.classList.toggle("pee-button");
-    let contracted = true;
-    contract();
-    contract();
-    cont.onclick = (e) => {
-      contracted = !contracted;
-      contracted ? contract() : expand();
-      e.stopPropagation();
-    };
-    let visible = false;
-    a.onclick = () => {
-      visible = !visible;
-      if (visible) {
-        console.log(csettings);
-        if (cont instanceof HTMLVideoElement && csettings.apv || cont instanceof HTMLAudioElement && csettings.apa)
-          cont.play();
-        if (cont instanceof HTMLImageElement && csettings.xpi || cont instanceof HTMLVideoElement && csettings.xpv)
-          expand();
-        imgcont.appendChild(cont);
-      } else {
-        if (playable) {
-          cont.pause();
-        }
-        contract();
-        imgcont.removeChild(cont);
+    if (!ahem) {
+      p.removeChild(thumb);
+      imgcont.appendChild(thumb);
+      imgcont.classList.add("fileThumb");
+    } else {
+      imgcont.innerHTML = "";
+    }
+    const emb = new Embedding_default({
+      target: imgcont,
+      props: {
+        file: res
       }
-      a.classList.toggle("disabled");
-    };
-    if (!inlining)
-      fi.children[1].insertAdjacentElement("afterend", a);
-    post.setAttribute("data-processed", src);
+    });
+    if (!ahem)
+      p.appendChild(imgcont);
+    post.setAttribute("data-processed", "true");
   };
   var startup = async () => {
     await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));

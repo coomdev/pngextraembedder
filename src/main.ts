@@ -10,6 +10,7 @@ import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
 import App from "./App.svelte";
 import SettingsButton from './SettingsButton.svelte';
+import Embedding from './Embedding.svelte';
 
 let csettings: any;
 settings.subscribe(b => csettings = b);
@@ -93,136 +94,29 @@ const processPost = async (post: HTMLDivElement) => {
     const replyBox = post.querySelector('.post');
     replyBox?.classList.toggle('hasembed');
     // add buttons
-    const fi = post.querySelector(".file-info")!;
-    let a: HTMLAnchorElement | null;
-    a = fi.querySelector('.fa.fa-eye');
-    let inlining = true;
-    if (!a) {
-        inlining = false;
-        a = textToElement<HTMLAnchorElement>(`
-        <a class="fa fa-eye">
-        </a>`);
-    }
-    let type = await fileTypeFromBuffer(res.data);
-    let cont: HTMLImageElement | HTMLVideoElement | HTMLAudioElement | HTMLAnchorElement;
-    let w: number, h: number;
-    if (type?.mime.startsWith("image")) {
-        cont = document.createElement("img");
-    } else if (type?.mime.startsWith("video")) {
-        cont = document.createElement("video");
-        //cont.autoplay = true;
-        cont.loop = true;
-        cont.controls = true;
-        cont.pause();
-    } else if (type?.mime.startsWith("audio")) {
-        cont = document.createElement("audio");
-        cont.autoplay = false;
-        cont.controls = true;
-        cont.pause();
-    } else {
-        // If type detection fails, you'd better have an extension
-        if (!type)
-            type = { mime: "application/unknown" as any, 'ext': "data" as any };
-        cont = document.createElement('a');
-        let fn = res.filename;
-        if (!fn.includes('.'))
-            fn += '.' + type.ext;
-        cont.download = fn;
-        cont.textContent = "Download " + cont.download;
-    }
-
-    let src: string | null;
-    src = post.getAttribute('data-processed');
-    if (!src)
-        src = URL.createObjectURL(new Blob([res.data], { type: type.mime }));
-    if (!(cont instanceof HTMLAnchorElement))
-        cont.src = src;
-    else
-        cont.href = src;
-
-    await new Promise(res => {
-        if (cont instanceof HTMLImageElement)
-            cont.onload = res;
-        else if (cont instanceof HTMLVideoElement)
-            cont.onloadedmetadata = res;
-        else if (cont instanceof HTMLAudioElement)
-            cont.onloadedmetadata = res;
-        else
-            res(void 0); // Don't know what this is: don't wait
-    });
-
-    if (cont instanceof HTMLImageElement) {
-        w = cont.naturalWidth;
-        h = cont.naturalHeight;
-    }
-
-    if (cont instanceof HTMLVideoElement) {
-        w = cont.videoWidth;
-        h = cont.videoHeight;
-    }
-
-    const playable = cont instanceof HTMLAudioElement || cont instanceof HTMLVideoElement;
-
-    const contract = () => {
-        if (cont instanceof HTMLAudioElement)
-            return;
-        cont.style.width = `unset`;
-        cont.style.height = `unset`;
-        cont.style.maxWidth = "125px";
-        cont.style.maxHeight = "125px";
-    };
-
-    const expand = () => {
-        cont.style.width = `${w}px`;
-        cont.style.height = `${h}px`;
-        cont.style.maxWidth = "unset";
-        cont.style.maxHeight = "unset";
-    };
-
-    const imgcont = document.createElement('div');
+    const ft = post.querySelector(".fileThumb")!;
+    const ahem: HTMLElement | null = ft.querySelector('.place');
+    const imgcont = ahem || document.createElement('div');
     const p = thumb.parentElement!;
-    p.removeChild(thumb);
-    imgcont.appendChild(thumb);
-    p.appendChild(imgcont);
 
-    thumb.style.display = "flex";
-    thumb.style.gap = "5px";
-    thumb.style.flexDirection = "column";
-    a.classList.toggle("disabled");
-    a.classList.toggle("pee-button");
-    let contracted = true;
-    contract();
-    contract();
-    cont.onclick = (e) => {
-        contracted = !contracted;
-        (contracted) ? contract() : expand();
-        e.stopPropagation();
-    };
+    if (!ahem) {
+        p.removeChild(thumb);
+        imgcont.appendChild(thumb);
+        imgcont.classList.add("fileThumb");
+    } else {
+        imgcont.innerHTML = '';
+    }
 
-    let visible = false;
-    a.onclick = () => {
-        visible = !visible;
-        if (visible) {
-            console.log(csettings);
-            if ((cont instanceof HTMLVideoElement && csettings.apv) ||
-                (cont instanceof HTMLAudioElement && csettings.apa))
-                cont.play();
-            if ((cont instanceof HTMLImageElement && csettings.xpi) ||
-                (cont instanceof HTMLVideoElement && csettings.xpv))
-                expand();
-            imgcont.appendChild(cont);
-        } else {
-            if (playable) {
-                (cont as any).pause();
-            }
-            contract();
-            imgcont.removeChild(cont);
+    const emb = new Embedding({
+        target: imgcont,
+        props: {
+            file: res
         }
-        a!.classList.toggle("disabled");
-    };
-    if (!inlining)
-        fi.children[1].insertAdjacentElement('afterend', a);
-    post.setAttribute('data-processed', src);
+    });
+    if (!ahem)
+        p.appendChild(imgcont);
+
+    post.setAttribute('data-processed', "true");
 };
 
 const startup = async () => {

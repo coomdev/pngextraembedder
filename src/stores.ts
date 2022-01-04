@@ -9,10 +9,9 @@ const localSet = (key: string, value: any) =>
     localStorage.setItem('__pee__' + key, JSON.stringify(value));
 
 export const settings = writable(localLoad('settings', {
-    apv: false,
+    loop: true,
     xpv: false,
     xpi: false,
-    apa: false,
     blacklist: [],
     sources: []
 }));
