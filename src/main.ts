@@ -372,24 +372,24 @@ customStyles.appendChild(document.createTextNode(
 
 document.documentElement.insertBefore(customStyles, null);
 
-import * as gif2 from './png';
-
-onload = () => {
-    const container = document.getElementById("container") as HTMLInputElement;
-    const injection = document.getElementById("injection") as HTMLInputElement;
-    container.onchange = injection.onchange = async () => {
-        if (container.files?.length && injection.files?.length) {
-            const res = await gif2.inject(container.files[0], injection.files[0]);
-            const result = document.getElementById("result") as HTMLImageElement;
-            const extracted = document.getElementById("extracted") as HTMLImageElement;
-            const res2 = new Blob([res], { type: 'image/gif' });
-            result.src = URL.createObjectURL(res2);
-            const embedded = await gif2.extract(res);
-            extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
-            const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-            const dle = document.getElementById("dle") as HTMLAnchorElement;
-            dlr.href = result.src;
-            dle.href = extracted.src;
-        }
-    };
-};
+//import * as gif2 from './png';
+//
+//onload = () => {
+//    const container = document.getElementById("container") as HTMLInputElement;
+//    const injection = document.getElementById("injection") as HTMLInputElement;
+//    container.onchange = injection.onchange = async () => {
+//        if (container.files?.length && injection.files?.length) {
+//            const res = await gif2.inject(container.files[0], injection.files[0]);
+//            const result = document.getElementById("result") as HTMLImageElement;
+//            const extracted = document.getElementById("extracted") as HTMLImageElement;
+//            const res2 = new Blob([res], { type: 'image/gif' });
+//            result.src = URL.createObjectURL(res2);
+//            const embedded = await gif2.extract(res);
+//            extracted.src = URL.createObjectURL(new Blob([embedded?.data!]));
+//            const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+//            const dle = document.getElementById("dle") as HTMLAnchorElement;
+//            dlr.href = result.src;
+//            dle.href = extracted.src;
+//        }
+//    };
+//};
