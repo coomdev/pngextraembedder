@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.61
+// @version      0.62
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14403,7 +14403,7 @@
   settings.subscribe((b) => {
     csettings = b;
     processors = [
-      ...csettings.te ? [thirdeye_default] : [],
+      ...!csettings.te ? [thirdeye_default] : [],
       png_default,
       webm_default,
       gif_default

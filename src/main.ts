@@ -26,7 +26,7 @@ let processors: ImageProcessor[] =
 
 settings.subscribe(b => {
     csettings = b;
-    processors = [...(csettings.te ? [thirdeye] : []), png, webm, gif
+    processors = [...(!csettings.te ? [thirdeye] : []), png, webm, gif
     ];
 });
 
