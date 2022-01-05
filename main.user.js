@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.67
+// @version      0.69
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10572,6 +10572,9 @@
   function space() {
     return text(" ");
   }
+  function empty() {
+    return text("");
+  }
   function listen(node, event, handler, options) {
     node.addEventListener(event, handler, options);
     return () => node.removeEventListener(event, handler, options);
@@ -10878,6 +10881,7 @@
     xpv: false,
     xpi: false,
     te: false,
+    eye: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
     sources: [
       "gelbooru.com",
@@ -11404,14 +11408,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[16] = list[i];
-    child_ctx[18] = i;
+    child_ctx[17] = list[i];
+    child_ctx[19] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[16] = list[i];
-    child_ctx[18] = i;
+    child_ctx[17] = list[i];
+    child_ctx[19] = i;
     return child_ctx;
   }
   function create_if_block(ctx) {
@@ -11487,7 +11491,7 @@
         for (let i = 0; i < each_blocks_1.length; i += 1) {
           each_blocks_1[i].m(select0, null);
         }
-        ctx[12](select0);
+        ctx[13](select0);
         insert(target, t2, anchor);
         insert(target, button0, anchor);
         insert(target, t4, anchor);
@@ -11499,7 +11503,7 @@
         for (let i = 0; i < each_blocks.length; i += 1) {
           each_blocks[i].m(select1, null);
         }
-        ctx[13](select1);
+        ctx[14](select1);
         insert(target, t8, anchor);
         insert(target, button1, anchor);
         insert(target, t10, anchor);
@@ -11508,7 +11512,7 @@
           dispose = [
             listen(button0, "click", ctx[5]),
             listen(button1, "click", ctx[6]),
-            listen(input, "keydown", ctx[14])
+            listen(input, "keydown", ctx[15])
           ];
           mounted = true;
         }
@@ -11559,7 +11563,7 @@
         if (detaching)
           detach(select0);
         destroy_each(each_blocks_1, detaching);
-        ctx[12](null);
+        ctx[13](null);
         if (detaching)
           detach(t2);
         if (detaching)
@@ -11577,7 +11581,7 @@
         if (detaching)
           detach(select1);
         destroy_each(each_blocks, detaching);
-        ctx[13](null);
+        ctx[14](null);
         if (detaching)
           detach(t8);
         if (detaching)
@@ -11593,7 +11597,7 @@
   }
   function create_each_block_1(ctx) {
     let option;
-    let t_value = ctx[16] + "";
+    let t_value = ctx[17] + "";
     let t;
     let option_value_value;
     return {
@@ -11601,9 +11605,9 @@
         option = element("option");
         t = text(t_value);
         attr(option, "class", "sourcedi svelte-gdh57y");
-        option.__value = option_value_value = ctx[16];
+        option.__value = option_value_value = ctx[17];
         option.value = option.__value;
-        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[16]));
+        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[17]));
       },
       m(target, anchor) {
         insert(target, option, anchor);
@@ -11611,7 +11615,7 @@
       },
       p(ctx2, dirty) {
         if (dirty & 24) {
-          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[16]));
+          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[17]));
         }
       },
       d(detaching) {
@@ -11622,14 +11626,14 @@
   }
   function create_each_block(ctx) {
     let option;
-    let t_value = ctx[16] + "";
+    let t_value = ctx[17] + "";
     let t;
     let option_value_value;
     return {
       c() {
         option = element("option");
         t = text(t_value);
-        option.__value = option_value_value = ctx[16];
+        option.__value = option_value_value = ctx[17];
         option.value = option.__value;
       },
       m(target, anchor) {
@@ -11637,9 +11641,9 @@
         append(option, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 8 && t_value !== (t_value = ctx2[16] + ""))
+        if (dirty & 8 && t_value !== (t_value = ctx2[17] + ""))
           set_data(t, t_value);
-        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[16])) {
+        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[17])) {
           option.__value = option_value_value;
           option.value = option.__value;
         }
@@ -11677,6 +11681,10 @@
     let input4;
     let t11;
     let t12;
+    let label5;
+    let input5;
+    let t13;
+    let t14;
     let mounted;
     let dispose;
     let if_block = !ctx[3].te && create_if_block(ctx);
@@ -11707,8 +11715,12 @@
         t10 = space();
         label4 = element("label");
         input4 = element("input");
-        t11 = text("\n      Turn off third-eye.");
+        t11 = text("\n      Hide embedded content behind an eye.");
         t12 = space();
+        label5 = element("label");
+        input5 = element("input");
+        t13 = text("\n      Turn off third-eye.");
+        t14 = space();
         if (if_block)
           if_block.c();
         attr(h1, "class", "svelte-gdh57y");
@@ -11718,6 +11730,7 @@
         attr(input2, "type", "checkbox");
         attr(input3, "type", "checkbox");
         attr(input4, "type", "checkbox");
+        attr(input5, "type", "checkbox");
         attr(div0, "class", "content svelte-gdh57y");
         attr(div1, "class", "backpanel svelte-gdh57y");
         toggle_class(div1, "enabled", ctx[0]);
@@ -11752,9 +11765,14 @@
         append(div0, t10);
         append(div0, label4);
         append(label4, input4);
-        input4.checked = ctx[3].te;
+        input4.checked = ctx[3].eye;
         append(label4, t11);
         append(div0, t12);
+        append(div0, label5);
+        append(label5, input5);
+        input5.checked = ctx[3].te;
+        append(label5, t13);
+        append(div0, t14);
         if (if_block)
           if_block.m(div0, null);
         if (!mounted) {
@@ -11763,7 +11781,8 @@
             listen(input1, "change", ctx[8]),
             listen(input2, "change", ctx[9]),
             listen(input3, "change", ctx[10]),
-            listen(input4, "change", ctx[11])
+            listen(input4, "change", ctx[11]),
+            listen(input5, "change", ctx[12])
           ];
           mounted = true;
         }
@@ -11782,7 +11801,10 @@
           input3.checked = ctx2[3].dh;
         }
         if (dirty & 8) {
-          input4.checked = ctx2[3].te;
+          input4.checked = ctx2[3].eye;
+        }
+        if (dirty & 8) {
+          input5.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block) {
@@ -11876,6 +11898,10 @@
       settings.set($settings);
     }
     function input4_change_handler() {
+      $settings.eye = this.checked;
+      settings.set($settings);
+    }
+    function input5_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -11911,6 +11937,7 @@
       input2_change_handler,
       input3_change_handler,
       input4_change_handler,
+      input5_change_handler,
       select0_binding,
       select1_binding,
       keydown_handler
@@ -13816,9 +13843,250 @@
 
   // src/Embedding.svelte
   function add_css3(target) {
-    append_styles(target, "svelte-vw6znf", ".place.svelte-vw6znf.svelte-vw6znf{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-vw6znf>img.svelte-vw6znf{filter:brightness(0.5) blur(10px)}.progress.svelte-vw6znf.svelte-vw6znf{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-vw6znf.svelte-vw6znf{display:none;position:fixed;pointer-events:none}.visible.svelte-vw6znf.svelte-vw6znf{display:block;z-index:9}.contract.svelte-vw6znf>img.svelte-vw6znf,.contract.svelte-vw6znf>video.svelte-vw6znf{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-vw6znf:not(.contract)>video.svelte-vw6znf,.place.svelte-vw6znf:not(.contract)>img.svelte-vw6znf,.hoverer.svelte-vw6znf>video.svelte-vw6znf,.hoverer.svelte-vw6znf>img.svelte-vw6znf{max-width:100vw;max-height:100vh}");
+    append_styles(target, "svelte-eaazkt", ".clickable.svelte-eaazkt.svelte-eaazkt{cursor:pointer}.place.svelte-eaazkt.svelte-eaazkt{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-eaazkt>img.svelte-eaazkt{filter:brightness(0.5) blur(10px)}.progress.svelte-eaazkt.svelte-eaazkt{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-eaazkt.svelte-eaazkt{display:none;position:fixed;pointer-events:none}.visible.svelte-eaazkt.svelte-eaazkt{display:block;z-index:9}.contract.svelte-eaazkt>img.svelte-eaazkt,.contract.svelte-eaazkt>video.svelte-eaazkt{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-eaazkt:not(.contract)>video.svelte-eaazkt,.place.svelte-eaazkt:not(.contract)>img.svelte-eaazkt,.hoverer.svelte-eaazkt>video.svelte-eaazkt,.hoverer.svelte-eaazkt>img.svelte-eaazkt{max-width:100vw;max-height:100vh}");
   }
-  function create_if_block_6(ctx) {
+  function create_if_block_8(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        span = element("span");
+        attr(span, "class", "fa clickable svelte-eaazkt");
+        toggle_class(span, "fa-eye", !ctx[15]);
+        toggle_class(span, "fa-eye-slash", ctx[15]);
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[24]);
+          mounted = true;
+        }
+      },
+      p(ctx2, dirty) {
+        if (dirty[0] & 32768) {
+          toggle_class(span, "fa-eye", !ctx2[15]);
+        }
+        if (dirty[0] & 32768) {
+          toggle_class(span, "fa-eye-slash", ctx2[15]);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function create_if_block2(ctx) {
+    let div0;
+    let t0;
+    let t1;
+    let t2;
+    let t3;
+    let div1;
+    let t4;
+    let t5;
+    let mounted;
+    let dispose;
+    let if_block0 = ctx[2] && create_if_block_7(ctx);
+    let if_block1 = ctx[3] && create_if_block_6(ctx);
+    let if_block2 = ctx[1] && create_if_block_5(ctx);
+    let if_block3 = ctx[4] && create_if_block_4(ctx);
+    let if_block4 = ctx[16] && create_if_block_3(ctx);
+    let if_block5 = ctx[2] && create_if_block_2(ctx);
+    let if_block6 = ctx[1] && create_if_block_1(ctx);
+    return {
+      c() {
+        div0 = element("div");
+        if (if_block0)
+          if_block0.c();
+        t0 = space();
+        if (if_block1)
+          if_block1.c();
+        t1 = space();
+        if (if_block2)
+          if_block2.c();
+        t2 = space();
+        if (if_block3)
+          if_block3.c();
+        t3 = space();
+        div1 = element("div");
+        if (if_block4)
+          if_block4.c();
+        t4 = space();
+        if (if_block5)
+          if_block5.c();
+        t5 = space();
+        if (if_block6)
+          if_block6.c();
+        attr(div0, "class", "place fileThumb svelte-eaazkt");
+        toggle_class(div0, "contract", ctx[6]);
+        attr(div1, "class", "hoverer svelte-eaazkt");
+        toggle_class(div1, "visible", ctx[7] && ctx[6]);
+        toggle_class(div1, "unzipping", ctx[16]);
+      },
+      m(target, anchor) {
+        insert(target, div0, anchor);
+        if (if_block0)
+          if_block0.m(div0, null);
+        append(div0, t0);
+        if (if_block1)
+          if_block1.m(div0, null);
+        append(div0, t1);
+        if (if_block2)
+          if_block2.m(div0, null);
+        append(div0, t2);
+        if (if_block3)
+          if_block3.m(div0, null);
+        ctx[28](div0);
+        insert(target, t3, anchor);
+        insert(target, div1, anchor);
+        if (if_block4)
+          if_block4.m(div1, null);
+        append(div1, t4);
+        if (if_block5)
+          if_block5.m(div1, null);
+        append(div1, t5);
+        if (if_block6)
+          if_block6.m(div1, null);
+        ctx[30](div1);
+        if (!mounted) {
+          dispose = [
+            listen(div0, "click", ctx[27]),
+            listen(div0, "mouseover", ctx[20]),
+            listen(div0, "mouseout", ctx[21]),
+            listen(div0, "mousemove", ctx[22]),
+            listen(div0, "wheel", ctx[23])
+          ];
+          mounted = true;
+        }
+      },
+      p(ctx2, dirty) {
+        if (ctx2[2]) {
+          if (if_block0) {
+            if_block0.p(ctx2, dirty);
+          } else {
+            if_block0 = create_if_block_7(ctx2);
+            if_block0.c();
+            if_block0.m(div0, t0);
+          }
+        } else if (if_block0) {
+          if_block0.d(1);
+          if_block0 = null;
+        }
+        if (ctx2[3]) {
+          if (if_block1) {
+            if_block1.p(ctx2, dirty);
+          } else {
+            if_block1 = create_if_block_6(ctx2);
+            if_block1.c();
+            if_block1.m(div0, t1);
+          }
+        } else if (if_block1) {
+          if_block1.d(1);
+          if_block1 = null;
+        }
+        if (ctx2[1]) {
+          if (if_block2) {
+            if_block2.p(ctx2, dirty);
+          } else {
+            if_block2 = create_if_block_5(ctx2);
+            if_block2.c();
+            if_block2.m(div0, t2);
+          }
+        } else if (if_block2) {
+          if_block2.d(1);
+          if_block2 = null;
+        }
+        if (ctx2[4]) {
+          if (if_block3) {
+            if_block3.p(ctx2, dirty);
+          } else {
+            if_block3 = create_if_block_4(ctx2);
+            if_block3.c();
+            if_block3.m(div0, null);
+          }
+        } else if (if_block3) {
+          if_block3.d(1);
+          if_block3 = null;
+        }
+        if (dirty[0] & 64) {
+          toggle_class(div0, "contract", ctx2[6]);
+        }
+        if (ctx2[16]) {
+          if (if_block4) {
+            if_block4.p(ctx2, dirty);
+          } else {
+            if_block4 = create_if_block_3(ctx2);
+            if_block4.c();
+            if_block4.m(div1, t4);
+          }
+        } else if (if_block4) {
+          if_block4.d(1);
+          if_block4 = null;
+        }
+        if (ctx2[2]) {
+          if (if_block5) {
+            if_block5.p(ctx2, dirty);
+          } else {
+            if_block5 = create_if_block_2(ctx2);
+            if_block5.c();
+            if_block5.m(div1, t5);
+          }
+        } else if (if_block5) {
+          if_block5.d(1);
+          if_block5 = null;
+        }
+        if (ctx2[1]) {
+          if (if_block6) {
+            if_block6.p(ctx2, dirty);
+          } else {
+            if_block6 = create_if_block_1(ctx2);
+            if_block6.c();
+            if_block6.m(div1, null);
+          }
+        } else if (if_block6) {
+          if_block6.d(1);
+          if_block6 = null;
+        }
+        if (dirty[0] & 192) {
+          toggle_class(div1, "visible", ctx2[7] && ctx2[6]);
+        }
+        if (dirty[0] & 65536) {
+          toggle_class(div1, "unzipping", ctx2[16]);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(div0);
+        if (if_block0)
+          if_block0.d();
+        if (if_block1)
+          if_block1.d();
+        if (if_block2)
+          if_block2.d();
+        if (if_block3)
+          if_block3.d();
+        ctx[28](null);
+        if (detaching)
+          detach(t3);
+        if (detaching)
+          detach(div1);
+        if (if_block4)
+          if_block4.d();
+        if (if_block5)
+          if_block5.d();
+        if (if_block6)
+          if_block6.d();
+        ctx[30](null);
+        mounted = false;
+        run_all(dispose);
+      }
+    };
+  }
+  function create_if_block_7(ctx) {
     let img;
     let img_alt_value;
     let img_src_value;
@@ -13826,54 +14094,62 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[5]))
+        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-vw6znf");
+        attr(img, "class", "svelte-eaazkt");
       },
       m(target, anchor) {
         insert(target, img, anchor);
-        ctx[22](img);
+        ctx[25](img);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 8224 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[5])) {
+        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
           attr(img, "src", img_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(img);
-        ctx[22](null);
+        ctx[25](null);
       }
     };
   }
-  function create_if_block_5(ctx) {
+  function create_if_block_6(ctx) {
     let audio;
+    let source;
+    let source_src_value;
     let audio_loop_value;
     let audio_alt_value;
-    let audio_src_value;
     return {
       c() {
         audio = element("audio");
-        audio.loop = audio_loop_value = ctx[16].loop;
+        source = element("source");
+        if (!src_url_equal(source.src, source_src_value = ctx[5]))
+          attr(source, "src", source_src_value);
+        attr(source, "type", ctx[8]);
+        audio.controls = true;
+        audio.loop = audio_loop_value = ctx[18].loop;
         attr(audio, "alt", audio_alt_value = ctx[0].filename);
-        if (!src_url_equal(audio.src, audio_src_value = ctx[5]))
-          attr(audio, "src", audio_src_value);
       },
       m(target, anchor) {
         insert(target, audio, anchor);
+        append(audio, source);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 65536 && audio_loop_value !== (audio_loop_value = ctx2[16].loop)) {
+        if (dirty[0] & 32 && !src_url_equal(source.src, source_src_value = ctx2[5])) {
+          attr(source, "src", source_src_value);
+        }
+        if (dirty[0] & 256) {
+          attr(source, "type", ctx2[8]);
+        }
+        if (dirty[0] & 262144 && audio_loop_value !== (audio_loop_value = ctx2[18].loop)) {
           audio.loop = audio_loop_value;
         }
         if (dirty[0] & 1 && audio_alt_value !== (audio_alt_value = ctx2[0].filename)) {
           attr(audio, "alt", audio_alt_value);
-        }
-        if (dirty[0] & 32 && !src_url_equal(audio.src, audio_src_value = ctx2[5])) {
-          attr(audio, "src", audio_src_value);
         }
       },
       d(detaching) {
@@ -13882,38 +14158,38 @@
       }
     };
   }
-  function create_if_block_4(ctx) {
+  function create_if_block_5(ctx) {
     let video;
     let video_loop_value;
     let video_src_value;
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[16].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[5]))
+        video.loop = video_loop_value = ctx[18].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-vw6znf");
+        attr(video, "class", "svelte-eaazkt");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[23](video);
+        ctx[26](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 65536 && video_loop_value !== (video_loop_value = ctx2[16].loop)) {
+        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 8224 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[5])) {
+        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[23](null);
+        ctx[26](null);
       }
     };
   }
-  function create_if_block_3(ctx) {
+  function create_if_block_4(ctx) {
     let button;
     let t0;
     let t1_value = ctx[0].filename + "";
@@ -13939,13 +14215,13 @@
       }
     };
   }
-  function create_if_block_2(ctx) {
+  function create_if_block_3(ctx) {
     let span;
     let t0;
-    let t1_value = ctx[15][0] + "";
+    let t1_value = ctx[17][0] + "";
     let t1;
     let t2;
-    let t3_value = ctx[15][1] + "";
+    let t3_value = ctx[17][1] + "";
     let t3;
     let t4;
     return {
@@ -13956,7 +14232,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-vw6znf");
+        attr(span, "class", "progress svelte-eaazkt");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -13967,9 +14243,9 @@
         append(span, t4);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 32768 && t1_value !== (t1_value = ctx2[15][0] + ""))
+        if (dirty[0] & 131072 && t1_value !== (t1_value = ctx2[17][0] + ""))
           set_data(t1, t1_value);
-        if (dirty[0] & 32768 && t3_value !== (t3_value = ctx2[15][1] + ""))
+        if (dirty[0] & 131072 && t3_value !== (t3_value = ctx2[17][1] + ""))
           set_data(t3, t3_value);
       },
       d(detaching) {
@@ -13978,7 +14254,7 @@
       }
     };
   }
-  function create_if_block_1(ctx) {
+  function create_if_block_2(ctx) {
     let img;
     let img_alt_value;
     let img_src_value;
@@ -13986,9 +14262,9 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[5]))
+        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-vw6znf");
+        attr(img, "class", "svelte-eaazkt");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -13997,7 +14273,7 @@
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 8224 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[5])) {
+        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
           attr(img, "src", img_src_value);
         }
       },
@@ -14007,243 +14283,96 @@
       }
     };
   }
-  function create_if_block2(ctx) {
+  function create_if_block_1(ctx) {
     let video;
     let video_loop_value;
     let video_src_value;
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[16].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[5]))
+        video.loop = video_loop_value = ctx[18].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-vw6znf");
+        attr(video, "class", "svelte-eaazkt");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[26](video);
+        ctx[29](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 65536 && video_loop_value !== (video_loop_value = ctx2[16].loop)) {
+        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 8224 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[5])) {
+        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[26](null);
+        ctx[29](null);
       }
     };
   }
   function create_fragment3(ctx) {
-    let div0;
-    let t0;
-    let t1;
-    let t2;
-    let t3;
-    let div1;
-    let t4;
-    let t5;
-    let mounted;
-    let dispose;
-    let if_block0 = ctx[2] && create_if_block_6(ctx);
-    let if_block1 = ctx[3] && create_if_block_5(ctx);
-    let if_block2 = ctx[1] && create_if_block_4(ctx);
-    let if_block3 = ctx[4] && create_if_block_3(ctx);
-    let if_block4 = ctx[14] && create_if_block_2(ctx);
-    let if_block5 = ctx[2] && create_if_block_1(ctx);
-    let if_block6 = ctx[1] && create_if_block2(ctx);
+    let t;
+    let if_block1_anchor;
+    let if_block0 = ctx[18].eye && create_if_block_8(ctx);
+    let if_block1 = (!ctx[18].eye || ctx[15]) && create_if_block2(ctx);
     return {
       c() {
-        div0 = element("div");
         if (if_block0)
           if_block0.c();
-        t0 = space();
+        t = space();
         if (if_block1)
           if_block1.c();
-        t1 = space();
-        if (if_block2)
-          if_block2.c();
-        t2 = space();
-        if (if_block3)
-          if_block3.c();
-        t3 = space();
-        div1 = element("div");
-        if (if_block4)
-          if_block4.c();
-        t4 = space();
-        if (if_block5)
-          if_block5.c();
-        t5 = space();
-        if (if_block6)
-          if_block6.c();
-        attr(div0, "class", "place fileThumb svelte-vw6znf");
-        toggle_class(div0, "contract", ctx[6]);
-        attr(div1, "class", "hoverer svelte-vw6znf");
-        toggle_class(div1, "visible", ctx[7] && ctx[6]);
-        toggle_class(div1, "unzipping", ctx[14]);
+        if_block1_anchor = empty();
       },
       m(target, anchor) {
-        insert(target, div0, anchor);
         if (if_block0)
-          if_block0.m(div0, null);
-        append(div0, t0);
+          if_block0.m(target, anchor);
+        insert(target, t, anchor);
         if (if_block1)
-          if_block1.m(div0, null);
-        append(div0, t1);
-        if (if_block2)
-          if_block2.m(div0, null);
-        append(div0, t2);
-        if (if_block3)
-          if_block3.m(div0, null);
-        ctx[25](div0);
-        insert(target, t3, anchor);
-        insert(target, div1, anchor);
-        if (if_block4)
-          if_block4.m(div1, null);
-        append(div1, t4);
-        if (if_block5)
-          if_block5.m(div1, null);
-        append(div1, t5);
-        if (if_block6)
-          if_block6.m(div1, null);
-        ctx[27](div1);
-        if (!mounted) {
-          dispose = [
-            listen(div0, "click", ctx[24]),
-            listen(div0, "mouseover", ctx[18]),
-            listen(div0, "mouseout", ctx[19]),
-            listen(div0, "mousemove", ctx[20]),
-            listen(div0, "wheel", ctx[21])
-          ];
-          mounted = true;
-        }
+          if_block1.m(target, anchor);
+        insert(target, if_block1_anchor, anchor);
       },
       p(ctx2, dirty) {
-        if (ctx2[2]) {
+        if (ctx2[18].eye) {
           if (if_block0) {
             if_block0.p(ctx2, dirty);
           } else {
-            if_block0 = create_if_block_6(ctx2);
+            if_block0 = create_if_block_8(ctx2);
             if_block0.c();
-            if_block0.m(div0, t0);
+            if_block0.m(t.parentNode, t);
           }
         } else if (if_block0) {
           if_block0.d(1);
           if_block0 = null;
         }
-        if (ctx2[3]) {
+        if (!ctx2[18].eye || ctx2[15]) {
           if (if_block1) {
             if_block1.p(ctx2, dirty);
           } else {
-            if_block1 = create_if_block_5(ctx2);
+            if_block1 = create_if_block2(ctx2);
             if_block1.c();
-            if_block1.m(div0, t1);
+            if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
           }
         } else if (if_block1) {
           if_block1.d(1);
           if_block1 = null;
         }
-        if (ctx2[1]) {
-          if (if_block2) {
-            if_block2.p(ctx2, dirty);
-          } else {
-            if_block2 = create_if_block_4(ctx2);
-            if_block2.c();
-            if_block2.m(div0, t2);
-          }
-        } else if (if_block2) {
-          if_block2.d(1);
-          if_block2 = null;
-        }
-        if (ctx2[4]) {
-          if (if_block3) {
-            if_block3.p(ctx2, dirty);
-          } else {
-            if_block3 = create_if_block_3(ctx2);
-            if_block3.c();
-            if_block3.m(div0, null);
-          }
-        } else if (if_block3) {
-          if_block3.d(1);
-          if_block3 = null;
-        }
-        if (dirty[0] & 64) {
-          toggle_class(div0, "contract", ctx2[6]);
-        }
-        if (ctx2[14]) {
-          if (if_block4) {
-            if_block4.p(ctx2, dirty);
-          } else {
-            if_block4 = create_if_block_2(ctx2);
-            if_block4.c();
-            if_block4.m(div1, t4);
-          }
-        } else if (if_block4) {
-          if_block4.d(1);
-          if_block4 = null;
-        }
-        if (ctx2[2]) {
-          if (if_block5) {
-            if_block5.p(ctx2, dirty);
-          } else {
-            if_block5 = create_if_block_1(ctx2);
-            if_block5.c();
-            if_block5.m(div1, t5);
-          }
-        } else if (if_block5) {
-          if_block5.d(1);
-          if_block5 = null;
-        }
-        if (ctx2[1]) {
-          if (if_block6) {
-            if_block6.p(ctx2, dirty);
-          } else {
-            if_block6 = create_if_block2(ctx2);
-            if_block6.c();
-            if_block6.m(div1, null);
-          }
-        } else if (if_block6) {
-          if_block6.d(1);
-          if_block6 = null;
-        }
-        if (dirty[0] & 192) {
-          toggle_class(div1, "visible", ctx2[7] && ctx2[6]);
-        }
-        if (dirty[0] & 16384) {
-          toggle_class(div1, "unzipping", ctx2[14]);
-        }
       },
       i: noop,
       o: noop,
       d(detaching) {
-        if (detaching)
-          detach(div0);
         if (if_block0)
-          if_block0.d();
+          if_block0.d(detaching);
+        if (detaching)
+          detach(t);
         if (if_block1)
-          if_block1.d();
-        if (if_block2)
-          if_block2.d();
-        if (if_block3)
-          if_block3.d();
-        ctx[25](null);
+          if_block1.d(detaching);
         if (detaching)
-          detach(t3);
-        if (detaching)
-          detach(div1);
-        if (if_block4)
-          if_block4.d();
-        if (if_block5)
-          if_block5.d();
-        if (if_block6)
-          if_block6.d();
-        ctx[27](null);
-        mounted = false;
-        run_all(dispose);
+          detach(if_block1_anchor);
       }
     };
   }
@@ -14252,7 +14381,7 @@
   }
   function instance3($$self, $$props, $$invalidate) {
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(16, $settings = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(18, $settings = $$value));
     let { file } = $$props;
     let isVideo = false;
     let isImage = false;
@@ -14262,6 +14391,7 @@
     let settled = false;
     let contracted = true;
     let hovering = false;
+    let ftype = "";
     let place;
     let hoverElem;
     let imgElem;
@@ -14269,6 +14399,7 @@
     let hoverVideo;
     let dims = [0, 0];
     let furl = void 0;
+    let visible = false;
     beforeUpdate(async () => {
       if (settled)
         return;
@@ -14280,6 +14411,7 @@
         $$invalidate(4, isFile = true);
         return;
       }
+      $$invalidate(8, ftype = type.mime);
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
@@ -14294,15 +14426,15 @@
     async function unzip() {
       if (!file.thumbnail)
         return;
-      $$invalidate(14, unzipping = true);
+      $$invalidate(16, unzipping = true);
       let lisn = new EventTarget();
       lisn.addEventListener("progress", (e) => {
-        $$invalidate(15, progress = e.detail);
+        $$invalidate(17, progress = e.detail);
       });
       let full = await file.data(lisn);
       const type = await fileTypeFromBuffer(full);
-      $$invalidate(13, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
-      $$invalidate(14, unzipping = false);
+      $$invalidate(14, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
+      $$invalidate(16, unzipping = false);
       if (!type)
         return;
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
@@ -14317,12 +14449,15 @@
       if (hovering)
         hoverStop();
       if (contracted && isVideo) {
-        $$invalidate(11, videoElem.controls = false, videoElem);
+        $$invalidate(12, videoElem.controls = false, videoElem);
         videoElem.pause();
       }
       if (!contracted && isVideo) {
-        $$invalidate(11, videoElem.controls = true, videoElem);
-        setTimeout(async () => await videoElem.play(), 10);
+        $$invalidate(12, videoElem.controls = true, videoElem);
+        setTimeout(async () => {
+          $$invalidate(12, videoElem.currentTime = hoverVideo.currentTime || 0, videoElem);
+          await videoElem.play();
+        }, 10);
       }
       if (file.thumbnail && !furl) {
         unzip();
@@ -14340,8 +14475,8 @@
       }
       let scale = Math.min(1, sw / iw, sh / ih);
       dims = [~~(iw * scale), ~~(ih * scale)];
-      $$invalidate(9, hoverElem.style.width = `${dims[0]}px`, hoverElem);
-      $$invalidate(9, hoverElem.style.height = `${dims[1]}px`, hoverElem);
+      $$invalidate(10, hoverElem.style.width = `${dims[0]}px`, hoverElem);
+      $$invalidate(10, hoverElem.style.height = `${dims[1]}px`, hoverElem);
     }
     async function hoverStart(ev) {
       if ($settings.dh)
@@ -14359,8 +14494,8 @@
         try {
           await hoverVideo.play();
         } catch (e) {
-          $$invalidate(12, hoverVideo.muted = true, hoverVideo);
-          $$invalidate(12, hoverVideo.volume = 0, hoverVideo);
+          $$invalidate(13, hoverVideo.muted = true, hoverVideo);
+          $$invalidate(13, hoverVideo.volume = 0, hoverVideo);
           await hoverVideo.play();
         }
       }
@@ -14397,41 +14532,43 @@
         return;
       if (hasAudio(videoElem)) {
         let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
-        $$invalidate(11, videoElem.volume = Math.max(0, Math.min(1, vol)), videoElem);
-        $$invalidate(12, hoverVideo.volume = videoElem.volume, hoverVideo);
-        $$invalidate(12, hoverVideo.muted = videoElem.volume > 0, hoverVideo);
+        vol = Math.max(0, Math.min(1, vol));
+        $$invalidate(12, videoElem.volume = vol, videoElem);
+        $$invalidate(13, hoverVideo.volume = videoElem.volume, hoverVideo);
+        $$invalidate(13, hoverVideo.muted = vol < 0, hoverVideo);
         ev.preventDefault();
       }
     }
+    const click_handler = () => $$invalidate(15, visible = !visible);
     function img_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         imgElem = $$value;
-        $$invalidate(10, imgElem);
+        $$invalidate(11, imgElem);
       });
     }
     function video_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         videoElem = $$value;
-        $$invalidate(11, videoElem);
+        $$invalidate(12, videoElem);
       });
     }
-    const click_handler = () => bepis();
+    const click_handler_1 = () => bepis();
     function div0_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         place = $$value;
-        $$invalidate(8, place);
+        $$invalidate(9, place);
       });
     }
     function video_binding_1($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverVideo = $$value;
-        $$invalidate(12, hoverVideo);
+        $$invalidate(13, hoverVideo);
       });
     }
     function div1_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverElem = $$value;
-        $$invalidate(9, hoverElem);
+        $$invalidate(10, hoverElem);
       });
     }
     $$self.$$set = ($$props2) => {
@@ -14447,12 +14584,14 @@
       url,
       contracted,
       hovering,
+      ftype,
       place,
       hoverElem,
       imgElem,
       videoElem,
       hoverVideo,
       furl,
+      visible,
       unzipping,
       progress,
       $settings,
@@ -14461,9 +14600,10 @@
       hoverStop,
       hoverUpdate,
       adjustAudio,
+      click_handler,
       img_binding,
       video_binding,
-      click_handler,
+      click_handler_1,
       div0_binding,
       video_binding_1,
       div1_binding

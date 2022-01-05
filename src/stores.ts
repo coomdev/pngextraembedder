@@ -14,6 +14,7 @@ export const settings = writable(localLoad('settings', {
     xpv: false,
     xpi: false,
     te: false,
+    eye: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],
     sources: ['gelbooru.com',
         'yande.re',

@@ -13,6 +13,7 @@
   let settled = false
   let contracted = true
   let hovering = false
+  let ftype = '';
 
   let place: HTMLDivElement
   let hoverElem: HTMLDivElement
@@ -21,6 +22,8 @@
   let hoverVideo: HTMLVideoElement
   let dims: [number, number] = [0, 0]
   let furl: string | undefined = undefined;
+
+  let visible = false;
 
   beforeUpdate(async () => {
     if (settled) return
@@ -33,6 +36,7 @@
       isFile = true
       return;
     }
+    ftype = type.mime;
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
@@ -177,52 +181,67 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-<div
-  class:contract={contracted}
-  class="place fileThumb"
-  on:click={() => bepis()}
-  on:mouseover={hoverStart}
-  on:mouseout={hoverStop}
-  on:mousemove={hoverUpdate}
-  on:wheel={adjustAudio}
-  bind:this={place}
->
-  {#if isImage}
-    <img bind:this={imgElem} alt={file.filename} src={furl || url} />
-  {/if}
-  {#if isAudio}
-    <audio loop={$settings.loop} alt={file.filename} src={url} />
-  {/if}
-  {#if isVideo}
-    <!-- svelte-ignore a11y-media-has-caption -->
-    <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
-    <!-- assoom videos will never be loaded from thumbnails -->
-  {/if}
-  {#if isFile}
-    <button>Download {file.filename}</button>
-  {/if}
-</div>
-<div
-  bind:this={hoverElem}
-  class:visible={hovering && contracted}
-  class:unzipping
-  class="hoverer"
->
-  {#if unzipping}<span class="progress">[{progress[0]} / {progress[1]}]</span
-    >{/if}
 
-  {#if isImage}
-    <img alt={file.filename} src={furl || url} />
-  {/if}
-  {#if isVideo}
-    <!-- svelte-ignore a11y-media-has-caption -->
-    <video loop={$settings.loop} bind:this={hoverVideo} src={furl || url} />
-    <!-- assoom videos will never be loaded from thumbnails -->
-  {/if}
-</div>
+{#if $settings.eye}
+  <span on:click={() => visible = !visible} class:fa-eye={!visible} class:fa-eye-slash={visible} class="fa clickable" />
+{/if}
+
+
+{#if !$settings.eye || visible}
+  <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+  <div
+    class:contract={contracted}
+    class="place fileThumb"
+    on:click={() => bepis()}
+    on:mouseover={hoverStart}
+    on:mouseout={hoverStop}
+    on:mousemove={hoverUpdate}
+    on:wheel={adjustAudio}
+    bind:this={place}
+  >
+    {#if isImage}
+      <img bind:this={imgElem} alt={file.filename} src={furl || url} />
+    {/if}
+    {#if isAudio}
+      <audio controls loop={$settings.loop} alt={file.filename}>
+        <source src={url} type={ftype} />
+      </audio>
+    {/if}
+    {#if isVideo}
+      <!-- svelte-ignore a11y-media-has-caption -->
+      <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
+      <!-- assoom videos will never be loaded from thumbnails -->
+    {/if}
+    {#if isFile}
+      <button>Download {file.filename}</button>
+    {/if}
+  </div>
+  <div
+    bind:this={hoverElem}
+    class:visible={hovering && contracted}
+    class:unzipping
+    class="hoverer"
+  >
+    {#if unzipping}<span class="progress">[{progress[0]} / {progress[1]}]</span
+      >{/if}
+
+    {#if isImage}
+      <img alt={file.filename} src={furl || url} />
+    {/if}
+    {#if isVideo}
+      <!-- svelte-ignore a11y-media-has-caption -->
+      <video loop={$settings.loop} bind:this={hoverVideo} src={furl || url} />
+      <!-- assoom videos will never be loaded from thumbnails -->
+    {/if}
+  </div>
+{/if}
 
 <style scoped>
+  .clickable {
+    cursor: pointer;
+  }
+
+
   .place {
     cursor: pointer;
     max-width: 100vw;

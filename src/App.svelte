@@ -71,6 +71,10 @@
       Turn off hover preview.
     </label>
     <label>
+      <input type="checkbox" bind:checked={$settings.eye} />
+      Hide embedded content behind an eye.
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.te} />
       Turn off third-eye.
     </label>
