@@ -99,7 +99,7 @@ const findFileFrom = async (b: Booru, hex: string) => {
         const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
         // might throw because some endpoint respond with invalid json when an error occurs
         const pres = await res.json();
-        const tran = b.quirks(pres);
+        const tran = b.quirks(pres).filter(e => !e.tags.some(e => black.has(e)));
         cache[hex] = tran;
         return tran;
     } catch {
