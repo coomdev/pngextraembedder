@@ -86,7 +86,10 @@
     if (!contracted && isVideo) {
       videoElem.controls = true
       // has to be delayed
-      setTimeout(async () => await videoElem.play(), 10)
+      setTimeout(async () => {
+        videoElem.currentTime = hoverVideo.currentTime || 0;
+        await videoElem.play()
+      }, 10)
     }
     if (file.thumbnail && !furl) {
       // don't know how you managed to click before hovering but oh well
@@ -165,9 +168,10 @@
     if (!isVideo) return
     if (hasAudio(videoElem)) {
       let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
-      videoElem.volume = Math.max(0, Math.min(1, vol));
+      vol = Math.max(0, Math.min(1, vol));
+      videoElem.volume = vol;
       hoverVideo.volume = videoElem.volume;
-      hoverVideo.muted = videoElem.volume > 0;
+      hoverVideo.muted = vol < 0;
       ev.preventDefault()
     }
   }
