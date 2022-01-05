@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.71
+// @version      0.72
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -7702,8 +7702,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance4, Constructor) {
-        if (!(instance4 instanceof Constructor)) {
+      function _classCallCheck(instance5, Constructor) {
+        if (!(instance5 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -10709,7 +10709,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance4, create_fragment4, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance5, create_fragment5, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -10732,7 +10732,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance4 ? instance4(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance5 ? instance5(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -10745,7 +10745,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment4 ? create_fragment4($$.ctx) : false;
+    $$.fragment = create_fragment5 ? create_fragment5($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -13854,41 +13854,7 @@
 
   // src/Embedding.svelte
   function add_css3(target) {
-    append_styles(target, "svelte-eaazkt", ".clickable.svelte-eaazkt.svelte-eaazkt{cursor:pointer}.place.svelte-eaazkt.svelte-eaazkt{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-eaazkt>img.svelte-eaazkt{filter:brightness(0.5) blur(10px)}.progress.svelte-eaazkt.svelte-eaazkt{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-eaazkt.svelte-eaazkt{display:none;position:fixed;pointer-events:none}.visible.svelte-eaazkt.svelte-eaazkt{display:block;z-index:9}.contract.svelte-eaazkt>img.svelte-eaazkt,.contract.svelte-eaazkt>video.svelte-eaazkt{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-eaazkt:not(.contract)>video.svelte-eaazkt,.place.svelte-eaazkt:not(.contract)>img.svelte-eaazkt,.hoverer.svelte-eaazkt>video.svelte-eaazkt,.hoverer.svelte-eaazkt>img.svelte-eaazkt{max-width:100vw;max-height:100vh}");
-  }
-  function create_if_block_8(ctx) {
-    let span;
-    let mounted;
-    let dispose;
-    return {
-      c() {
-        span = element("span");
-        attr(span, "class", "fa clickable svelte-eaazkt");
-        toggle_class(span, "fa-eye", !ctx[15]);
-        toggle_class(span, "fa-eye-slash", ctx[15]);
-      },
-      m(target, anchor) {
-        insert(target, span, anchor);
-        if (!mounted) {
-          dispose = listen(span, "click", ctx[24]);
-          mounted = true;
-        }
-      },
-      p(ctx2, dirty) {
-        if (dirty[0] & 32768) {
-          toggle_class(span, "fa-eye", !ctx2[15]);
-        }
-        if (dirty[0] & 32768) {
-          toggle_class(span, "fa-eye-slash", ctx2[15]);
-        }
-      },
-      d(detaching) {
-        if (detaching)
-          detach(span);
-        mounted = false;
-        dispose();
-      }
-    };
+    append_styles(target, "svelte-vw6znf", ".place.svelte-vw6znf.svelte-vw6znf{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-vw6znf>img.svelte-vw6znf{filter:brightness(0.5) blur(10px)}.progress.svelte-vw6znf.svelte-vw6znf{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-vw6znf.svelte-vw6znf{display:none;position:fixed;pointer-events:none}.visible.svelte-vw6znf.svelte-vw6znf{display:block;z-index:9}.contract.svelte-vw6znf>img.svelte-vw6znf,.contract.svelte-vw6znf>video.svelte-vw6znf{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-vw6znf:not(.contract)>video.svelte-vw6znf,.place.svelte-vw6znf:not(.contract)>img.svelte-vw6znf,.hoverer.svelte-vw6znf>video.svelte-vw6znf,.hoverer.svelte-vw6znf>img.svelte-vw6znf{max-width:100vw;max-height:100vh}");
   }
   function create_if_block2(ctx) {
     let div0;
@@ -13932,9 +13898,9 @@
         t5 = space();
         if (if_block6)
           if_block6.c();
-        attr(div0, "class", "place fileThumb svelte-eaazkt");
+        attr(div0, "class", "place fileThumb svelte-vw6znf");
         toggle_class(div0, "contract", ctx[6]);
-        attr(div1, "class", "hoverer svelte-eaazkt");
+        attr(div1, "class", "hoverer svelte-vw6znf");
         toggle_class(div1, "visible", ctx[7] && ctx[6]);
         toggle_class(div1, "unzipping", ctx[16]);
       },
@@ -14107,7 +14073,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-eaazkt");
+        attr(img, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14179,7 +14145,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-eaazkt");
+        attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14243,7 +14209,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-eaazkt");
+        attr(span, "class", "progress svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -14275,7 +14241,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-eaazkt");
+        attr(img, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14304,7 +14270,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-eaazkt");
+        attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14326,64 +14292,40 @@
     };
   }
   function create_fragment3(ctx) {
-    let t;
-    let if_block1_anchor;
-    let if_block0 = ctx[18].eye && create_if_block_8(ctx);
-    let if_block1 = (!ctx[18].eye || ctx[15]) && create_if_block2(ctx);
+    let if_block_anchor;
+    let if_block = (!ctx[18].eye || ctx[15]) && create_if_block2(ctx);
     return {
       c() {
-        if (if_block0)
-          if_block0.c();
-        t = space();
-        if (if_block1)
-          if_block1.c();
-        if_block1_anchor = empty();
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
       },
       m(target, anchor) {
-        if (if_block0)
-          if_block0.m(target, anchor);
-        insert(target, t, anchor);
-        if (if_block1)
-          if_block1.m(target, anchor);
-        insert(target, if_block1_anchor, anchor);
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
       },
       p(ctx2, dirty) {
-        if (ctx2[18].eye) {
-          if (if_block0) {
-            if_block0.p(ctx2, dirty);
-          } else {
-            if_block0 = create_if_block_8(ctx2);
-            if_block0.c();
-            if_block0.m(t.parentNode, t);
-          }
-        } else if (if_block0) {
-          if_block0.d(1);
-          if_block0 = null;
-        }
         if (!ctx2[18].eye || ctx2[15]) {
-          if (if_block1) {
-            if_block1.p(ctx2, dirty);
+          if (if_block) {
+            if_block.p(ctx2, dirty);
           } else {
-            if_block1 = create_if_block2(ctx2);
-            if_block1.c();
-            if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
+            if_block = create_if_block2(ctx2);
+            if_block.c();
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
           }
-        } else if (if_block1) {
-          if_block1.d(1);
-          if_block1 = null;
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
         }
       },
       i: noop,
       o: noop,
       d(detaching) {
-        if (if_block0)
-          if_block0.d(detaching);
+        if (if_block)
+          if_block.d(detaching);
         if (detaching)
-          detach(t);
-        if (if_block1)
-          if_block1.d(detaching);
-        if (detaching)
-          detach(if_block1_anchor);
+          detach(if_block_anchor);
       }
     };
   }
@@ -14411,6 +14353,11 @@
     let dims = [0, 0];
     let furl = void 0;
     let visible = false;
+    let { id = "" } = $$props;
+    document.addEventListener("reveal", (e) => {
+      if (e.detail.id == id)
+        $$invalidate(15, visible = !visible);
+    });
     beforeUpdate(async () => {
       if (settled)
         return;
@@ -14558,7 +14505,6 @@
         ev.preventDefault();
       }
     }
-    const click_handler = () => $$invalidate(15, visible = !visible);
     function img_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         imgElem = $$value;
@@ -14571,7 +14517,7 @@
         $$invalidate(12, videoElem);
       });
     }
-    const click_handler_1 = () => bepis();
+    const click_handler = () => bepis();
     function div0_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         place = $$value;
@@ -14593,6 +14539,8 @@
     $$self.$$set = ($$props2) => {
       if ("file" in $$props2)
         $$invalidate(0, file = $$props2.file);
+      if ("id" in $$props2)
+        $$invalidate(24, id = $$props2.id);
     };
     return [
       file,
@@ -14619,10 +14567,10 @@
       hoverStop,
       hoverUpdate,
       adjustAudio,
-      click_handler,
+      id,
       img_binding,
       video_binding,
-      click_handler_1,
+      click_handler,
       div0_binding,
       video_binding_1,
       div1_binding
@@ -14631,10 +14579,110 @@
   var Embedding = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0 }, add_css3, [-1, -1]);
+      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0, id: 24 }, add_css3, [-1, -1]);
     }
   };
   var Embedding_default = Embedding;
+
+  // src/EyeButton.svelte
+  init_esbuild_inject();
+  function add_css4(target) {
+    append_styles(target, "svelte-1ailok0", ".clickable.svelte-1ailok0{cursor:pointer}.clickable.svelte-1ailok0:hover{text-shadow:0 0 4px palevioletred}");
+  }
+  function create_if_block3(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        span = element("span");
+        attr(span, "class", "fa clickable svelte-1ailok0");
+        toggle_class(span, "fa-eye", !ctx[0]);
+        toggle_class(span, "fa-eye-slash", ctx[0]);
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[2]);
+          mounted = true;
+        }
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1) {
+          toggle_class(span, "fa-eye", !ctx2[0]);
+        }
+        if (dirty & 1) {
+          toggle_class(span, "fa-eye-slash", ctx2[0]);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function create_fragment4(ctx) {
+    let if_block_anchor;
+    let if_block = ctx[1].eye && create_if_block3(ctx);
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[1].eye) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block3(ctx2);
+            if_block.c();
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(if_block_anchor);
+      }
+    };
+  }
+  function instance4($$self, $$props, $$invalidate) {
+    let $settings;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(1, $settings = $$value));
+    let { id = "" } = $$props;
+    let visible = false;
+    function reveal() {
+      $$invalidate(0, visible = !visible);
+      document.dispatchEvent(new CustomEvent("reveal", { detail: { id } }));
+    }
+    $$self.$$set = ($$props2) => {
+      if ("id" in $$props2)
+        $$invalidate(3, id = $$props2.id);
+    };
+    return [visible, $settings, reveal, id];
+  }
+  var EyeButton = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance4, create_fragment4, safe_not_equal, { id: 3 }, add_css4);
+    }
+  };
+  var EyeButton_default = EyeButton;
 
   // src/main.ts
   var csettings;
@@ -14678,7 +14726,7 @@
       return;
     if (proc.skip) {
       if (await proc.has_embed(import_buffer4.Buffer.alloc(0), fn) === true)
-        return await proc.extract(import_buffer4.Buffer.alloc(0), fn);
+        return [await proc.extract(import_buffer4.Buffer.alloc(0), fn), true];
       return;
     }
     const iter = streamRemote(src);
@@ -14702,7 +14750,7 @@
     if (found === false) {
       return;
     }
-    return await proc.extract(cumul);
+    return [await proc.extract(cumul), false];
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var processPost = async (post) => {
@@ -14710,22 +14758,53 @@
     const origlink = post.querySelector(".file-info > a");
     if (!thumb || !origlink)
       return;
-    const res = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "");
-    if (!res)
+    const res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "");
+    if (!res2)
       return;
+    const [res, external] = res2;
     const replyBox = post.querySelector(".post");
-    replyBox?.classList.toggle("hasembed");
+    if (external)
+      replyBox?.classList.add("hasext");
+    else
+      replyBox?.classList.add("hasembed");
     const isCatalog = replyBox?.classList.contains("catalog-post");
     if (!isCatalog) {
       const ft = thumb;
       const ahem = ft.querySelector(".place");
       const imgcont = ahem || document.createElement("div");
+      const eyecont = ahem || document.createElement("span");
       const p = thumb.parentElement;
       if (!ahem) {
         p.removeChild(thumb);
         imgcont.appendChild(thumb);
         imgcont.classList.add("fileThumb");
+        replyBox?.querySelector("a[download]").insertAdjacentElement("afterend", eyecont);
       } else {
+        imgcont.innerHTML = "";
+        eyecont.innerHTML = "";
+      }
+      const id = ~~(Math.random() * 2e7);
+      new Embedding_default({
+        target: imgcont,
+        props: {
+          file: res,
+          id: "" + id
+        }
+      });
+      new EyeButton_default({
+        target: eyecont,
+        props: {
+          id: "" + id
+        }
+      });
+      if (!ahem)
+        p.appendChild(imgcont);
+    } else {
+      const opFile = post.querySelector(".catalog-link");
+      const ahem = opFile?.querySelector(".catalog-host");
+      const imgcont = ahem || document.createElement("div");
+      imgcont.className = "catalog-host";
+      if (ahem) {
         imgcont.innerHTML = "";
       }
       const emb = new Embedding_default({
@@ -14735,17 +14814,7 @@
         }
       });
       if (!ahem)
-        p.appendChild(imgcont);
-    } else {
-      const opFile = post.querySelector(".catalog-link");
-      const imgcont = document.createElement("div");
-      const emb = new Embedding_default({
-        target: imgcont,
-        props: {
-          file: res
-        }
-      });
-      opFile?.append(imgcont);
+        opFile?.append(imgcont);
     }
     post.setAttribute("data-processed", "true");
   };
@@ -14863,7 +14932,15 @@
 }
 
 .hasembed.catalog-post {
-    border-right: 3px dashed deeppink !important;
+    border: 3px dashed deeppink !important;
+}
+
+.postContainer > div.hasext {
+    border-right: 3px dashed goldenrod !important;
+}
+
+.hasext.catalog-post {
+    border: 3px dashed goldenrod !important;
 }
 
 .expanded-image > .post > .file .fileThumb > img[data-md5] {

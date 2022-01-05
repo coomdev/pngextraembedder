@@ -25,6 +25,12 @@
 
   let visible = false;
 
+  export let id = ''; 
+  document.addEventListener("reveal", (e: any) => {
+    if (e.detail.id == id)
+      visible = !visible;
+  });
+
   beforeUpdate(async () => {
     if (settled) return
     settled = true
@@ -190,9 +196,6 @@
 </script>
 
 
-{#if $settings.eye}
-  <span on:click={() => visible = !visible} class:fa-eye={!visible} class:fa-eye-slash={visible} class="fa clickable" />
-{/if}
 
 
 {#if !$settings.eye || visible}
@@ -245,11 +248,6 @@
 {/if}
 
 <style scoped>
-  .clickable {
-    cursor: pointer;
-  }
-
-
   .place {
     cursor: pointer;
     max-width: 100vw;

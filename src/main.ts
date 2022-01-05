@@ -11,6 +11,7 @@ import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 import App from "./App.svelte";
 import SettingsButton from './SettingsButton.svelte';
 import Embedding from './Embedding.svelte';
+import EyeButton from './EyeButton.svelte';
 
 export interface ImageProcessor {
     skip?: true;
@@ -70,7 +71,7 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string) => {
+const processImage = async (src: string, fn: string): Promise<[EmbeddedFile, boolean] | undefined> => {
     const proc = processors.find(e => e.match(fn));
     if (!proc)
         return;
@@ -78,7 +79,7 @@ const processImage = async (src: string, fn: string) => {
         // skip file downloading, file is referenced from the filename
         // basically does things like filtering out blacklisted tags
         if (await proc.has_embed(Buffer.alloc(0), fn) === true)
-            return await proc.extract(Buffer.alloc(0), fn);
+            return [await proc.extract(Buffer.alloc(0), fn), true];
         return;
     }
     const iter = streamRemote(src);
@@ -103,7 +104,7 @@ const processImage = async (src: string, fn: string) => {
         //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
         return;
     }
-    return await proc.extract(cumul);
+    return [await proc.extract(cumul), false];
 };
 
 const textToElement = <T = HTMLElement>(s: string) =>
@@ -114,24 +115,54 @@ const processPost = async (post: HTMLDivElement) => {
     const origlink = post.querySelector('.file-info > a') as HTMLAnchorElement;
     if (!thumb || !origlink)
         return;
-    const res = await processImage(origlink.href, (origlink.querySelector('.fnfull') || origlink).textContent || '');
-    if (!res)
+    const res2 = await processImage(origlink.href, (origlink.querySelector('.fnfull') || origlink).textContent || '');
+    if (!res2)
         return;
+    const [res, external] = res2;
     const replyBox = post.querySelector('.post');
-    replyBox?.classList.toggle('hasembed');
+    if (external)
+        replyBox?.classList.add('hasext');
+    else replyBox?.classList.add('hasembed');
     const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
     if (!isCatalog) {
         const ft = thumb;
         const ahem: HTMLElement | null = ft.querySelector('.place');
         const imgcont = ahem || document.createElement('div');
+        const eyecont = ahem || document.createElement('span');
         const p = thumb.parentElement!;
 
         if (!ahem) {
             p.removeChild(thumb);
             imgcont.appendChild(thumb);
             imgcont.classList.add("fileThumb");
+            replyBox?.querySelector('a[download]')!.insertAdjacentElement("afterend", eyecont);
         } else {
+            imgcont.innerHTML = '';
+            eyecont.innerHTML = '';
+        }
+        const id = ~~(Math.random() * 20000000);
+        new Embedding({
+            target: imgcont,
+            props: {
+                file: res,
+                id: '' + id
+            }
+        });
+        new EyeButton({
+            target: eyecont,
+            props: {
+                id: '' + id
+            }
+        });
+        if (!ahem)
+            p.appendChild(imgcont);
+    } else {
+        const opFile = post.querySelector('.catalog-link');
+        const ahem = opFile?.querySelector('.catalog-host');
+        const imgcont = ahem || document.createElement('div');
+        imgcont.className = "catalog-host";
+        if (ahem) {
             imgcont.innerHTML = '';
         }
         const emb = new Embedding({
@@ -141,16 +172,6 @@ const processPost = async (post: HTMLDivElement) => {
             }
         });
         if (!ahem)
-            p.appendChild(imgcont);
-    } else {
-        const opFile = post.querySelector('.catalog-link');
-        const imgcont = document.createElement('div');
-        const emb = new Embedding({
-            target: imgcont,
-            props: {
-                file: res
-            }
-        });
         opFile?.append(imgcont);
     }
 
@@ -287,7 +308,15 @@ customStyles.appendChild(document.createTextNode(
 }
 
 .hasembed.catalog-post {
-    border-right: 3px dashed deeppink !important;
+    border: 3px dashed deeppink !important;
+}
+
+.postContainer > div.hasext {
+    border-right: 3px dashed goldenrod !important;
+}
+
+.hasext.catalog-post {
+    border: 3px dashed goldenrod !important;
 }
 
 .expanded-image > .post > .file .fileThumb > img[data-md5] {
