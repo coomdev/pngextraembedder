@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.63
+// @version      0.65
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11358,7 +11358,7 @@
         return cache[hex];
       const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
       const pres = await res.json();
-      const tran = b.quirks(pres);
+      const tran = b.quirks(pres).filter((e) => !e.tags.some((e2) => black.has(e2)));
       cache[hex] = tran;
       return tran;
     } catch {
@@ -13813,7 +13813,7 @@
 
   // src/Embedding.svelte
   function add_css3(target) {
-    append_styles(target, "svelte-l97pnn", ".place.svelte-l97pnn.svelte-l97pnn{cursor:pointer;max-width:90vw;max-height:90vh}.hoverer.svelte-l97pnn.svelte-l97pnn{display:none;position:fixed;pointer-events:none}.visible.svelte-l97pnn.svelte-l97pnn{display:block;z-index:1}.contract.svelte-l97pnn>img.svelte-l97pnn,.contract.svelte-l97pnn>video.svelte-l97pnn{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-l97pnn:not(.contract)>video.svelte-l97pnn,.place.svelte-l97pnn:not(.contract)>img.svelte-l97pnn,.hoverer.svelte-l97pnn>video.svelte-l97pnn,.hoverer.svelte-l97pnn>img.svelte-l97pnn{max-width:90vw;max-height:90vh}");
+    append_styles(target, "svelte-1215cld", ".place.svelte-1215cld.svelte-1215cld{cursor:pointer;max-width:90vw;max-height:90vh}.hoverer.svelte-1215cld.svelte-1215cld{display:none;position:fixed;pointer-events:none}.visible.svelte-1215cld.svelte-1215cld{display:block;z-index:9}.contract.svelte-1215cld>img.svelte-1215cld,.contract.svelte-1215cld>video.svelte-1215cld{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-1215cld:not(.contract)>video.svelte-1215cld,.place.svelte-1215cld:not(.contract)>img.svelte-1215cld,.hoverer.svelte-1215cld>video.svelte-1215cld,.hoverer.svelte-1215cld>img.svelte-1215cld{max-width:100vw;max-height:100vh}");
   }
   function create_if_block_5(ctx) {
     let img;
@@ -13825,7 +13825,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-l97pnn");
+        attr(img, "class", "svelte-1215cld");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -13889,7 +13889,7 @@
         video.loop = video_loop_value = ctx[14].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-l97pnn");
+        attr(video, "class", "svelte-1215cld");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -13946,7 +13946,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-l97pnn");
+        attr(img, "class", "svelte-1215cld");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -13975,7 +13975,7 @@
         video.loop = video_loop_value = ctx[14].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-l97pnn");
+        attr(video, "class", "svelte-1215cld");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14033,9 +14033,9 @@
         t4 = space();
         if (if_block5)
           if_block5.c();
-        attr(div0, "class", "place fileThumb svelte-l97pnn");
+        attr(div0, "class", "place fileThumb svelte-1215cld");
         toggle_class(div0, "contract", ctx[6]);
-        attr(div1, "class", "hoverer svelte-l97pnn");
+        attr(div1, "class", "hoverer svelte-1215cld");
         toggle_class(div1, "visible", ctx[7] && ctx[6]);
       },
       m(target, anchor) {
@@ -14281,11 +14281,14 @@
       if (!contracted)
         return;
       recompute();
-      try {
-        if (isVideo)
+      if (isVideo) {
+        try {
           await hoverVideo.play();
-      } catch (e) {
-        console.log(e);
+        } catch (e) {
+          $$invalidate(12, hoverVideo.muted = true, hoverVideo);
+          $$invalidate(12, hoverVideo.volume = 0, hoverVideo);
+          await hoverVideo.play();
+        }
       }
     }
     function hoverStop(ev) {
@@ -14322,6 +14325,7 @@
         let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
         $$invalidate(11, videoElem.volume = Math.max(0, Math.min(1, vol)), videoElem);
         $$invalidate(12, hoverVideo.volume = videoElem.volume, hoverVideo);
+        $$invalidate(12, hoverVideo.muted = videoElem.volume > 0, hoverVideo);
         ev.preventDefault();
       }
     }
@@ -14476,25 +14480,38 @@
       return;
     const replyBox = post.querySelector(".post");
     replyBox?.classList.toggle("hasembed");
-    const ft = post.querySelector(".fileThumb");
-    const ahem = ft.querySelector(".place");
-    const imgcont = ahem || document.createElement("div");
-    const p = thumb.parentElement;
-    if (!ahem) {
-      p.removeChild(thumb);
-      imgcont.appendChild(thumb);
-      imgcont.classList.add("fileThumb");
-    } else {
-      imgcont.innerHTML = "";
-    }
-    const emb = new Embedding_default({
-      target: imgcont,
-      props: {
-        file: res
+    const isCatalog = replyBox?.classList.contains("catalog-post");
+    if (!isCatalog) {
+      const ft = thumb;
+      const ahem = ft.querySelector(".place");
+      const imgcont = ahem || document.createElement("div");
+      const p = thumb.parentElement;
+      if (!ahem) {
+        p.removeChild(thumb);
+        imgcont.appendChild(thumb);
+        imgcont.classList.add("fileThumb");
+      } else {
+        imgcont.innerHTML = "";
       }
-    });
-    if (!ahem)
-      p.appendChild(imgcont);
+      const emb = new Embedding_default({
+        target: imgcont,
+        props: {
+          file: res
+        }
+      });
+      if (!ahem)
+        p.appendChild(imgcont);
+    } else {
+      const opFile = post.querySelector(".catalog-link");
+      const imgcont = document.createElement("div");
+      const emb = new Embedding_default({
+        target: imgcont,
+        props: {
+          file: res
+        }
+      });
+      opFile?.append(imgcont);
+    }
     post.setAttribute("data-processed", "true");
   };
   var startup = async () => {
@@ -14607,6 +14624,10 @@
 }
 
 .postContainer > div.hasembed {
+    border-right: 3px dashed deeppink !important;
+}
+
+.hasembed.catalog-post {
     border-right: 3px dashed deeppink !important;
 }
 

@@ -119,28 +119,40 @@ const processPost = async (post: HTMLDivElement) => {
         return;
     const replyBox = post.querySelector('.post');
     replyBox?.classList.toggle('hasembed');
+    const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
-    const ft = post.querySelector(".fileThumb")!;
-    const ahem: HTMLElement | null = ft.querySelector('.place');
-    const imgcont = ahem || document.createElement('div');
-    const p = thumb.parentElement!;
+    if (!isCatalog) {
+        const ft = thumb;
+        const ahem: HTMLElement | null = ft.querySelector('.place');
+        const imgcont = ahem || document.createElement('div');
+        const p = thumb.parentElement!;
 
-    if (!ahem) {
-        p.removeChild(thumb);
-        imgcont.appendChild(thumb);
-        imgcont.classList.add("fileThumb");
-    } else {
-        imgcont.innerHTML = '';
-    }
-
-    const emb = new Embedding({
-        target: imgcont,
-        props: {
-            file: res
+        if (!ahem) {
+            p.removeChild(thumb);
+            imgcont.appendChild(thumb);
+            imgcont.classList.add("fileThumb");
+        } else {
+            imgcont.innerHTML = '';
         }
-    });
-    if (!ahem)
-        p.appendChild(imgcont);
+        const emb = new Embedding({
+            target: imgcont,
+            props: {
+                file: res
+            }
+        });
+        if (!ahem)
+            p.appendChild(imgcont);
+    } else {
+        const opFile = post.querySelector('.catalog-link');
+        const imgcont = document.createElement('div');
+        const emb = new Embedding({
+            target: imgcont,
+            props: {
+                file: res
+            }
+        });
+        opFile?.append(imgcont);
+    }
 
     post.setAttribute('data-processed', "true");
 };
@@ -271,6 +283,10 @@ customStyles.appendChild(document.createTextNode(
 }
 
 .postContainer > div.hasembed {
+    border-right: 3px dashed deeppink !important;
+}
+
+.hasembed.catalog-post {
     border-right: 3px dashed deeppink !important;
 }
 

@@ -116,12 +116,17 @@
 
     recompute();
 
-    try {
-      if (isVideo) await hoverVideo.play()
-    } catch (e) {
-      console.log(e)
+    if (isVideo){
+      try {
+          await hoverVideo.play()
+        } catch (e) {
+          // probably didn't interact with document error, mute the video and try again?
+          hoverVideo.muted = true;
+          hoverVideo.volume = 0;
+          await hoverVideo.play()
+        }
+      }
     }
-  }
 
   function hoverStop(ev?: MouseEvent) {
     if ($settings.dh) return;
@@ -156,6 +161,7 @@
       let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
       videoElem.volume = Math.max(0, Math.min(1, vol));
       hoverVideo.volume = videoElem.volume;
+      hoverVideo.muted = videoElem.volume > 0;
       ev.preventDefault()
     }
   }
@@ -217,7 +223,7 @@
 
   .visible {
     display: block;
-    z-index: 1;
+    z-index: 9;
   }
 
   .contract > img,
@@ -232,7 +238,7 @@
   .place:not(.contract) > img,
   .hoverer > video,
   .hoverer > img {
-    max-width: 90vw;
-    max-height: 90vh;
+    max-width: 100vw;
+    max-height: 100vh;
   }
 </style>
