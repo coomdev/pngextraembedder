@@ -59,7 +59,7 @@ async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonC
 type EmbeddedFileWithPreview = {
     thumbnail: Buffer;
     filename: string;
-    data: () => Promise<Buffer>;
+    data: (lisn?: EventTarget) => Promise<Buffer>;
 };
 
 type EmbeddedFileWithoutPreview = {

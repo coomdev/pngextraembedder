@@ -24,7 +24,7 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
     });
 }
 
-export function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
+export function GM_fetch(...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) {
     function blobTo(to: string, blob: Blob) {
         if (to == "arrayBuffer" && blob.arrayBuffer)
             return blob.arrayBuffer();
@@ -51,6 +51,12 @@ export function GM_fetch(...[url, opt]: Parameters<typeof fetch>) {
             responseType: "blob",
             headers: opt?.headers as any,
             method: "GET",
+            ...(lisn ? {
+                onprogress: (prog) => {
+                    if (prog.loaded != prog.total && prog.total != 0)
+                        lisn.dispatchEvent(new CustomEvent("progress", { detail: [prog.loaded, prog.total] }));
+                },
+            } : {}),
             onload: (resp) => {
                 const blob = resp.response as Blob;
                 const ref = resp as any as Awaited<ReturnType<typeof fetch>>;

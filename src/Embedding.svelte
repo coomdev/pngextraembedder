@@ -43,12 +43,20 @@
     }
   })
 
+  let unzipping = false;
+  let progress = [0, 0]
   async function unzip() {
     if (!file.thumbnail)
       return;
-    let full = await file.data();
+    unzipping = true;
+    let lisn = new EventTarget();
+    lisn.addEventListener("progress", (e: any) => {
+      progress = e.detail
+    });
+    let full = await file.data(lisn);
     const type = await fileTypeFromBuffer(full);
     furl = URL.createObjectURL(new Blob([full], { type: type?.mime }));
+    unzipping = false;
     if (!type)
       return;
     isVideo = type.mime.startsWith('video/')
@@ -194,8 +202,12 @@
 <div
   bind:this={hoverElem}
   class:visible={hovering && contracted}
+  class:unzipping
   class="hoverer"
 >
+  {#if unzipping}<span class="progress">[{progress[0]} / {progress[1]}]</span
+    >{/if}
+
   {#if isImage}
     <img alt={file.filename} src={furl || url} />
   {/if}
@@ -209,8 +221,24 @@
 <style scoped>
   .place {
     cursor: pointer;
-    max-width: 90vw;
-    max-height: 90vh;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
+  .unzipping > img {
+    filter: brightness(0.5) blur(10px);
+  }
+
+  .progress {
+    color: black;
+    -webkit-text-stroke: 0.7px white;
+    font-weight: bold;
+    left: 50%;
+    top: 50%;
+    font-size: larger;
+    display: inline-block;
+    position: absolute;
+    z-index: 10;
   }
 
   .hoverer {
