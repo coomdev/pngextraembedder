@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.69
+// @version      0.70
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11294,7 +11294,7 @@
   }
 
   // src/thirdeye.ts
-  var gelquirk = (a) => a.post?.map((e) => ({
+  var gelquirk = (a) => (a.post || a).map((e) => ({
     ext: e.image.substr(e.image.indexOf(".") + 1),
     full_url: e.file_url,
     preview_url: e.preview_url,
@@ -11361,19 +11361,28 @@
   var cache = {};
   var findFileFrom = async (b, hex) => {
     try {
-      if (hex in cache)
-        return cache[hex];
+      if (b.domain in cache && hex in cache[b.domain])
+        return cache[b.domain][hex];
       const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
       const pres = await res.json();
       const tran = b.quirks(pres).filter((e) => !e.tags.some((e2) => black.has(e2)));
-      cache[hex] = tran;
+      if (!(b.domain in cache))
+        cache[b.domain] = {};
+      cache[b.domain][hex] = tran;
       return tran;
     } catch {
       return [];
     }
   };
   var extract4 = async (b, fn) => {
-    const result = await Promise.race(Object.values(boorus).filter((e) => sources.has(e.domain)).map((e) => findFileFrom(e, fn.substring(0, 32))));
+    let result;
+    for (const e of Object.values(boorus)) {
+      if (!sources.has(e.domain))
+        continue;
+      result = await findFileFrom(e, fn.substring(0, 32));
+      if (result.length)
+        break;
+    }
     return {
       filename: fn.substring(33) + result[0].ext,
       thumbnail: await (await GM_fetch(result[0].preview_url)).arrayBuffer(),
@@ -11386,6 +11395,8 @@
       if (!sources.has(e.domain))
         continue;
       result = await findFileFrom(e, fn.substring(0, 32));
+      if (result.length)
+        break;
     }
     return result && result.length != 0;
   };
@@ -14409,12 +14420,15 @@
       $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
       if (!type) {
         $$invalidate(4, isFile = true);
+        debugger;
         return;
       }
       $$invalidate(8, ftype = type.mime);
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
+      if (type.mime.includes("svg"))
+        debugger;
       if (isImage)
         $$invalidate(6, contracted = !$settings.xpi);
       if (isVideo) {

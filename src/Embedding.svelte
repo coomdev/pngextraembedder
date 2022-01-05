@@ -34,12 +34,15 @@
     url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
     if (!type) {
       isFile = true
+      debugger;
       return;
     }
     ftype = type.mime;
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
+    if (type.mime.includes('svg'))
+      debugger;
 
     if (isImage) contracted = !$settings.xpi
     if (isVideo) {

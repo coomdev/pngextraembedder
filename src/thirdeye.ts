@@ -18,7 +18,7 @@ export type BooruMatch = {
 type tran = (a: any) => BooruMatch[];
 
 const gelquirk: tran = a =>
-    a.post?.map((e: any) => ({
+    (a.post || a).map((e: any) => ({
         ext: e.image.substr(e.image.indexOf('.') + 1),
         full_url: e.file_url,
         preview_url: e.preview_url,
@@ -94,13 +94,15 @@ const cache: any = {};
 
 const findFileFrom = async (b: Booru, hex: string) => {
     try {
-        if (hex in cache)
-            return cache[hex] as BooruMatch[];
+        if (b.domain in cache && hex in cache[b.domain])
+            return cache[b.domain][hex] as BooruMatch[];
         const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
         // might throw because some endpoint respond with invalid json when an error occurs
         const pres = await res.json();
         const tran = b.quirks(pres).filter(e => !e.tags.some(e => black.has(e)));
-        cache[hex] = tran;
+        if (!(b.domain in cache))
+            cache[b.domain] = {};
+        cache[b.domain][hex] = tran;
         return tran;
     } catch {
         return [];
@@ -108,9 +110,14 @@ const findFileFrom = async (b: Booru, hex: string) => {
 };
 
 const extract = async (b: Buffer, fn?: string) => {
-    const result = await Promise.race(Object.values(boorus)
-        .filter(e => sources.has(e.domain))
-        .map(e => findFileFrom(e, fn!.substring(0, 32))));
+    let result!: BooruMatch[];
+    for (const e of Object.values(boorus)) {
+        if (!sources.has(e.domain))
+            continue;
+        result = await findFileFrom(e, fn!.substring(0, 32));
+        if (result.length)
+            break;
+    }
     return {
         filename: fn!.substring(33) + result[0].ext,
         thumbnail: (await (await GM_fetch(result[0].preview_url)).arrayBuffer()),
@@ -126,6 +133,8 @@ const has_embed = async (b: Buffer, fn?: string) => {
         if (!sources.has(e.domain))
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
+        if (result.length)
+            break;
     }
     return result && result.length != 0;
 };
