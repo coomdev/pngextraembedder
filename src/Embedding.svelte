@@ -56,9 +56,7 @@
     isImage = type.mime.startsWith('image/')
     if (hovering) {
       // reset hovering to recompute proper image coordinates
-      await tick();
-      recompute();
-      await tick();
+      setTimeout(recompute, 10);
     }
   }
 
@@ -102,7 +100,6 @@
 
     hoverElem.style.width = `${dims[0]}px`
     hoverElem.style.height = `${dims[1]}px`
-    hovering = true
   }
 
   async function hoverStart(ev?: MouseEvent) {
@@ -115,6 +112,7 @@
     if (!contracted) return
 
     recompute();
+    hovering = true
 
     if (isVideo){
       try {

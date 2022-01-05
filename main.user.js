@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.65
+// @version      0.66
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14,6 +14,7 @@
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
+// @connect      *
 // ==/UserScript==
 (() => {
   var __create = Object.create;
@@ -10619,10 +10620,6 @@
       resolved_promise.then(flush);
     }
   }
-  function tick() {
-    schedule_update();
-    return resolved_promise;
-  }
   function add_render_callback(fn) {
     render_callbacks.push(fn);
   }
@@ -14233,9 +14230,7 @@
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
       if (hovering) {
-        await tick();
-        recompute();
-        await tick();
+        setTimeout(recompute, 10);
       }
     }
     async function bepis() {
@@ -14268,7 +14263,6 @@
       dims = [~~(iw * scale), ~~(ih * scale)];
       $$invalidate(9, hoverElem.style.width = `${dims[0]}px`, hoverElem);
       $$invalidate(9, hoverElem.style.height = `${dims[1]}px`, hoverElem);
-      $$invalidate(7, hovering = true);
     }
     async function hoverStart(ev) {
       if ($settings.dh)
@@ -14281,6 +14275,7 @@
       if (!contracted)
         return;
       recompute();
+      $$invalidate(7, hovering = true);
       if (isVideo) {
         try {
           await hoverVideo.play();
