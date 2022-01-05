@@ -71,7 +71,10 @@
     isImage = type.mime.startsWith('image/')
     if (hovering) {
       // reset hovering to recompute proper image coordinates
-      setTimeout(recompute, 10);
+      setTimeout(() => {
+        recompute();
+        hoverUpdate();
+      }, 20);
     }
   }
 
@@ -150,14 +153,16 @@
     if (isVideo) hoverVideo.pause()
   }
 
-  function hoverUpdate(ev: MouseEvent) {
+  let lastev: MouseEvent | undefined;
+  function hoverUpdate(ev?: MouseEvent) {
+    lastev = lastev || ev;
     if ($settings.dh) return;
     if (!contracted) return
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
     let width = dims[0]
     let height = dims[1] + 25
-    let { clientX, clientY } = ev
+    let { clientX, clientY } = (ev || lastev!)
     let top = Math.max(0, (clientY * (sh - height)) / sh)
     let threshold = sw / 2
     let marginX: number | string =

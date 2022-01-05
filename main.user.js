@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.70
+// @version      0.71
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14455,7 +14455,10 @@
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
       if (hovering) {
-        setTimeout(recompute, 10);
+        setTimeout(() => {
+          recompute();
+          hoverUpdate();
+        }, 20);
       }
     }
     async function bepis() {
@@ -14521,7 +14524,9 @@
       if (isVideo)
         hoverVideo.pause();
     }
+    let lastev;
     function hoverUpdate(ev) {
+      lastev = lastev || ev;
       if ($settings.dh)
         return;
       if (!contracted)
@@ -14529,7 +14534,7 @@
       const [sw, sh] = [visualViewport.width, visualViewport.height];
       let width = dims[0];
       let height = dims[1] + 25;
-      let { clientX, clientY } = ev;
+      let { clientX, clientY } = ev || lastev;
       let top = Math.max(0, clientY * (sh - height) / sh);
       let threshold = sw / 2;
       let marginX = (clientX <= threshold ? clientX : sw - clientX) + 45;
