@@ -134,5 +134,5 @@ export default {
     skip: true,
     extract,
     has_embed,
-    match: fn => !!fn.match(/[0-9a-fA-F]{32}\.....?/)
+    match: fn => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
 } as ImageProcessor;

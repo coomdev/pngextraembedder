@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.62
+// @version      0.63
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11386,7 +11386,7 @@
     skip: true,
     extract: extract4,
     has_embed: has_embed4,
-    match: (fn) => !!fn.match(/[0-9a-fA-F]{32}\.....?/)
+    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
   };
 
   // src/App.svelte
