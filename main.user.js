@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.73
+// @version      0.74
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14098,16 +14098,19 @@
     let audio;
     let source;
     let source_src_value;
+    let audio_src_value;
     let audio_loop_value;
     let audio_alt_value;
     return {
       c() {
         audio = element("audio");
         source = element("source");
-        if (!src_url_equal(source.src, source_src_value = ctx[5]))
+        if (!src_url_equal(source.src, source_src_value = ctx[14] || ctx[5]))
           attr(source, "src", source_src_value);
         attr(source, "type", ctx[8]);
         audio.controls = true;
+        if (!src_url_equal(audio.src, audio_src_value = ctx[14] || ctx[5]))
+          attr(audio, "src", audio_src_value);
         audio.loop = audio_loop_value = ctx[18].loop;
         attr(audio, "alt", audio_alt_value = ctx[0].filename);
       },
@@ -14116,11 +14119,14 @@
         append(audio, source);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 32 && !src_url_equal(source.src, source_src_value = ctx2[5])) {
+        if (dirty[0] & 16416 && !src_url_equal(source.src, source_src_value = ctx2[14] || ctx2[5])) {
           attr(source, "src", source_src_value);
         }
         if (dirty[0] & 256) {
           attr(source, "type", ctx2[8]);
+        }
+        if (dirty[0] & 16416 && !src_url_equal(audio.src, audio_src_value = ctx2[14] || ctx2[5])) {
+          attr(audio, "src", audio_src_value);
         }
         if (dirty[0] & 262144 && audio_loop_value !== (audio_loop_value = ctx2[18].loop)) {
           audio.loop = audio_loop_value;
@@ -14367,15 +14373,12 @@
       $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
       if (!type) {
         $$invalidate(4, isFile = true);
-        debugger;
         return;
       }
       $$invalidate(8, ftype = type.mime);
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
-      if (type.mime.includes("svg"))
-        debugger;
       if (isImage)
         $$invalidate(6, contracted = !$settings.xpi);
       if (isVideo) {

@@ -40,15 +40,12 @@
     url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
     if (!type) {
       isFile = true
-      debugger;
       return;
     }
     ftype = type.mime;
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
-    if (type.mime.includes('svg'))
-      debugger;
 
     if (isImage) contracted = !$settings.xpi
     if (isVideo) {
@@ -214,8 +211,8 @@
       <img bind:this={imgElem} alt={file.filename} src={furl || url} />
     {/if}
     {#if isAudio}
-      <audio controls loop={$settings.loop} alt={file.filename}>
-        <source src={url} type={ftype} />
+      <audio controls src={furl || url}  loop={$settings.loop} alt={file.filename}>
+        <source src={furl || url} type={ftype} />
       </audio>
     {/if}
     {#if isVideo}
