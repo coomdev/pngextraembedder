@@ -21,6 +21,6 @@
   }
 
   .clickable:hover {
-    text-shadow: 0 0 2px palevioletred;
+    text-shadow: 0 0 4px palevioletred;
   }
 </style>

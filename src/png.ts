@@ -1,9 +1,10 @@
 import { buf } from "crc-32";
 import { Buffer } from "buffer";
+import type { ImageProcessor } from "./main";
 
-export type PNGChunk = [string, Buffer, number, number];
+type PNGChunk = [string, Buffer, number, number];
 
-export class PNGDecoder {
+class PNGDecoder {
     repr: Buffer;
 
     req = 8;
@@ -46,7 +47,7 @@ export class PNGDecoder {
     }
 }
 
-export class PNGEncoder {
+class PNGEncoder {
     writer: WritableStreamDefaultWriter<Buffer>;
 
     constructor(bytes: WritableStream<Buffer>) {
@@ -72,7 +73,7 @@ export class PNGEncoder {
 
 const CUM0 = Buffer.from("CUM\0" + "0");
 
-export const BufferReadStream = (b: Buffer) => {
+const BufferReadStream = (b: Buffer) => {
     const ret = new ReadableStream<Buffer>({
         pull(cont) {
             cont.enqueue(b);
@@ -82,7 +83,7 @@ export const BufferReadStream = (b: Buffer) => {
     return ret;
 };
 
-export const extract = async (png: Buffer) => {
+const extract = async (png: Buffer) => {
     let magic = false;
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
@@ -143,7 +144,7 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
-export const inject = async (container: File, inj: File) => {
+const inject = async (container: File, inj: File) => {
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
@@ -167,7 +168,7 @@ export const inject = async (container: File, inj: File) => {
     return extract();
 };
 
-export const has_embed = async (png: Buffer) => {
+const has_embed = async (png: Buffer) => {
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
     try {
@@ -196,3 +197,10 @@ export const has_embed = async (png: Buffer) => {
         reader.releaseLock();
     }
 };
+
+export default {
+    extract,
+    has_embed,
+    inject,
+    match: fn => !!fn.match(/\.png$/)
+} as ImageProcessor;

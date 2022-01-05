@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import * as ebml from "ts-ebml";
+import type { ImageProcessor } from "./main";
 
 // unused, but will in case 4chan does file sig checks
 //const password = Buffer.from("NOA");
@@ -107,7 +108,7 @@ const embed = (webm: Buffer, data: Buffer) => {
     return Buffer.from(enc.encode(chunks.filter(e => e.name != "unknown")));
 };
 
-export const extract = (webm: Buffer) => {
+const extract = (webm: Buffer) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
 
@@ -122,10 +123,10 @@ export const extract = (webm: Buffer) => {
         return { filename: 'string', data: chk.data };
 };
 
-export const inject = async (container: File, inj: File): Promise<Buffer> =>
+const inject = async (container: File, inj: File): Promise<Buffer> =>
     embed(Buffer.from(await container.arrayBuffer()), Buffer.from(await inj.arrayBuffer()));
 
-export const has_embed = (webm: Buffer) => {
+const has_embed = (webm: Buffer) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
 
@@ -137,3 +138,9 @@ export const has_embed = (webm: Buffer) => {
         return;
     return true;
 };
+
+export default {
+    extract,
+    has_embed,
+    match: fn => !!fn.match(/\.webm$/)
+} as ImageProcessor;

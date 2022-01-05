@@ -1,9 +1,10 @@
 <script lang="ts">
   import { fileTypeFromBuffer } from 'file-type'
   import { settings } from './stores'
-  import { beforeUpdate } from 'svelte'
+  import { beforeUpdate, tick } from 'svelte'
+  import type {EmbeddedFile} from './main';
 
-  export let file: { filename: string; data: Buffer }
+  export let file: EmbeddedFile
   let isVideo = false
   let isImage = false
   let isAudio = false
@@ -19,15 +20,18 @@
   let videoElem: HTMLVideoElement
   let hoverVideo: HTMLVideoElement
   let dims: [number, number] = [0, 0]
+  let furl: string | undefined = undefined;
 
   beforeUpdate(async () => {
     if (settled) return
     settled = true
-    const type = await fileTypeFromBuffer(file.data)
-    url = URL.createObjectURL(new Blob([file.data], { type: type?.mime }))
+    
+    const thumb = file.thumbnail || file.data;
+    const type = await fileTypeFromBuffer(thumb);
+    url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
     if (!type) {
       isFile = true
-      return
+      return;
     }
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
@@ -39,15 +43,34 @@
     }
   })
 
+  async function unzip() {
+    if (!file.thumbnail)
+      return;
+    let full = await file.data();
+    const type = await fileTypeFromBuffer(full);
+    furl = URL.createObjectURL(new Blob([full], { type: type?.mime }));
+    if (!type)
+      return;
+    isVideo = type.mime.startsWith('video/')
+    isAudio = type.mime.startsWith('audio/')
+    isImage = type.mime.startsWith('image/')
+    if (hovering) {
+      // reset hovering to recompute proper image coordinates
+      await tick();
+      recompute();
+      await tick();
+    }
+  }
+
   function hasAudio(video: any) {
     return (
       video.mozHasAudio ||
-      Boolean(video.webkitAudioDecodedByteCount) ||
-      Boolean(video.audioTracks && video.audioTracks.length)
+      !!(video.webkitAudioDecodedByteCount) ||
+      !!(video.audioTracks && video.audioTracks.length)
     )
   }
 
-  function bepis() {
+  async function bepis() {
     contracted = !contracted
     if (hovering) hoverStop()
     if (contracted && isVideo) {
@@ -57,14 +80,15 @@
     if (!contracted && isVideo) {
       videoElem.controls = true
       // has to be delayed
-      setTimeout(() => videoElem.play(), 10)
+      setTimeout(async () => await videoElem.play(), 10)
+    }
+    if (file.thumbnail && !furl) {
+      // don't know how you managed to click before hovering but oh well
+       unzip()
     }
   }
 
-  function hoverStart(ev: MouseEvent) {
-    if (!isImage && !isVideo) return
-    if (!contracted) return
-
+  function recompute() {
     const [sw, sh] = [visualViewport.width, visualViewport.height]
 
     let [iw, ih] = [0, 0]
@@ -79,15 +103,34 @@
     hoverElem.style.width = `${dims[0]}px`
     hoverElem.style.height = `${dims[1]}px`
     hovering = true
-    if (isVideo) hoverVideo.play()
+  }
+
+  async function hoverStart(ev?: MouseEvent) {
+    if ($settings.dh)return;
+    if (file.thumbnail && !furl) {
+       unzip();
+    }
+
+    if (!isImage && !isVideo) return
+    if (!contracted) return
+
+    recompute();
+
+    try {
+      if (isVideo) await hoverVideo.play()
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function hoverStop(ev?: MouseEvent) {
+    if ($settings.dh) return;
     hovering = false
     if (isVideo) hoverVideo.pause()
   }
 
   function hoverUpdate(ev: MouseEvent) {
+    if ($settings.dh) return;
     if (!contracted) return
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
@@ -130,14 +173,15 @@
   bind:this={place}
 >
   {#if isImage}
-    <img bind:this={imgElem} alt={file.filename} src={url} />
+    <img bind:this={imgElem} alt={file.filename} src={furl || url} />
   {/if}
   {#if isAudio}
     <audio loop={$settings.loop} alt={file.filename} src={url} />
   {/if}
   {#if isVideo}
     <!-- svelte-ignore a11y-media-has-caption -->
-    <video loop={$settings.loop} bind:this={videoElem} src={url} />
+    <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
+    <!-- assoom videos will never be loaded from thumbnails -->
   {/if}
   {#if isFile}
     <button>Download {file.filename}</button>
@@ -149,11 +193,12 @@
   class="hoverer"
 >
   {#if isImage}
-    <img alt={file.filename} src={url} />
+    <img alt={file.filename} src={furl || url} />
   {/if}
   {#if isVideo}
     <!-- svelte-ignore a11y-media-has-caption -->
-    <video loop={$settings.loop} bind:this={hoverVideo} src={url} />
+    <video loop={$settings.loop} bind:this={hoverVideo} src={furl || url} />
+    <!-- assoom videos will never be loaded from thumbnails -->
   {/if}
 </div>
 

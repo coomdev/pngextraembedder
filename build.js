@@ -29,20 +29,7 @@ const extheader = `// ==UserScript==
 `;
 
 (async () => {
-  let res;/*
-  res = await esbuild.build({
-    entryPoints: ['src/main.ts'],
-    bundle: true,
-    outfile: 'dist/main.js',
-    define: {
-      global: 'window'
-    },
-    inject: ['./esbuild.inject.js'],
-    metafile: true
-  });
-  console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
-  writeFileSync('./main.user.js', extheader + readFileSync('./dist/main.js'));
-  */
+  let res;
 
   res = await esbuild
     .build({
@@ -65,5 +52,4 @@ const extheader = `// ==UserScript==
   console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
   writeFileSync('./main.user.js', extheader + readFileSync('./dist/main.js'));
   writeFileSync('./main.meta.js', extheader);
-
 })();

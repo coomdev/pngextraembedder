@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
-import { fileTypeFromBuffer } from 'file-type';
 import { settings } from "./stores";
 
-import * as png from "./png";
-import * as webm from "./webm";
-import * as gif from "./gif";
+import png from "./png";
+import webm from "./webm";
+import gif from "./gif";
+import thirdeye from "./thirdeye";
 
 import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
@@ -12,8 +12,23 @@ import App from "./App.svelte";
 import SettingsButton from './SettingsButton.svelte';
 import Embedding from './Embedding.svelte';
 
+export interface ImageProcessor {
+    skip?: true;
+    match(fn: string): boolean;
+    has_embed(b: Buffer, fn?: string): boolean | Promise<boolean>;
+    extract(b: Buffer, fn?: string): EmbeddedFile | Promise<EmbeddedFile>;
+    inject?(b: File, c: File): Buffer | Promise<Buffer>;
+}
+
 let csettings: any;
-settings.subscribe(b => csettings = b);
+let processors: ImageProcessor[] =
+    [thirdeye, png, webm, gif];
+
+settings.subscribe(b => {
+    csettings = b;
+    processors = [...(csettings.te ? [thirdeye] : []), png, webm, gif
+    ];
+});
 
 // most pngs are encoded with 65k idat chunks
 async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonCanceled = true) {
@@ -41,20 +56,31 @@ async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonC
     //console.log("streaming ended, ", ptr, size);
 }
 
-type EmbeddedFile = { filename: string; data: Buffer };
-const processors: [RegExp,
-    (b: Buffer) => (boolean | undefined) | Promise<boolean | undefined>,
-    (b: Buffer) => EmbeddedFile | undefined | Promise<EmbeddedFile | undefined>,
-    (container: File, inj: File) => Promise<Buffer>][] = [
-        [/\.png$/, png.has_embed, png.extract, png.inject],
-        [/\.webm$/, webm.has_embed, webm.extract, webm.inject],
-        [/\.gif$/, gif.has_embed, gif.extract, gif.inject],
-    ];
+type EmbeddedFileWithPreview = {
+    thumbnail: Buffer;
+    filename: string;
+    data: () => Promise<Buffer>;
+};
 
-const processImage = async (src: string) => {
-    const proc = processors.find(e => src.match(e[0]));
+type EmbeddedFileWithoutPreview = {
+    thumbnail: undefined;
+    filename: string;
+    data: Buffer;
+};
+
+export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
+
+const processImage = async (src: string, fn: string) => {
+    const proc = processors.find(e => e.match(fn));
     if (!proc)
         return;
+    if (proc.skip) {
+        // skip file downloading, file is referenced from the filename
+        // basically does things like filtering out blacklisted tags
+        if (await proc.has_embed(Buffer.alloc(0), fn) === true)
+            return await proc.extract(Buffer.alloc(0), fn);
+        return;
+    }
     const iter = streamRemote(src);
     if (!iter)
         return;
@@ -70,14 +96,14 @@ const processImage = async (src: string) => {
         }
         if (!done)
             cumul = Buffer.concat([cumul, value!]);
-        found = await proc[1](cumul);
+        found = await proc.has_embed(cumul);
     } while (found !== false && !chunk.done);
     await iter.next(false);
     if (found === false) {
         //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
         return;
     }
-    return await proc[2](cumul);
+    return await proc.extract(cumul);
 };
 
 const textToElement = <T = HTMLElement>(s: string) =>
@@ -88,7 +114,7 @@ const processPost = async (post: HTMLDivElement) => {
     const origlink = post.querySelector('.file-info > a') as HTMLAnchorElement;
     if (!thumb || !origlink)
         return;
-    const res = await processImage(origlink.href);
+    const res = await processImage(origlink.href, (origlink.querySelector('.fnfull') || origlink).textContent || '');
     if (!res)
         return;
     const replyBox = post.querySelector('.post');
@@ -195,10 +221,12 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => 
         input.onchange = (async ev => {
             if (input.files) {
                 try {
-                    const proc = processors.find(e => file.name.match(e[0]));
+                    const proc = processors.find(e => e.match(file.name));
                     if (!proc)
                         throw new Error("Container filetype not supported");
-                    const buff = await proc[3](file, input.files[0]);
+                    if (!proc.inject)
+                        return;
+                    const buff = await proc.inject(file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
                         //detail: { file: new Blob([buff]), name: file.name, type: file.type }
                         detail: { file: new Blob([buff], { type }), name: file.name }

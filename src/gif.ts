@@ -1,4 +1,5 @@
 import { Buffer } from "buffer";
+import type { ImageProcessor } from "./main";
 import { BufferWriteStream } from "./png";
 
 const netscape = Buffer.from("!\xFF\x0BNETSCAPE2.0", 'ascii');
@@ -44,7 +45,7 @@ const extractBuff = (gif: Buffer) => {
     // metadata ended, nothing...
 };
 
-export const extract = extractBuff;
+const extract = extractBuff;
 
 const write_embedding = async (writer: WritableStreamDefaultWriter<Buffer>, inj: Buffer) => {
     await writer.write(magic);
@@ -64,7 +65,7 @@ const write_embedding = async (writer: WritableStreamDefaultWriter<Buffer>, inj:
     await writer.write(byte);
 };
 
-export const inject = async (container: File, inj: File) => {
+const inject = async (container: File, inj: File) => {
     const [writestream, extract] = BufferWriteStream();
     const writer = writestream.getWriter();
 
@@ -84,7 +85,7 @@ export const inject = async (container: File, inj: File) => {
     return extract();
 };
 
-export const has_embed = (gif: Buffer) => {
+const has_embed = (gif: Buffer) => {
     const field = gif.readUInt8(10);
     const gcte = !!(field & (1 << 7));
     let end = 13;
@@ -110,3 +111,10 @@ export const has_embed = (gif: Buffer) => {
         return; // Don't know yet, need more to decide.
     return false; // no more extension blocks, so definite no
 };
+
+export default {
+    extract,
+    has_embed,
+    inject,
+    match: fn => !!fn.match(/\.gif$/)
+} as ImageProcessor;

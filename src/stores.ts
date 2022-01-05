@@ -10,10 +10,17 @@ const localSet = (key: string, value: any) =>
 
 export const settings = writable(localLoad('settings', {
     loop: true,
+    dh: false,
     xpv: false,
     xpi: false,
-    blacklist: [],
-    sources: []
+    te: false,
+    blacklist: ['guro', 'scat', 'ryona', 'gore'],
+    sources: ['gelbooru.com',
+        'yande.re',
+        'capi-v2.sankakucomplex.com',
+        'api.rule34.xxx',
+        'danbooru.donmai.us',
+        'lolibooru.moe']
 }));
 
 settings.subscribe(newVal => {
