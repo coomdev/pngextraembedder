@@ -152,6 +152,7 @@ const processPost = async (post: HTMLDivElement) => {
         new EyeButton({
             target: eyecont,
             props: {
+                file: res,
                 id: '' + id
             }
         });

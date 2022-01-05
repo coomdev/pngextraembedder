@@ -118,10 +118,15 @@ const extract = async (b: Buffer, fn?: string) => {
         if (result.length)
             break;
     }
+    let cachedFile: ArrayBuffer;
     return {
-        filename: fn!.substring(33) + result[0].ext,
+        filename: fn!.substring(0, 33) + result[0].ext,
         thumbnail: (await (await GM_fetch(result[0].preview_url)).arrayBuffer()),
-        data: async (lsn) => (await (await GM_fetch(result[0].full_url, undefined, lsn)).arrayBuffer())
+        data: async (lsn) => {
+            if (!cachedFile)
+                cachedFile = (await (await GM_fetch(result[0].full_url, undefined, lsn)).arrayBuffer());
+            return cachedFile;
+        }
     } as EmbeddedFile;
 };
 

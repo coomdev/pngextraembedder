@@ -8,7 +8,6 @@
   let isVideo = false
   let isImage = false
   let isAudio = false
-  let isFile = false
   let url = ''
   let settled = false
   let contracted = true
@@ -38,10 +37,8 @@
     const thumb = file.thumbnail || file.data;
     const type = await fileTypeFromBuffer(thumb);
     url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
-    if (!type) {
-      isFile = true
+    if (!type)
       return;
-    }
     ftype = type.mime;
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
@@ -192,9 +189,6 @@
   }
 </script>
 
-
-
-
 {#if !$settings.eye || visible}
   <!-- svelte-ignore a11y-mouse-events-have-key-events -->
   <div
@@ -211,7 +205,12 @@
       <img bind:this={imgElem} alt={file.filename} src={furl || url} />
     {/if}
     {#if isAudio}
-      <audio controls src={furl || url}  loop={$settings.loop} alt={file.filename}>
+      <audio
+        controls
+        src={furl || url}
+        loop={$settings.loop}
+        alt={file.filename}
+      >
         <source src={furl || url} type={ftype} />
       </audio>
     {/if}
@@ -219,9 +218,6 @@
       <!-- svelte-ignore a11y-media-has-caption -->
       <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
       <!-- assoom videos will never be loaded from thumbnails -->
-    {/if}
-    {#if isFile}
-      <button>Download {file.filename}</button>
     {/if}
   </div>
   <div

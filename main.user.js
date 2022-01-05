@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.74
+// @version      0.75
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11383,10 +11383,15 @@
       if (result.length)
         break;
     }
+    let cachedFile;
     return {
-      filename: fn.substring(33) + result[0].ext,
+      filename: fn.substring(0, 33) + result[0].ext,
       thumbnail: await (await GM_fetch(result[0].preview_url)).arrayBuffer(),
-      data: async (lsn) => await (await GM_fetch(result[0].full_url, void 0, lsn)).arrayBuffer()
+      data: async (lsn) => {
+        if (!cachedFile)
+          cachedFile = await (await GM_fetch(result[0].full_url, void 0, lsn)).arrayBuffer();
+        return cachedFile;
+      }
     };
   };
   var has_embed4 = async (b, fn) => {
@@ -13861,19 +13866,17 @@
     let t0;
     let t1;
     let t2;
-    let t3;
     let div1;
+    let t3;
     let t4;
-    let t5;
     let mounted;
     let dispose;
-    let if_block0 = ctx[2] && create_if_block_7(ctx);
-    let if_block1 = ctx[3] && create_if_block_6(ctx);
-    let if_block2 = ctx[1] && create_if_block_5(ctx);
-    let if_block3 = ctx[4] && create_if_block_4(ctx);
-    let if_block4 = ctx[16] && create_if_block_3(ctx);
-    let if_block5 = ctx[2] && create_if_block_2(ctx);
-    let if_block6 = ctx[1] && create_if_block_1(ctx);
+    let if_block0 = ctx[2] && create_if_block_6(ctx);
+    let if_block1 = ctx[3] && create_if_block_5(ctx);
+    let if_block2 = ctx[1] && create_if_block_4(ctx);
+    let if_block3 = ctx[15] && create_if_block_3(ctx);
+    let if_block4 = ctx[2] && create_if_block_2(ctx);
+    let if_block5 = ctx[1] && create_if_block_1(ctx);
     return {
       c() {
         div0 = element("div");
@@ -13886,23 +13889,20 @@
         if (if_block2)
           if_block2.c();
         t2 = space();
+        div1 = element("div");
         if (if_block3)
           if_block3.c();
         t3 = space();
-        div1 = element("div");
         if (if_block4)
           if_block4.c();
         t4 = space();
         if (if_block5)
           if_block5.c();
-        t5 = space();
-        if (if_block6)
-          if_block6.c();
         attr(div0, "class", "place fileThumb svelte-vw6znf");
-        toggle_class(div0, "contract", ctx[6]);
+        toggle_class(div0, "contract", ctx[5]);
         attr(div1, "class", "hoverer svelte-vw6znf");
-        toggle_class(div1, "visible", ctx[7] && ctx[6]);
-        toggle_class(div1, "unzipping", ctx[16]);
+        toggle_class(div1, "visible", ctx[6] && ctx[5]);
+        toggle_class(div1, "unzipping", ctx[15]);
       },
       m(target, anchor) {
         insert(target, div0, anchor);
@@ -13914,28 +13914,25 @@
         append(div0, t1);
         if (if_block2)
           if_block2.m(div0, null);
-        append(div0, t2);
-        if (if_block3)
-          if_block3.m(div0, null);
-        ctx[28](div0);
-        insert(target, t3, anchor);
+        ctx[27](div0);
+        insert(target, t2, anchor);
         insert(target, div1, anchor);
+        if (if_block3)
+          if_block3.m(div1, null);
+        append(div1, t3);
         if (if_block4)
           if_block4.m(div1, null);
         append(div1, t4);
         if (if_block5)
           if_block5.m(div1, null);
-        append(div1, t5);
-        if (if_block6)
-          if_block6.m(div1, null);
-        ctx[30](div1);
+        ctx[29](div1);
         if (!mounted) {
           dispose = [
-            listen(div0, "click", ctx[27]),
-            listen(div0, "mouseover", ctx[20]),
-            listen(div0, "mouseout", ctx[21]),
-            listen(div0, "mousemove", ctx[22]),
-            listen(div0, "wheel", ctx[23])
+            listen(div0, "click", ctx[26]),
+            listen(div0, "mouseover", ctx[19]),
+            listen(div0, "mouseout", ctx[20]),
+            listen(div0, "mousemove", ctx[21]),
+            listen(div0, "wheel", ctx[22])
           ];
           mounted = true;
         }
@@ -13945,7 +13942,7 @@
           if (if_block0) {
             if_block0.p(ctx2, dirty);
           } else {
-            if_block0 = create_if_block_7(ctx2);
+            if_block0 = create_if_block_6(ctx2);
             if_block0.c();
             if_block0.m(div0, t0);
           }
@@ -13957,7 +13954,7 @@
           if (if_block1) {
             if_block1.p(ctx2, dirty);
           } else {
-            if_block1 = create_if_block_6(ctx2);
+            if_block1 = create_if_block_5(ctx2);
             if_block1.c();
             if_block1.m(div0, t1);
           }
@@ -13969,34 +13966,34 @@
           if (if_block2) {
             if_block2.p(ctx2, dirty);
           } else {
-            if_block2 = create_if_block_5(ctx2);
+            if_block2 = create_if_block_4(ctx2);
             if_block2.c();
-            if_block2.m(div0, t2);
+            if_block2.m(div0, null);
           }
         } else if (if_block2) {
           if_block2.d(1);
           if_block2 = null;
         }
-        if (ctx2[4]) {
+        if (dirty[0] & 32) {
+          toggle_class(div0, "contract", ctx2[5]);
+        }
+        if (ctx2[15]) {
           if (if_block3) {
             if_block3.p(ctx2, dirty);
           } else {
-            if_block3 = create_if_block_4(ctx2);
+            if_block3 = create_if_block_3(ctx2);
             if_block3.c();
-            if_block3.m(div0, null);
+            if_block3.m(div1, t3);
           }
         } else if (if_block3) {
           if_block3.d(1);
           if_block3 = null;
         }
-        if (dirty[0] & 64) {
-          toggle_class(div0, "contract", ctx2[6]);
-        }
-        if (ctx2[16]) {
+        if (ctx2[2]) {
           if (if_block4) {
             if_block4.p(ctx2, dirty);
           } else {
-            if_block4 = create_if_block_3(ctx2);
+            if_block4 = create_if_block_2(ctx2);
             if_block4.c();
             if_block4.m(div1, t4);
           }
@@ -14004,35 +14001,23 @@
           if_block4.d(1);
           if_block4 = null;
         }
-        if (ctx2[2]) {
+        if (ctx2[1]) {
           if (if_block5) {
             if_block5.p(ctx2, dirty);
           } else {
-            if_block5 = create_if_block_2(ctx2);
+            if_block5 = create_if_block_1(ctx2);
             if_block5.c();
-            if_block5.m(div1, t5);
+            if_block5.m(div1, null);
           }
         } else if (if_block5) {
           if_block5.d(1);
           if_block5 = null;
         }
-        if (ctx2[1]) {
-          if (if_block6) {
-            if_block6.p(ctx2, dirty);
-          } else {
-            if_block6 = create_if_block_1(ctx2);
-            if_block6.c();
-            if_block6.m(div1, null);
-          }
-        } else if (if_block6) {
-          if_block6.d(1);
-          if_block6 = null;
+        if (dirty[0] & 96) {
+          toggle_class(div1, "visible", ctx2[6] && ctx2[5]);
         }
-        if (dirty[0] & 192) {
-          toggle_class(div1, "visible", ctx2[7] && ctx2[6]);
-        }
-        if (dirty[0] & 65536) {
-          toggle_class(div1, "unzipping", ctx2[16]);
+        if (dirty[0] & 32768) {
+          toggle_class(div1, "unzipping", ctx2[15]);
         }
       },
       d(detaching) {
@@ -14044,26 +14029,24 @@
           if_block1.d();
         if (if_block2)
           if_block2.d();
-        if (if_block3)
-          if_block3.d();
-        ctx[28](null);
+        ctx[27](null);
         if (detaching)
-          detach(t3);
+          detach(t2);
         if (detaching)
           detach(div1);
+        if (if_block3)
+          if_block3.d();
         if (if_block4)
           if_block4.d();
         if (if_block5)
           if_block5.d();
-        if (if_block6)
-          if_block6.d();
-        ctx[30](null);
+        ctx[29](null);
         mounted = false;
         run_all(dispose);
       }
     };
   }
-  function create_if_block_7(ctx) {
+  function create_if_block_6(ctx) {
     let img;
     let img_alt_value;
     let img_src_value;
@@ -14071,30 +14054,30 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
+        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[4]))
           attr(img, "src", img_src_value);
         attr(img, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, img, anchor);
-        ctx[25](img);
+        ctx[24](img);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[4])) {
           attr(img, "src", img_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(img);
-        ctx[25](null);
+        ctx[24](null);
       }
     };
   }
-  function create_if_block_6(ctx) {
+  function create_if_block_5(ctx) {
     let audio;
     let source;
     let source_src_value;
@@ -14105,13 +14088,13 @@
       c() {
         audio = element("audio");
         source = element("source");
-        if (!src_url_equal(source.src, source_src_value = ctx[14] || ctx[5]))
+        if (!src_url_equal(source.src, source_src_value = ctx[13] || ctx[4]))
           attr(source, "src", source_src_value);
-        attr(source, "type", ctx[8]);
+        attr(source, "type", ctx[7]);
         audio.controls = true;
-        if (!src_url_equal(audio.src, audio_src_value = ctx[14] || ctx[5]))
+        if (!src_url_equal(audio.src, audio_src_value = ctx[13] || ctx[4]))
           attr(audio, "src", audio_src_value);
-        audio.loop = audio_loop_value = ctx[18].loop;
+        audio.loop = audio_loop_value = ctx[17].loop;
         attr(audio, "alt", audio_alt_value = ctx[0].filename);
       },
       m(target, anchor) {
@@ -14119,16 +14102,16 @@
         append(audio, source);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 16416 && !src_url_equal(source.src, source_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(source.src, source_src_value = ctx2[13] || ctx2[4])) {
           attr(source, "src", source_src_value);
         }
-        if (dirty[0] & 256) {
-          attr(source, "type", ctx2[8]);
+        if (dirty[0] & 128) {
+          attr(source, "type", ctx2[7]);
         }
-        if (dirty[0] & 16416 && !src_url_equal(audio.src, audio_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(audio.src, audio_src_value = ctx2[13] || ctx2[4])) {
           attr(audio, "src", audio_src_value);
         }
-        if (dirty[0] & 262144 && audio_loop_value !== (audio_loop_value = ctx2[18].loop)) {
+        if (dirty[0] & 131072 && audio_loop_value !== (audio_loop_value = ctx2[17].loop)) {
           audio.loop = audio_loop_value;
         }
         if (dirty[0] & 1 && audio_alt_value !== (audio_alt_value = ctx2[0].filename)) {
@@ -14141,70 +14124,44 @@
       }
     };
   }
-  function create_if_block_5(ctx) {
+  function create_if_block_4(ctx) {
     let video;
     let video_loop_value;
     let video_src_value;
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[18].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
+        video.loop = video_loop_value = ctx[17].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[4]))
           attr(video, "src", video_src_value);
         attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[26](video);
+        ctx[25](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
+        if (dirty[0] & 131072 && video_loop_value !== (video_loop_value = ctx2[17].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[4])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[26](null);
-      }
-    };
-  }
-  function create_if_block_4(ctx) {
-    let button;
-    let t0;
-    let t1_value = ctx[0].filename + "";
-    let t1;
-    return {
-      c() {
-        button = element("button");
-        t0 = text("Download ");
-        t1 = text(t1_value);
-      },
-      m(target, anchor) {
-        insert(target, button, anchor);
-        append(button, t0);
-        append(button, t1);
-      },
-      p(ctx2, dirty) {
-        if (dirty[0] & 1 && t1_value !== (t1_value = ctx2[0].filename + ""))
-          set_data(t1, t1_value);
-      },
-      d(detaching) {
-        if (detaching)
-          detach(button);
+        ctx[25](null);
       }
     };
   }
   function create_if_block_3(ctx) {
     let span;
     let t0;
-    let t1_value = ctx[17][0] + "";
+    let t1_value = ctx[16][0] + "";
     let t1;
     let t2;
-    let t3_value = ctx[17][1] + "";
+    let t3_value = ctx[16][1] + "";
     let t3;
     let t4;
     return {
@@ -14226,9 +14183,9 @@
         append(span, t4);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 131072 && t1_value !== (t1_value = ctx2[17][0] + ""))
+        if (dirty[0] & 65536 && t1_value !== (t1_value = ctx2[16][0] + ""))
           set_data(t1, t1_value);
-        if (dirty[0] & 131072 && t3_value !== (t3_value = ctx2[17][1] + ""))
+        if (dirty[0] & 65536 && t3_value !== (t3_value = ctx2[16][1] + ""))
           set_data(t3, t3_value);
       },
       d(detaching) {
@@ -14245,7 +14202,7 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
+        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[4]))
           attr(img, "src", img_src_value);
         attr(img, "class", "svelte-vw6znf");
       },
@@ -14256,7 +14213,7 @@
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[4])) {
           attr(img, "src", img_src_value);
         }
       },
@@ -14273,33 +14230,33 @@
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[18].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
+        video.loop = video_loop_value = ctx[17].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[4]))
           attr(video, "src", video_src_value);
         attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[29](video);
+        ctx[28](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
+        if (dirty[0] & 131072 && video_loop_value !== (video_loop_value = ctx2[17].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
+        if (dirty[0] & 8208 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[4])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[29](null);
+        ctx[28](null);
       }
     };
   }
   function create_fragment3(ctx) {
     let if_block_anchor;
-    let if_block = (!ctx[18].eye || ctx[15]) && create_if_block2(ctx);
+    let if_block = (!ctx[17].eye || ctx[14]) && create_if_block2(ctx);
     return {
       c() {
         if (if_block)
@@ -14312,7 +14269,7 @@
         insert(target, if_block_anchor, anchor);
       },
       p(ctx2, dirty) {
-        if (!ctx2[18].eye || ctx2[15]) {
+        if (!ctx2[17].eye || ctx2[14]) {
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
@@ -14340,12 +14297,11 @@
   }
   function instance3($$self, $$props, $$invalidate) {
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(18, $settings = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(17, $settings = $$value));
     let { file } = $$props;
     let isVideo = false;
     let isImage = false;
     let isAudio = false;
-    let isFile = false;
     let url = "";
     let settled = false;
     let contracted = true;
@@ -14362,7 +14318,7 @@
     let { id = "" } = $$props;
     document.addEventListener("reveal", (e) => {
       if (e.detail.id == id)
-        $$invalidate(15, visible = !visible);
+        $$invalidate(14, visible = !visible);
     });
     beforeUpdate(async () => {
       if (settled)
@@ -14370,19 +14326,17 @@
       settled = true;
       const thumb = file.thumbnail || file.data;
       const type = await fileTypeFromBuffer(thumb);
-      $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
-      if (!type) {
-        $$invalidate(4, isFile = true);
+      $$invalidate(4, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
+      if (!type)
         return;
-      }
-      $$invalidate(8, ftype = type.mime);
+      $$invalidate(7, ftype = type.mime);
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
       $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(2, isImage = type.mime.startsWith("image/"));
       if (isImage)
-        $$invalidate(6, contracted = !$settings.xpi);
+        $$invalidate(5, contracted = !$settings.xpi);
       if (isVideo) {
-        $$invalidate(6, contracted = !$settings.xpv);
+        $$invalidate(5, contracted = !$settings.xpv);
       }
     });
     let unzipping = false;
@@ -14390,15 +14344,15 @@
     async function unzip() {
       if (!file.thumbnail)
         return;
-      $$invalidate(16, unzipping = true);
+      $$invalidate(15, unzipping = true);
       let lisn = new EventTarget();
       lisn.addEventListener("progress", (e) => {
-        $$invalidate(17, progress = e.detail);
+        $$invalidate(16, progress = e.detail);
       });
       let full = await file.data(lisn);
       const type = await fileTypeFromBuffer(full);
-      $$invalidate(14, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
-      $$invalidate(16, unzipping = false);
+      $$invalidate(13, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
+      $$invalidate(15, unzipping = false);
       if (!type)
         return;
       $$invalidate(1, isVideo = type.mime.startsWith("video/"));
@@ -14412,17 +14366,17 @@
       }
     }
     async function bepis() {
-      $$invalidate(6, contracted = !contracted);
+      $$invalidate(5, contracted = !contracted);
       if (hovering)
         hoverStop();
       if (contracted && isVideo) {
-        $$invalidate(12, videoElem.controls = false, videoElem);
+        $$invalidate(11, videoElem.controls = false, videoElem);
         videoElem.pause();
       }
       if (!contracted && isVideo) {
-        $$invalidate(12, videoElem.controls = true, videoElem);
+        $$invalidate(11, videoElem.controls = true, videoElem);
         setTimeout(async () => {
-          $$invalidate(12, videoElem.currentTime = hoverVideo.currentTime || 0, videoElem);
+          $$invalidate(11, videoElem.currentTime = hoverVideo.currentTime || 0, videoElem);
           await videoElem.play();
         }, 10);
       }
@@ -14442,8 +14396,8 @@
       }
       let scale = Math.min(1, sw / iw, sh / ih);
       dims = [~~(iw * scale), ~~(ih * scale)];
-      $$invalidate(10, hoverElem.style.width = `${dims[0]}px`, hoverElem);
-      $$invalidate(10, hoverElem.style.height = `${dims[1]}px`, hoverElem);
+      $$invalidate(9, hoverElem.style.width = `${dims[0]}px`, hoverElem);
+      $$invalidate(9, hoverElem.style.height = `${dims[1]}px`, hoverElem);
     }
     async function hoverStart(ev) {
       if ($settings.dh)
@@ -14456,13 +14410,13 @@
       if (!contracted)
         return;
       recompute();
-      $$invalidate(7, hovering = true);
+      $$invalidate(6, hovering = true);
       if (isVideo) {
         try {
           await hoverVideo.play();
         } catch (e) {
-          $$invalidate(13, hoverVideo.muted = true, hoverVideo);
-          $$invalidate(13, hoverVideo.volume = 0, hoverVideo);
+          $$invalidate(12, hoverVideo.muted = true, hoverVideo);
+          $$invalidate(12, hoverVideo.volume = 0, hoverVideo);
           await hoverVideo.play();
         }
       }
@@ -14470,7 +14424,7 @@
     function hoverStop(ev) {
       if ($settings.dh)
         return;
-      $$invalidate(7, hovering = false);
+      $$invalidate(6, hovering = false);
       if (isVideo)
         hoverVideo.pause();
     }
@@ -14502,55 +14456,54 @@
       if (hasAudio(videoElem)) {
         let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
         vol = Math.max(0, Math.min(1, vol));
-        $$invalidate(12, videoElem.volume = vol, videoElem);
-        $$invalidate(13, hoverVideo.volume = videoElem.volume, hoverVideo);
-        $$invalidate(13, hoverVideo.muted = vol < 0, hoverVideo);
+        $$invalidate(11, videoElem.volume = vol, videoElem);
+        $$invalidate(12, hoverVideo.volume = videoElem.volume, hoverVideo);
+        $$invalidate(12, hoverVideo.muted = vol < 0, hoverVideo);
         ev.preventDefault();
       }
     }
     function img_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         imgElem = $$value;
-        $$invalidate(11, imgElem);
+        $$invalidate(10, imgElem);
       });
     }
     function video_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         videoElem = $$value;
-        $$invalidate(12, videoElem);
+        $$invalidate(11, videoElem);
       });
     }
     const click_handler = () => bepis();
     function div0_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         place = $$value;
-        $$invalidate(9, place);
+        $$invalidate(8, place);
       });
     }
     function video_binding_1($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverVideo = $$value;
-        $$invalidate(13, hoverVideo);
+        $$invalidate(12, hoverVideo);
       });
     }
     function div1_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverElem = $$value;
-        $$invalidate(10, hoverElem);
+        $$invalidate(9, hoverElem);
       });
     }
     $$self.$$set = ($$props2) => {
       if ("file" in $$props2)
         $$invalidate(0, file = $$props2.file);
       if ("id" in $$props2)
-        $$invalidate(24, id = $$props2.id);
+        $$invalidate(23, id = $$props2.id);
     };
     return [
       file,
       isVideo,
       isImage,
       isAudio,
-      isFile,
       url,
       contracted,
       hovering,
@@ -14582,7 +14535,7 @@
   var Embedding = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0, id: 24 }, add_css3, [-1, -1]);
+      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0, id: 23 }, add_css3, [-1, -1]);
     }
   };
   var Embedding_default = Embedding;
@@ -14600,22 +14553,22 @@
       c() {
         span = element("span");
         attr(span, "class", "fa clickable svelte-64lw6s");
-        toggle_class(span, "fa-eye", !ctx[0]);
-        toggle_class(span, "fa-eye-slash", ctx[0]);
+        toggle_class(span, "fa-eye", !ctx[1]);
+        toggle_class(span, "fa-eye-slash", ctx[1]);
       },
       m(target, anchor) {
         insert(target, span, anchor);
         if (!mounted) {
-          dispose = listen(span, "click", ctx[2]);
+          dispose = listen(span, "click", ctx[3]);
           mounted = true;
         }
       },
       p(ctx2, dirty) {
-        if (dirty & 1) {
-          toggle_class(span, "fa-eye", !ctx2[0]);
+        if (dirty & 2) {
+          toggle_class(span, "fa-eye", !ctx2[1]);
         }
-        if (dirty & 1) {
-          toggle_class(span, "fa-eye-slash", ctx2[0]);
+        if (dirty & 2) {
+          toggle_class(span, "fa-eye-slash", ctx2[1]);
         }
       },
       d(detaching) {
@@ -14627,31 +14580,46 @@
     };
   }
   function create_fragment4(ctx) {
-    let if_block_anchor;
-    let if_block = ctx[1].eye && create_if_block3(ctx);
+    let t;
+    let span;
+    let span_title_value;
+    let mounted;
+    let dispose;
+    let if_block = ctx[2].eye && create_if_block3(ctx);
     return {
       c() {
         if (if_block)
           if_block.c();
-        if_block_anchor = empty();
+        t = space();
+        span = element("span");
+        attr(span, "title", span_title_value = ctx[0].filename);
+        attr(span, "class", "fa fa-download clickable svelte-64lw6s");
       },
       m(target, anchor) {
         if (if_block)
           if_block.m(target, anchor);
-        insert(target, if_block_anchor, anchor);
+        insert(target, t, anchor);
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[4]);
+          mounted = true;
+        }
       },
       p(ctx2, [dirty]) {
-        if (ctx2[1].eye) {
+        if (ctx2[2].eye) {
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
             if_block = create_if_block3(ctx2);
             if_block.c();
-            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+            if_block.m(t.parentNode, t);
           }
         } else if (if_block) {
           if_block.d(1);
           if_block = null;
+        }
+        if (dirty & 1 && span_title_value !== (span_title_value = ctx2[0].filename)) {
+          attr(span, "title", span_title_value);
         }
       },
       i: noop,
@@ -14660,29 +14628,48 @@
         if (if_block)
           if_block.d(detaching);
         if (detaching)
-          detach(if_block_anchor);
+          detach(t);
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
       }
     };
   }
   function instance4($$self, $$props, $$invalidate) {
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(1, $settings = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(2, $settings = $$value));
     let { id = "" } = $$props;
+    let { file } = $$props;
     let visible = false;
     function reveal() {
-      $$invalidate(0, visible = !visible);
+      $$invalidate(1, visible = !visible);
       document.dispatchEvent(new CustomEvent("reveal", { detail: { id } }));
+    }
+    async function downloadFile() {
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.style.display = "none";
+      const thumb = Buffer2.isBuffer(file.data) ? file.data : await file.data();
+      const type = await fileTypeFromBuffer(thumb);
+      const url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }));
+      a.href = url;
+      a.download = file.filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
     }
     $$self.$$set = ($$props2) => {
       if ("id" in $$props2)
-        $$invalidate(3, id = $$props2.id);
+        $$invalidate(5, id = $$props2.id);
+      if ("file" in $$props2)
+        $$invalidate(0, file = $$props2.file);
     };
-    return [visible, $settings, reveal, id];
+    return [file, visible, $settings, reveal, downloadFile, id];
   }
   var EyeButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance4, create_fragment4, safe_not_equal, { id: 3 }, add_css4);
+      init(this, options, instance4, create_fragment4, safe_not_equal, { id: 5, file: 0 }, add_css4);
     }
   };
   var EyeButton_default = EyeButton;
@@ -14797,6 +14784,7 @@
       new EyeButton_default({
         target: eyecont,
         props: {
+          file: res,
           id: "" + id
         }
       });
