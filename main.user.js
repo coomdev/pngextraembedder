@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.72
+// @version      0.73
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14587,7 +14587,7 @@
   // src/EyeButton.svelte
   init_esbuild_inject();
   function add_css4(target) {
-    append_styles(target, "svelte-1ailok0", ".clickable.svelte-1ailok0{cursor:pointer}.clickable.svelte-1ailok0:hover{text-shadow:0 0 4px palevioletred}");
+    append_styles(target, "svelte-64lw6s", ".clickable.svelte-64lw6s{cursor:pointer;margin-left:5px}.clickable.svelte-64lw6s:hover{text-shadow:0 0 4px palevioletred}");
   }
   function create_if_block3(ctx) {
     let span;
@@ -14596,7 +14596,7 @@
     return {
       c() {
         span = element("span");
-        attr(span, "class", "fa clickable svelte-1ailok0");
+        attr(span, "class", "fa clickable svelte-64lw6s");
         toggle_class(span, "fa-eye", !ctx[0]);
         toggle_class(span, "fa-eye-slash", ctx[0]);
       },

@@ -21,6 +21,7 @@
 <style scoped>
   .clickable {
     cursor: pointer;
+    margin-left: 5px;
   }
 
   .clickable:hover {
