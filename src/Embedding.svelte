@@ -107,8 +107,10 @@
     }
   }
 
+  const getViewport = () => (typeof visualViewport != "undefined" ? () => [visualViewport.width, visualViewport.height] : () => [document.documentElement.clientWidth, document.documentElement.clientHeight])();
+
   function recompute() {
-    const [sw, sh] = [visualViewport.width, visualViewport.height]
+    const [sw, sh] = getViewport();
 
     let [iw, ih] = [0, 0]
     if (isImage) {
