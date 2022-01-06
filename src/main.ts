@@ -335,6 +335,21 @@ customStyles.appendChild(document.createTextNode(
     height: 100%;
     pointer-events: none;
 }
+
+div.hasemb .catalog-host img {
+    border: 1px solid deeppink;
+}
+div.hasext .catalog-host img {
+    border: 1px solid goldenrod;
+}
+.catalog-host img {
+    position: absolute;
+    top: -5px;
+    right: 0px;
+    max-width: 80px;
+    max-height: 80px;
+    box-shadow: 0px 0px 4px 2px #00000090;
+}
 `
 ));
 
