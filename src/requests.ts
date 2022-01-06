@@ -1,4 +1,8 @@
-const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ? GM_xmlhttpRequest : (typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest);
+const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
+    GM_xmlhttpRequest :
+    (typeof GM != "undefined" ?
+        GM.xmlHttpRequest :
+        (window as any)['GM_xmlhttpRequest']);
 
 export const headerStringToObject = (s: string) =>
     Object.fromEntries(s.split('\n').map(e => {

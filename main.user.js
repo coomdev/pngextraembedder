@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.75
+// @version      0.76
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11176,7 +11176,7 @@
     if (gcte)
       endo += 3 * (1 << (field & 7) + 1);
     if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
-      endo += netscape.byteLength;
+      endo += 19;
     await writer.write(contbuff.slice(0, endo));
     await write_embedding(writer, import_buffer3.Buffer.from(await inj.arrayBuffer()));
     await writer.write(contbuff.slice(endo));
@@ -11218,7 +11218,7 @@
 
   // src/requests.ts
   init_esbuild_inject();
-  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : GM_xmlhttpRequest;
+  var xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : window["GM_xmlhttpRequest"];
   var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
     return [name.toLowerCase(), rest.join(":").trim()];

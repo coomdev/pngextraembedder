@@ -78,7 +78,7 @@ const inject = async (container: File, inj: File) => {
         endo += 3 * (1 << ((field & 7) + 1));
 
     if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
-        endo += netscape.byteLength;
+        endo += 19;
     await writer.write(contbuff.slice(0, endo));
     await write_embedding(writer, Buffer.from(await inj.arrayBuffer()));
     await writer.write(contbuff.slice(endo));
