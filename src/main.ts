@@ -72,15 +72,16 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string): Promise<[EmbeddedFile, boolean] | undefined> => {
+const processImage = async (src: string, fn: string, hex: string): Promise<[EmbeddedFile, boolean] | undefined> => {
     const proc = processors.find(e => e.match(fn));
     if (!proc)
         return;
     if (proc.skip) {
         // skip file downloading, file is referenced from the filename
         // basically does things like filtering out blacklisted tags
-        if (await proc.has_embed(Buffer.alloc(0), fn) === true)
-            return [await proc.extract(Buffer.alloc(0), fn), true];
+        const md5 = Buffer.from(hex, 'base64');
+        if (await proc.has_embed(md5, fn) === true)
+            return [await proc.extract(md5, fn), true];
         return;
     }
     const iter = streamRemote(src);
@@ -116,7 +117,9 @@ const processPost = async (post: HTMLDivElement) => {
     const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
     if (!thumb || !origlink)
         return;
-    const res2 = await processImage(origlink.href, (origlink.querySelector('.fnfull') || origlink).textContent || '');
+    const res2 = await processImage(origlink.href,
+        (origlink.querySelector('.fnfull') || origlink).textContent || '',
+        post.querySelector("[data-md5]")?.getAttribute('data-md5') || '');
     if (!res2)
         return;
     const [res, external] = res2;

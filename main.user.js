@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.84
+// @version      0.85
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11398,6 +11398,8 @@
     };
   };
   var has_embed4 = async (b, fn) => {
+    if (Buffer2.from(fn, "hex").equals(b))
+      return false;
     let result = void 0;
     for (const e of Object.values(boorus)) {
       if (!sources.has(e.domain))
@@ -14714,13 +14716,14 @@
       }
     }
   }
-  var processImage = async (src, fn) => {
+  var processImage = async (src, fn, hex) => {
     const proc = processors.find((e) => e.match(fn));
     if (!proc)
       return;
     if (proc.skip) {
-      if (await proc.has_embed(import_buffer4.Buffer.alloc(0), fn) === true)
-        return [await proc.extract(import_buffer4.Buffer.alloc(0), fn), true];
+      const md5 = import_buffer4.Buffer.from(hex, "base64");
+      if (await proc.has_embed(md5, fn) === true)
+        return [await proc.extract(md5, fn), true];
       return;
     }
     const iter = streamRemote(src);
@@ -14752,7 +14755,7 @@
     const origlink = post.querySelector('.file-info > a[target*="_blank"]');
     if (!thumb || !origlink)
       return;
-    const res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "");
+    const res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "", post.querySelector("[data-md5]")?.getAttribute("data-md5") || "");
     if (!res2)
       return;
     const [res, external] = res2;

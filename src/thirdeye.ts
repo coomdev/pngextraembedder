@@ -133,6 +133,11 @@ const extract = async (b: Buffer, fn?: string) => {
 const has_embed = async (b: Buffer, fn?: string) => {
     // It's not worth to bother skipping images with filenames that match their md5 because 
     // 4chan reencodes jpegs, which is well over half the files posted
+
+    // ok fine you autists
+    if (Buffer.from(fn!, 'hex').equals(b))
+        return false;
+
     let result: BooruMatch[] | undefined = undefined;
     for (const e of Object.values(boorus)) {
         if (!sources.has(e.domain))

@@ -23,6 +23,7 @@
   "devDependencies": {
     "@tsconfig/svelte": "^3.0.0",
     "@types/tampermonkey": "^4.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
     "esbuild": "^0.14.7",
     "esbuild-css-modules-plugin": "^2.0.9",
     "esbuild-svelte": "^0.6.0",
