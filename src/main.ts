@@ -350,12 +350,11 @@ document.documentElement.insertBefore(customStyles, null);
 //             if (container.files?.length && injection.files?.length) {
 //                 const dlr = document.getElementById("dlr") as HTMLAnchorElement;
 //                 const dle = document.getElementById("dle") as HTMLAnchorElement;
-
 //                 const res = await gif.inject!(container.files[0], injection.files[0]);
 //                 console.log('inj done');
 //                 const result = document.getElementById("result") as HTMLImageElement;
 //                 const extracted = document.getElementById("extracted") as HTMLImageElement;
-//                 const res2 = new Blob([res], { type: 'image/gif' });
+//                 const res2 = new Blob([res], {type: (await fileTypeFromBuffer(res))?.mime});
 //                 result.src = URL.createObjectURL(res2);
 //                 dlr.href = result.src;
 //                 console.log('url created');
