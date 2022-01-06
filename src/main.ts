@@ -304,7 +304,7 @@ customStyles.appendChild(document.createTextNode(
     
 }
 
-.postContainer > div.hasembed {
+#delform .postContainer > div.hasembed {
     border-right: 3px dashed deeppink !important;
 }
 
@@ -312,7 +312,7 @@ customStyles.appendChild(document.createTextNode(
     border: 3px dashed deeppink !important;
 }
 
-.postContainer > div.hasext {
+#delform .postContainer > div.hasext {
     border-right: 3px dashed goldenrod !important;
 }
 

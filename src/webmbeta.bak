@@ -1,0 +1,199 @@
+
+function readVint(buff: ArrayBuffer, start = 0) {
+    const buffer = new Uint8Array(buff);
+    const length = 8 - Math.floor(Math.log2(buffer[start]));
+    if (length > 8) {
+        throw new Error(`Unrepresentable length`);
+    }
+
+    if (start + length > buffer.length) {
+        return;
+    }
+
+    let value = buffer[start] & ((1 << (8 - length)) - 1);
+    for (let i = 1; i < length; i += 1) {
+        if (i === 7) {
+            if (value >= 2 ** 8 && buffer[start + 7] > 0) {
+                return { length, value: -1 };
+            }
+        }
+        value *= 2 ** 8;
+        value += buffer[start + i];
+    }
+
+    return { length, value };
+}
+
+enum DecoderState {
+    Tag, Size, Content
+}
+
+const schema = new Map([
+    [
+        0x1a45dfa3,
+        {
+            name: 'EBML',
+            type: 'm',
+        },
+    ], [
+        0x1654ae6b,
+        {
+            name: 'Tracks',
+            type: 'm',
+        },
+    ], [
+        0x4485,
+        {
+            name: 'TagBinary',
+            type: 'b',
+        },
+    ],
+    [
+        0x4487,
+        {
+            name: 'TagString',
+            type: '8',
+        },
+    ],
+    [
+        0x63c0,
+        {
+            name: 'Targets',
+            type: 'm',
+        },
+    ],
+    [
+        0x7373,
+        {
+            name: 'Tag',
+            type: 'm',
+        },
+    ],
+    [
+        0x1254c367,
+        {
+            name: 'Tags',
+            type: 'm',
+        },
+    ],
+    [
+        0x45a3,
+        {
+            name: 'TagName',
+            type: '8',
+        },
+    ],
+    [
+        0x67c8,
+        {
+            name: 'SimpleTag',
+            type: 'm',
+        },
+    ]]);
+
+type Tag = [id: number, type: string, name: string, ln: number, pos: number, size?: number]
+
+export const decodeEBML = (arr: ArrayBuffer): {
+    tag: Tag;
+    isEnd?: true | undefined;
+    data?: ArrayBuffer | undefined;
+}[] => {
+    let ptr = 0;
+    const buffer = new Uint8Array(arr);
+    const dw = new DataView(arr);
+    let total = 0;
+    let stack: Tag[] = [];
+    let ret: { tag: Tag, isEnd?: true, data?: ArrayBuffer }[] = [];
+    let state: number = DecoderState.Tag;
+
+    const readTag = () => {
+        if (ptr >= arr.byteLength)
+            return;
+        const vint = readVint(arr, ptr);
+        if (!vint)
+            return;
+        let v = 0;
+        switch (vint.length) {
+            case 1:
+                v = dw.getInt8(ptr);
+                break;
+            case 2:
+                v = dw.getInt16(ptr);
+                break;
+            case 3:
+                v = dw.getInt32(ptr) & 0xFFFFFF;
+                break;
+            case 4:
+                v = dw.getInt32(ptr);
+                break;
+            default:
+                throw "Unexpected v size";
+        }
+        const elem = schema.get(v);
+        const start = total;
+        total += vint.length;
+        const tag = [v, elem?.type, elem?.name, vint.length, start] as Tag;
+        stack.push(tag);
+        state = DecoderState.Size;
+        return true;
+    };
+
+    const readSize = () => {
+        const lasttag = stack.slice(-1)[0];
+        if (ptr >= arr.byteLength)
+            return;
+        const size = readVint(arr, ptr);
+        if (!size)
+            return;
+        ptr += size.length;
+        total += size.length;
+        lasttag[5] = size?.value;
+        if (lasttag[5] == -1)
+            lasttag[3] = -1;
+        else
+            lasttag[3] += size.length + size.value;
+        state = DecoderState.Content;
+        return true;
+    };
+
+    const readContent = () => {
+        const lasttag = stack.slice(-1)[0];
+        if (lasttag[1] == "m") {
+            state = DecoderState.Tag;
+            return true;
+        }
+        if (arr.byteLength < ptr + lasttag[5]!)
+            return;
+        const data = arr.slice(ptr, ptr + lasttag[5]!);
+        total += data.byteLength;
+        arr = arr.slice(ptr + lasttag[5]!);
+        ptr = 0;
+        state = DecoderState.Tag;
+        ret.push({ tag: lasttag, data });
+        stack.pop();
+        while (stack.length > 0) {
+            const top = stack.pop();
+            if (!top)
+                break;
+            if (total < top[4] + top[3]) {
+                stack.push(top);
+                break;
+            }
+            ret.push({ tag: lasttag, data, isEnd: true });
+        }
+    };
+
+    while (ptr < buffer.length) {
+        if (state == DecoderState.Tag) {
+            if (!readTag())
+                break;
+        } else if (state == DecoderState.Size) {
+            if (!readSize())
+                break;
+        } else if (state == DecoderState.Content) {
+            if (!readContent())
+                break;
+        }
+    }
+    return ret;
+}

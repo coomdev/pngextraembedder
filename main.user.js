@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.77
+// @version      0.80
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -5843,9 +5843,9 @@
     }
   });
 
-  // node_modules/ts-ebml/node_modules/ebml/lib/ebml/tools.js
+  // node_modules/ebml/lib/ebml/tools.js
   var require_tools = __commonJS({
-    "node_modules/ts-ebml/node_modules/ebml/lib/ebml/tools.js"(exports, module) {
+    "node_modules/ebml/lib/ebml/tools.js"(exports, module) {
       init_esbuild_inject();
       var tools = {
         readVint: function(buffer, start) {
@@ -14383,8 +14383,9 @@
         unzip();
       }
     }
+    const getViewport = () => (typeof visualViewport != "undefined" ? () => [visualViewport.width, visualViewport.height] : () => [document.documentElement.clientWidth, document.documentElement.clientHeight])();
     function recompute() {
-      const [sw, sh] = [visualViewport.width, visualViewport.height];
+      const [sw, sh] = getViewport();
       let [iw, ih] = [0, 0];
       if (isImage) {
         ;
@@ -14948,35 +14949,23 @@
     height: 100%;
     pointer-events: none;
 }
+
+div.hasemb .catalog-host img {
+    border: 1px solid deeppink;
+}
+div.hasext .catalog-host img {
+    border: 1px solid goldenrod;
+}
+.catalog-host img {
+    position: absolute;
+    top: -5px;
+    right: 0px;
+    max-width: 80px;
+    max-height: 80px;
+    box-shadow: 0px 0px 4px 2px #00000090;
+}
 `));
   document.documentElement.insertBefore(customStyles, null);
-  if (window["pagemode"]) {
-    onload = () => {
-      const resbuf = async (s) => import_buffer4.Buffer.isBuffer(s) ? s : await s();
-      const container = document.getElementById("container");
-      const injection = document.getElementById("injection");
-      container.onchange = injection.onchange = async () => {
-        console.log("eval changed");
-        if (container.files?.length && injection.files?.length) {
-          const dlr = document.getElementById("dlr");
-          const dle = document.getElementById("dle");
-          const res = await gif_default.inject(container.files[0], injection.files[0]);
-          console.log("inj done");
-          const result = document.getElementById("result");
-          const extracted = document.getElementById("extracted");
-          const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
-          result.src = URL.createObjectURL(res2);
-          dlr.href = result.src;
-          console.log("url created");
-          const embedded = await gif_default.extract(res);
-          if (!embedded)
-            debugger;
-          extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded?.data)]));
-          dle.href = extracted.src;
-        }
-      };
-    };
-  }
 })();
 /*!
  * The buffer module from node.js, for the browser.
