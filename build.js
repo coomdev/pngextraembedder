@@ -25,6 +25,7 @@ const extheader = `// ==UserScript==
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
+// @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 `;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.85
+// @version      0.86
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14,6 +14,7 @@
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
+// @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 (() => {
