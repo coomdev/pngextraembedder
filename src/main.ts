@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import { settings } from "./stores";
+import globalCss from './global.css';
 
 import png from "./png";
 import webm from "./webm";
@@ -289,69 +290,8 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => 
 }), { once: true });
 
 const customStyles = document.createElement('style');
-customStyles.appendChild(document.createTextNode(
-    `
-.pee-hidden {
-    display: none;
-}
 
-.extractedImg {
-    width:auto;
-    height:auto;
-    max-width:125px;
-    max-height:125px;
-    cursor: pointer;
-    
-}
-
-#delform .postContainer > div.hasembed {
-    border-right: 3px dashed deeppink !important;
-}
-
-.hasembed.catalog-post {
-    border: 3px dashed deeppink !important;
-}
-
-#delform .postContainer > div.hasext {
-    border-right: 3px dashed goldenrod !important;
-}
-
-.hasext.catalog-post {
-    border: 3px dashed goldenrod !important;
-}
-
-.expanded-image > .post > .file .fileThumb > img[data-md5] {
-    display: none;
-}
-
-.expanded-image > .post > .file .fileThumb  .full-image {
-    display: inline;
-}
-
-.pee-settings {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-div.hasemb .catalog-host img {
-    border: 1px solid deeppink;
-}
-div.hasext .catalog-host img {
-    border: 1px solid goldenrod;
-}
-.catalog-host img {
-    position: absolute;
-    top: -5px;
-    right: 0px;
-    max-width: 80px;
-    max-height: 80px;
-    box-shadow: 0px 0px 4px 2px #00000090;
-}
-`
-));
+customStyles.appendChild(document.createTextNode(globalCss));
 
 document.documentElement.insertBefore(customStyles, null);
 

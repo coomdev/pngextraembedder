@@ -46,6 +46,9 @@ const extheader = `// ==UserScript==
           preprocess: sveltePreprocess(),
         })
       ],
+      loader: {
+        '.css': 'text'
+      },
       metafile: true
     })
 

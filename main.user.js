@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.80
+// @version      0.82
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10895,6 +10895,9 @@
     localSet("settings", newVal);
   });
 
+  // src/global.css
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}";
+
   // src/png.ts
   init_esbuild_inject();
   var import_crc_32 = __toESM(require_crc32(), 1);
@@ -14904,67 +14907,7 @@
     };
   }, { once: true });
   var customStyles = document.createElement("style");
-  customStyles.appendChild(document.createTextNode(`
-.pee-hidden {
-    display: none;
-}
-
-.extractedImg {
-    width:auto;
-    height:auto;
-    max-width:125px;
-    max-height:125px;
-    cursor: pointer;
-    
-}
-
-.postContainer > div.hasembed {
-    border-right: 3px dashed deeppink !important;
-}
-
-.hasembed.catalog-post {
-    border: 3px dashed deeppink !important;
-}
-
-.postContainer > div.hasext {
-    border-right: 3px dashed goldenrod !important;
-}
-
-.hasext.catalog-post {
-    border: 3px dashed goldenrod !important;
-}
-
-.expanded-image > .post > .file .fileThumb > img[data-md5] {
-    display: none;
-}
-
-.expanded-image > .post > .file .fileThumb  .full-image {
-    display: inline;
-}
-
-.pee-settings {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-div.hasemb .catalog-host img {
-    border: 1px solid deeppink;
-}
-div.hasext .catalog-host img {
-    border: 1px solid goldenrod;
-}
-.catalog-host img {
-    position: absolute;
-    top: -5px;
-    right: 0px;
-    max-width: 80px;
-    max-height: 80px;
-    box-shadow: 0px 0px 4px 2px #00000090;
-}
-`));
+  customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
 })();
 /*!
