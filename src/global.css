@@ -58,3 +58,7 @@ div.hasext .catalog-host img {
     max-height: 80px;
     box-shadow: 0px 0px 4px 2px #00000090;
 }
+
+.fileThumb.filehost {
+    margin-left: 0 !important;
+}

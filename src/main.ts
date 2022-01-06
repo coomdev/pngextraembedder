@@ -112,8 +112,8 @@ const textToElement = <T = HTMLElement>(s: string) =>
     document.createRange().createContextualFragment(s).children[0] as any as T;
 
 const processPost = async (post: HTMLDivElement) => {
-    const thumb = post.querySelector(".fileThumb") as HTMLAnchorElement;
-    const origlink = post.querySelector('.file-info > a') as HTMLAnchorElement;
+    const thumb = post.querySelector("a.fileThumb") as HTMLAnchorElement;
+    const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
     if (!thumb || !origlink)
         return;
     const res2 = await processImage(origlink.href, (origlink.querySelector('.fnfull') || origlink).textContent || '');
@@ -127,19 +127,25 @@ const processPost = async (post: HTMLDivElement) => {
     const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
     if (!isCatalog) {
-        const ft = thumb;
-        const ahem: HTMLElement | null = ft.querySelector('.place');
-        const imgcont = ahem || document.createElement('div');
-        const eyecont = ahem || document.createElement('span');
-        const p = thumb.parentElement!;
+        const ft = post.querySelector('div.file') as HTMLDivElement;
+        const info = post.querySelector("span.file-info") as HTMLSpanElement;
 
-        if (!ahem) {
-            p.removeChild(thumb);
-            imgcont.appendChild(thumb);
+        const filehost: HTMLElement | null = ft.querySelector('.filehost');
+        const eyehost: HTMLElement | null = info.querySelector('.eyehost');
+        const imgcont = filehost || document.createElement('div');
+        const eyecont = eyehost || document.createElement('span');
+
+        if (!filehost) {
+            ft.append(imgcont);
             imgcont.classList.add("fileThumb");
-            replyBox?.querySelector('a[download]')!.insertAdjacentElement("afterend", eyecont);
+            imgcont.classList.add("filehost");
         } else {
             imgcont.innerHTML = '';
+        }
+        if (!eyehost) {
+            info.append(eyecont);
+            eyecont.classList.add("eyehost");
+        } else {
             eyecont.innerHTML = '';
         }
         const id = ~~(Math.random() * 20000000);
@@ -157,8 +163,6 @@ const processPost = async (post: HTMLDivElement) => {
                 id: '' + id
             }
         });
-        if (!ahem)
-            p.appendChild(imgcont);
     } else {
         const opFile = post.querySelector('.catalog-link');
         const ahem = opFile?.querySelector('.catalog-host');
@@ -201,7 +205,7 @@ const startup = async () => {
                     if (!(e instanceof HTMLElement))
                         return;
                     // apparently querySelector cannot select the root element if it matches
-                    let el = (e as any).querySelectorAll(".postContainer");
+                    let el = (e as any).querySelectorAll('.postContainer:not([class*="noFile"])');
                     if (!el && e.classList.contains('postContainer'))
                         el = e;
                     if (el)
@@ -212,7 +216,7 @@ const startup = async () => {
     document.querySelectorAll('.board').forEach(e => {
         mo.observe(e!, { childList: true, subtree: true });
     });
-    const posts = [...document.querySelectorAll('.postContainer')];
+    const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
 
     const scts = document.getElementById('shortcuts');
     const button = textToElement(`<span></span>`);

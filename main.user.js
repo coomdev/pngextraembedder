@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.82
+// @version      0.84
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14,6 +14,7 @@
 // @connect      4chan.org
 // @connect      4channel.org
 // @connect      i.4cdn.org
+// @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 (() => {
   var __create = Object.create;
@@ -10896,7 +10897,7 @@
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n}";
 
   // src/png.ts
   init_esbuild_inject();
@@ -13900,7 +13901,7 @@
         t4 = space();
         if (if_block5)
           if_block5.c();
-        attr(div0, "class", "place fileThumb svelte-vw6znf");
+        attr(div0, "class", "place svelte-vw6znf");
         toggle_class(div0, "contract", ctx[5]);
         attr(div1, "class", "hoverer svelte-vw6znf");
         toggle_class(div1, "visible", ctx[6] && ctx[5]);
@@ -14747,8 +14748,8 @@
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var processPost = async (post) => {
-    const thumb = post.querySelector(".fileThumb");
-    const origlink = post.querySelector(".file-info > a");
+    const thumb = post.querySelector("a.fileThumb");
+    const origlink = post.querySelector('.file-info > a[target*="_blank"]');
     if (!thumb || !origlink)
       return;
     const res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "");
@@ -14762,18 +14763,23 @@
       replyBox?.classList.add("hasembed");
     const isCatalog = replyBox?.classList.contains("catalog-post");
     if (!isCatalog) {
-      const ft = thumb;
-      const ahem = ft.querySelector(".place");
-      const imgcont = ahem || document.createElement("div");
-      const eyecont = ahem || document.createElement("span");
-      const p = thumb.parentElement;
-      if (!ahem) {
-        p.removeChild(thumb);
-        imgcont.appendChild(thumb);
+      const ft = post.querySelector("div.file");
+      const info = post.querySelector("span.file-info");
+      const filehost = ft.querySelector(".filehost");
+      const eyehost = info.querySelector(".eyehost");
+      const imgcont = filehost || document.createElement("div");
+      const eyecont = eyehost || document.createElement("span");
+      if (!filehost) {
+        ft.append(imgcont);
         imgcont.classList.add("fileThumb");
-        replyBox?.querySelector("a[download]").insertAdjacentElement("afterend", eyecont);
+        imgcont.classList.add("filehost");
       } else {
         imgcont.innerHTML = "";
+      }
+      if (!eyehost) {
+        info.append(eyecont);
+        eyecont.classList.add("eyehost");
+      } else {
         eyecont.innerHTML = "";
       }
       const id = ~~(Math.random() * 2e7);
@@ -14791,8 +14797,6 @@
           id: "" + id
         }
       });
-      if (!ahem)
-        p.appendChild(imgcont);
     } else {
       const opFile = post.querySelector(".catalog-link");
       const ahem = opFile?.querySelector(".catalog-host");
@@ -14827,7 +14831,7 @@
           rec.addedNodes.forEach((e) => {
             if (!(e instanceof HTMLElement))
               return;
-            let el = e.querySelectorAll(".postContainer");
+            let el = e.querySelectorAll('.postContainer:not([class*="noFile"])');
             if (!el && e.classList.contains("postContainer"))
               el = e;
             if (el)
@@ -14837,7 +14841,7 @@
     document.querySelectorAll(".board").forEach((e) => {
       mo.observe(e, { childList: true, subtree: true });
     });
-    const posts = [...document.querySelectorAll(".postContainer")];
+    const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
     const scts = document.getElementById("shortcuts");
     const button = textToElement(`<span></span>`);
     const settingsButton = new SettingsButton_default({

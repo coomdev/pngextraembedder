@@ -195,7 +195,7 @@
   <!-- svelte-ignore a11y-mouse-events-have-key-events -->
   <div
     class:contract={contracted}
-    class="place fileThumb"
+    class="place"
     on:click={() => bepis()}
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
