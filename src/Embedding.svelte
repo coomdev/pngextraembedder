@@ -252,7 +252,6 @@
     on:wheel={adjustAudio}
     bind:this={place}
   >
-  {contracted}
     {#if isImage}
       <img bind:this={imgElem} alt={file.filename} src={furl || url} />
     {/if}

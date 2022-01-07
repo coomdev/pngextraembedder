@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.88
+// @version      0.91
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -14123,6 +14123,8 @@
       }));
     };
     const updateViewhint = () => {
+      if (!$settings.sh)
+        return;
       const [sw, sh] = getViewport();
       const fromtop = getDistFromTop();
       const containerScrollHeight = document.documentElement.scrollHeight;
@@ -14230,7 +14232,7 @@
   // src/Embedding.svelte
   init_esbuild_inject();
   function add_css4(target) {
-    append_styles(target, "svelte-vw6znf", ".place.svelte-vw6znf.svelte-vw6znf{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-vw6znf>img.svelte-vw6znf{filter:brightness(0.5) blur(10px)}.progress.svelte-vw6znf.svelte-vw6znf{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-vw6znf.svelte-vw6znf{display:none;position:fixed;pointer-events:none}.visible.svelte-vw6znf.svelte-vw6znf{display:block;z-index:9}.contract.svelte-vw6znf>img.svelte-vw6znf,.contract.svelte-vw6znf>video.svelte-vw6znf{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-vw6znf:not(.contract)>video.svelte-vw6znf,.place.svelte-vw6znf:not(.contract)>img.svelte-vw6znf,.hoverer.svelte-vw6znf>video.svelte-vw6znf,.hoverer.svelte-vw6znf>img.svelte-vw6znf{max-width:100vw;max-height:100vh}");
+    append_styles(target, "svelte-3nbis9", ".place.svelte-3nbis9.svelte-3nbis9{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-3nbis9>img.svelte-3nbis9{filter:brightness(0.5) blur(10px)}.progress.svelte-3nbis9.svelte-3nbis9{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-3nbis9.svelte-3nbis9{display:none;position:fixed;pointer-events:none}.visible.svelte-3nbis9.svelte-3nbis9{display:block;z-index:9}.contract.svelte-3nbis9>img.svelte-3nbis9,.contract.svelte-3nbis9>video.svelte-3nbis9{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-3nbis9:not(.contract)>video.svelte-3nbis9,.place.svelte-3nbis9:not(.contract)>img.svelte-3nbis9,.hoverer.svelte-3nbis9>video.svelte-3nbis9,.hoverer.svelte-3nbis9>img.svelte-3nbis9{max-width:100vw;max-height:100vh}");
   }
   function create_if_block3(ctx) {
     let div0;
@@ -14269,9 +14271,9 @@
         t4 = space();
         if (if_block5)
           if_block5.c();
-        attr(div0, "class", "place svelte-vw6znf");
+        attr(div0, "class", "place svelte-3nbis9");
         toggle_class(div0, "contract", ctx[6]);
-        attr(div1, "class", "hoverer svelte-vw6znf");
+        attr(div1, "class", "hoverer svelte-3nbis9");
         toggle_class(div1, "visible", ctx[7] && ctx[6]);
         toggle_class(div1, "unzipping", ctx[16]);
       },
@@ -14428,7 +14430,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-vw6znf");
+        attr(img, "class", "svelte-3nbis9");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14506,7 +14508,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-vw6znf");
+        attr(video, "class", "svelte-3nbis9");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14544,7 +14546,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-vw6znf");
+        attr(span, "class", "progress svelte-3nbis9");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -14576,7 +14578,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-vw6znf");
+        attr(img, "class", "svelte-3nbis9");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14605,7 +14607,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-vw6znf");
+        attr(video, "class", "svelte-3nbis9");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14714,11 +14716,13 @@
       $$invalidate(3, isImage = type.mime.startsWith("image/"));
       dispatch("fileinfo", { type });
       if (isImage) {
-        $$invalidate(6, contracted = !$settings.xpi && !$appState.isCatalog);
+        $$invalidate(6, contracted = !$settings.xpi);
       }
       if (isVideo) {
         $$invalidate(6, contracted = !$settings.xpv && !$appState.isCatalog);
       }
+      if ($appState.isCatalog)
+        $$invalidate(6, contracted = true);
       if ($settings.pre) {
         unzip();
       }
@@ -14768,6 +14772,8 @@
       }
     }
     async function bepis(ev) {
+      if ($appState.isCatalog)
+        return;
       if (ev.button == 0) {
         $$invalidate(6, contracted = !contracted);
         if (hovering)
