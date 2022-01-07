@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.86
+// @version      0.87
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10,6 +10,8 @@
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
+// @grant        GM_openInTab
+// @grant        GM.openInTab
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
@@ -7703,8 +7705,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance5, Constructor) {
-        if (!(instance5 instanceof Constructor)) {
+      function _classCallCheck(instance6, Constructor) {
+        if (!(instance6 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -10597,6 +10599,11 @@
   function toggle_class(element2, name, toggle) {
     element2.classList[toggle ? "add" : "remove"](name);
   }
+  function custom_event(type, detail, bubbles = false) {
+    const e = document.createEvent("CustomEvent");
+    e.initCustomEvent(type, bubbles, false, detail);
+    return e;
+  }
   var current_component;
   function set_current_component(component) {
     current_component = component;
@@ -10611,6 +10618,18 @@
   }
   function onDestroy(fn) {
     get_current_component().$$.on_destroy.push(fn);
+  }
+  function createEventDispatcher() {
+    const component = get_current_component();
+    return (type, detail) => {
+      const callbacks = component.$$.callbacks[type];
+      if (callbacks) {
+        const event = custom_event(type, detail);
+        callbacks.slice().forEach((fn) => {
+          fn.call(component, event);
+        });
+      }
+    };
   }
   var dirty_components = [];
   var binding_callbacks = [];
@@ -10710,7 +10729,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance5, create_fragment5, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance6, create_fragment6, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -10733,7 +10752,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance5 ? instance5(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance6 ? instance6(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -10746,7 +10765,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment5 ? create_fragment5($$.ctx) : false;
+    $$.fragment = create_fragment6 ? create_fragment6($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -10883,6 +10902,9 @@
     xpi: false,
     te: false,
     eye: false,
+    ca: false,
+    pre: false,
+    prev: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
     sources: [
       "gelbooru.com",
@@ -10893,12 +10915,18 @@
       "lolibooru.moe"
     ]
   }));
+  var appState = writable({
+    isCatalog: false
+  });
+  appState.subscribe((v) => {
+    console.log(v);
+  });
   settings.subscribe((newVal) => {
     localSet("settings", newVal);
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n}";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n}\n";
 
   // src/png.ts
   init_esbuild_inject();
@@ -11298,9 +11326,11 @@
   }
 
   // src/thirdeye.ts
-  var gelquirk = (a) => (a.post || a).map((e) => ({
+  var gelquirk = (prefix) => (a) => (a.post || a).map((e) => ({
     ext: e.image.substr(e.image.indexOf(".") + 1),
     full_url: e.file_url,
+    source: e.source,
+    page: `${prefix}${e.id}`,
     preview_url: e.preview_url,
     tags: e.tags.split(" ")
   })) || [];
@@ -11308,12 +11338,14 @@
     {
       domain: "gelbooru.com",
       endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
-      quirks: gelquirk
+      quirks: gelquirk("https://gelbooru.com/index.php?page=post&s=view&id=")
     },
     {
       domain: "yande.re",
       endpoint: "/post.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
+        source: e.source,
+        page: `https://yande.re/post/show/${e.id}`,
         ext: e.file_ext,
         full_url: e.file_url,
         preview_url: e.preview_url,
@@ -11324,6 +11356,8 @@
       domain: "capi-v2.sankakucomplex.com",
       endpoint: "/posts/keyset?tags=md5:",
       quirks: (a) => a.data ? a.data.map((e) => ({
+        source: e.source,
+        page: `https://chan.sankakucomplex.com/post/show/${e.id}`,
         ext: e.file_type.substr(e.file_type.indexOf("/") + 1),
         full_url: e.file_url,
         preview_url: e.preview_url,
@@ -11333,12 +11367,14 @@
     {
       domain: "api.rule34.xxx",
       endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
-      quirks: gelquirk
+      quirks: gelquirk("https://rule34.xxx/index.php?page=post&s=view&id=")
     },
     {
       domain: "danbooru.donmai.us",
       endpoint: "/posts.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
+        source: e.source,
+        page: `https://danbooru.donmai.us/posts/${e.id}`,
         ext: e.file_ext,
         full_url: e.file_url,
         preview_url: e.preview_url,
@@ -11349,6 +11385,8 @@
       domain: "lolibooru.moe",
       endpoint: "/post.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
+        source: e.source,
+        page: `https://lolibooru.moe/post/show/${e.id}`,
         ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
         full_url: e.file_url,
         preview_url: e.preview_url,
@@ -11389,6 +11427,8 @@
     }
     let cachedFile;
     return {
+      source: result[0].source,
+      page: result[0].page,
       filename: fn.substring(0, 33) + result[0].ext,
       thumbnail: await (await GM_fetch(result[0].preview_url)).arrayBuffer(),
       data: async (lsn) => {
@@ -11430,14 +11470,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[17] = list[i];
-    child_ctx[19] = i;
+    child_ctx[20] = list[i];
+    child_ctx[22] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[17] = list[i];
-    child_ctx[19] = i;
+    child_ctx[20] = list[i];
+    child_ctx[22] = i;
     return child_ctx;
   }
   function create_if_block(ctx) {
@@ -11513,7 +11553,7 @@
         for (let i = 0; i < each_blocks_1.length; i += 1) {
           each_blocks_1[i].m(select0, null);
         }
-        ctx[13](select0);
+        ctx[16](select0);
         insert(target, t2, anchor);
         insert(target, button0, anchor);
         insert(target, t4, anchor);
@@ -11525,7 +11565,7 @@
         for (let i = 0; i < each_blocks.length; i += 1) {
           each_blocks[i].m(select1, null);
         }
-        ctx[14](select1);
+        ctx[17](select1);
         insert(target, t8, anchor);
         insert(target, button1, anchor);
         insert(target, t10, anchor);
@@ -11534,7 +11574,7 @@
           dispose = [
             listen(button0, "click", ctx[5]),
             listen(button1, "click", ctx[6]),
-            listen(input, "keydown", ctx[15])
+            listen(input, "keydown", ctx[18])
           ];
           mounted = true;
         }
@@ -11585,7 +11625,7 @@
         if (detaching)
           detach(select0);
         destroy_each(each_blocks_1, detaching);
-        ctx[13](null);
+        ctx[16](null);
         if (detaching)
           detach(t2);
         if (detaching)
@@ -11603,7 +11643,7 @@
         if (detaching)
           detach(select1);
         destroy_each(each_blocks, detaching);
-        ctx[14](null);
+        ctx[17](null);
         if (detaching)
           detach(t8);
         if (detaching)
@@ -11619,7 +11659,7 @@
   }
   function create_each_block_1(ctx) {
     let option;
-    let t_value = ctx[17] + "";
+    let t_value = ctx[20] + "";
     let t;
     let option_value_value;
     return {
@@ -11627,9 +11667,9 @@
         option = element("option");
         t = text(t_value);
         attr(option, "class", "sourcedi svelte-gdh57y");
-        option.__value = option_value_value = ctx[17];
+        option.__value = option_value_value = ctx[20];
         option.value = option.__value;
-        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[17]));
+        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[20]));
       },
       m(target, anchor) {
         insert(target, option, anchor);
@@ -11637,7 +11677,7 @@
       },
       p(ctx2, dirty) {
         if (dirty & 24) {
-          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[17]));
+          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[20]));
         }
       },
       d(detaching) {
@@ -11648,14 +11688,14 @@
   }
   function create_each_block(ctx) {
     let option;
-    let t_value = ctx[17] + "";
+    let t_value = ctx[20] + "";
     let t;
     let option_value_value;
     return {
       c() {
         option = element("option");
         t = text(t_value);
-        option.__value = option_value_value = ctx[17];
+        option.__value = option_value_value = ctx[20];
         option.value = option.__value;
       },
       m(target, anchor) {
@@ -11663,9 +11703,9 @@
         append(option, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 8 && t_value !== (t_value = ctx2[17] + ""))
+        if (dirty & 8 && t_value !== (t_value = ctx2[20] + ""))
           set_data(t, t_value);
-        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[17])) {
+        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[20])) {
           option.__value = option_value_value;
           option.value = option.__value;
         }
@@ -11707,6 +11747,18 @@
     let input5;
     let t13;
     let t14;
+    let label6;
+    let input6;
+    let t15;
+    let t16;
+    let label7;
+    let input7;
+    let t17;
+    let t18;
+    let label8;
+    let input8;
+    let t19;
+    let t20;
     let mounted;
     let dispose;
     let if_block = !ctx[3].te && create_if_block(ctx);
@@ -11741,8 +11793,20 @@
         t12 = space();
         label5 = element("label");
         input5 = element("input");
-        t13 = text("\n      Turn off third-eye.");
+        t13 = text("\n      Preload external files.");
         t14 = space();
+        label6 = element("label");
+        input6 = element("input");
+        t15 = text("\n      Preload external files when they are in view.");
+        t16 = space();
+        label7 = element("label");
+        input7 = element("input");
+        t17 = text("\n      Control audio on videos with mouse wheel.");
+        t18 = space();
+        label8 = element("label");
+        input8 = element("input");
+        t19 = text("\n      Turn off third-eye.");
+        t20 = space();
         if (if_block)
           if_block.c();
         attr(h1, "class", "svelte-gdh57y");
@@ -11753,6 +11817,9 @@
         attr(input3, "type", "checkbox");
         attr(input4, "type", "checkbox");
         attr(input5, "type", "checkbox");
+        attr(input6, "type", "checkbox");
+        attr(input7, "type", "checkbox");
+        attr(input8, "type", "checkbox");
         attr(div0, "class", "content svelte-gdh57y");
         attr(div1, "class", "backpanel svelte-gdh57y");
         toggle_class(div1, "enabled", ctx[0]);
@@ -11792,9 +11859,24 @@
         append(div0, t12);
         append(div0, label5);
         append(label5, input5);
-        input5.checked = ctx[3].te;
+        input5.checked = ctx[3].pre;
         append(label5, t13);
         append(div0, t14);
+        append(div0, label6);
+        append(label6, input6);
+        input6.checked = ctx[3].prev;
+        append(label6, t15);
+        append(div0, t16);
+        append(div0, label7);
+        append(label7, input7);
+        input7.checked = ctx[3].ca;
+        append(label7, t17);
+        append(div0, t18);
+        append(div0, label8);
+        append(label8, input8);
+        input8.checked = ctx[3].te;
+        append(label8, t19);
+        append(div0, t20);
         if (if_block)
           if_block.m(div0, null);
         if (!mounted) {
@@ -11804,7 +11886,10 @@
             listen(input2, "change", ctx[9]),
             listen(input3, "change", ctx[10]),
             listen(input4, "change", ctx[11]),
-            listen(input5, "change", ctx[12])
+            listen(input5, "change", ctx[12]),
+            listen(input6, "change", ctx[13]),
+            listen(input7, "change", ctx[14]),
+            listen(input8, "change", ctx[15])
           ];
           mounted = true;
         }
@@ -11826,7 +11911,16 @@
           input4.checked = ctx2[3].eye;
         }
         if (dirty & 8) {
-          input5.checked = ctx2[3].te;
+          input5.checked = ctx2[3].pre;
+        }
+        if (dirty & 8) {
+          input6.checked = ctx2[3].prev;
+        }
+        if (dirty & 8) {
+          input7.checked = ctx2[3].ca;
+        }
+        if (dirty & 8) {
+          input8.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block) {
@@ -11924,6 +12018,18 @@
       settings.set($settings);
     }
     function input5_change_handler() {
+      $settings.pre = this.checked;
+      settings.set($settings);
+    }
+    function input6_change_handler() {
+      $settings.prev = this.checked;
+      settings.set($settings);
+    }
+    function input7_change_handler() {
+      $settings.ca = this.checked;
+      settings.set($settings);
+    }
+    function input8_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -11960,6 +12066,9 @@
       input3_change_handler,
       input4_change_handler,
       input5_change_handler,
+      input6_change_handler,
+      input7_change_handler,
+      input8_change_handler,
       select0_binding,
       select1_binding,
       keydown_handler
@@ -11973,63 +12082,7 @@
   };
   var App_default = App;
 
-  // src/SettingsButton.svelte
-  init_esbuild_inject();
-  function add_css2(target) {
-    append_styles(target, "svelte-55kf6x", ".glow.svelte-55kf6x{text-shadow:0 0 4px red}.clickable.svelte-55kf6x{cursor:pointer}.clickable.svelte-55kf6x:hover{text-shadow:0 0 4px palevioletred}");
-  }
-  function create_fragment2(ctx) {
-    let span;
-    let mounted;
-    let dispose;
-    return {
-      c() {
-        span = element("span");
-        span.textContent = "[PEE Settings]";
-        attr(span, "class", "clickable svelte-55kf6x");
-        toggle_class(span, "glow", ctx[0]);
-      },
-      m(target, anchor) {
-        insert(target, span, anchor);
-        if (!mounted) {
-          dispose = listen(span, "click", ctx[2]);
-          mounted = true;
-        }
-      },
-      p(ctx2, [dirty]) {
-        if (dirty & 1) {
-          toggle_class(span, "glow", ctx2[0]);
-        }
-      },
-      i: noop,
-      o: noop,
-      d(detaching) {
-        if (detaching)
-          detach(span);
-        mounted = false;
-        dispose();
-      }
-    };
-  }
-  function instance2($$self, $$props, $$invalidate) {
-    "use strict";
-    let visible = false;
-    function opensettings() {
-      $$invalidate(0, visible = !visible);
-      document.dispatchEvent(new CustomEvent("penis"));
-    }
-    const click_handler = () => opensettings();
-    return [visible, opensettings, click_handler];
-  }
-  var SettingsButton = class extends SvelteComponent {
-    constructor(options) {
-      super();
-      init(this, options, instance2, create_fragment2, safe_not_equal, {}, add_css2);
-    }
-  };
-  var SettingsButton_default = SettingsButton;
-
-  // src/Embedding.svelte
+  // src/ScrollHighlighter.svelte
   init_esbuild_inject();
 
   // node_modules/file-type/browser.js
@@ -13863,11 +13916,138 @@
   var supportedExtensions = new Set(extensions);
   var supportedMimeTypes = new Set(mimeTypes);
 
-  // src/Embedding.svelte
-  function add_css3(target) {
-    append_styles(target, "svelte-vw6znf", ".place.svelte-vw6znf.svelte-vw6znf{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-vw6znf>img.svelte-vw6znf{filter:brightness(0.5) blur(10px)}.progress.svelte-vw6znf.svelte-vw6znf{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-vw6znf.svelte-vw6znf{display:none;position:fixed;pointer-events:none}.visible.svelte-vw6znf.svelte-vw6znf{display:block;z-index:9}.contract.svelte-vw6znf>img.svelte-vw6znf,.contract.svelte-vw6znf>video.svelte-vw6znf{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-vw6znf:not(.contract)>video.svelte-vw6znf,.place.svelte-vw6znf:not(.contract)>img.svelte-vw6znf,.hoverer.svelte-vw6znf>video.svelte-vw6znf,.hoverer.svelte-vw6znf>img.svelte-vw6znf{max-width:100vw;max-height:100vh}");
+  // src/ScrollHighlighter.svelte
+  function add_css2(target) {
+    append_styles(target, "svelte-1yqxcfo", ".scroll-container.svelte-1yqxcfo{position:fixed;height:100%;width:12px;top:0;right:0;z-index:1000}");
   }
   function create_if_block2(ctx) {
+    let div;
+    return {
+      c() {
+        div = element("div");
+        attr(div, "class", "scroll-container svelte-1yqxcfo");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+      },
+      d(detaching) {
+        if (detaching)
+          detach(div);
+      }
+    };
+  }
+  function create_fragment2(ctx) {
+    let if_block_anchor;
+    let if_block = ctx[0].sh && create_if_block2(ctx);
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[0].sh) {
+          if (if_block) {
+          } else {
+            if_block = create_if_block2(ctx2);
+            if_block.c();
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(if_block_anchor);
+      }
+    };
+  }
+  function instance2($$self, $$props, $$invalidate) {
+    let $settings;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(0, $settings = $$value));
+    return [$settings];
+  }
+  var ScrollHighlighter = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance2, create_fragment2, safe_not_equal, {}, add_css2);
+    }
+  };
+  var ScrollHighlighter_default = ScrollHighlighter;
+
+  // src/SettingsButton.svelte
+  init_esbuild_inject();
+  function add_css3(target) {
+    append_styles(target, "svelte-55kf6x", ".glow.svelte-55kf6x{text-shadow:0 0 4px red}.clickable.svelte-55kf6x{cursor:pointer}.clickable.svelte-55kf6x:hover{text-shadow:0 0 4px palevioletred}");
+  }
+  function create_fragment3(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        span = element("span");
+        span.textContent = "[PEE Settings]";
+        attr(span, "class", "clickable svelte-55kf6x");
+        toggle_class(span, "glow", ctx[0]);
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[2]);
+          mounted = true;
+        }
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & 1) {
+          toggle_class(span, "glow", ctx2[0]);
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function instance3($$self, $$props, $$invalidate) {
+    "use strict";
+    let visible = false;
+    function opensettings() {
+      $$invalidate(0, visible = !visible);
+      document.dispatchEvent(new CustomEvent("penis"));
+    }
+    const click_handler = () => opensettings();
+    return [visible, opensettings, click_handler];
+  }
+  var SettingsButton = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance3, create_fragment3, safe_not_equal, {}, add_css3);
+    }
+  };
+  var SettingsButton_default = SettingsButton;
+
+  // src/Embedding.svelte
+  init_esbuild_inject();
+  function add_css4(target) {
+    append_styles(target, "svelte-vw6znf", ".place.svelte-vw6znf.svelte-vw6znf{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-vw6znf>img.svelte-vw6znf{filter:brightness(0.5) blur(10px)}.progress.svelte-vw6znf.svelte-vw6znf{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-vw6znf.svelte-vw6znf{display:none;position:fixed;pointer-events:none}.visible.svelte-vw6znf.svelte-vw6znf{display:block;z-index:9}.contract.svelte-vw6znf>img.svelte-vw6znf,.contract.svelte-vw6znf>video.svelte-vw6znf{max-width:125px;max-height:125px;width:auto;height:auto}.place.svelte-vw6znf:not(.contract)>video.svelte-vw6znf,.place.svelte-vw6znf:not(.contract)>img.svelte-vw6znf,.hoverer.svelte-vw6znf>video.svelte-vw6znf,.hoverer.svelte-vw6znf>img.svelte-vw6znf{max-width:100vw;max-height:100vh}");
+  }
+  function create_if_block3(ctx) {
     let div0;
     let t0;
     let t1;
@@ -13877,12 +14057,12 @@
     let t4;
     let mounted;
     let dispose;
-    let if_block0 = ctx[2] && create_if_block_6(ctx);
-    let if_block1 = ctx[3] && create_if_block_5(ctx);
-    let if_block2 = ctx[1] && create_if_block_4(ctx);
-    let if_block3 = ctx[15] && create_if_block_3(ctx);
-    let if_block4 = ctx[2] && create_if_block_2(ctx);
-    let if_block5 = ctx[1] && create_if_block_1(ctx);
+    let if_block0 = ctx[3] && create_if_block_6(ctx);
+    let if_block1 = ctx[4] && create_if_block_5(ctx);
+    let if_block2 = ctx[2] && create_if_block_4(ctx);
+    let if_block3 = ctx[16] && create_if_block_3(ctx);
+    let if_block4 = ctx[3] && create_if_block_2(ctx);
+    let if_block5 = ctx[2] && create_if_block_1(ctx);
     return {
       c() {
         div0 = element("div");
@@ -13905,10 +14085,10 @@
         if (if_block5)
           if_block5.c();
         attr(div0, "class", "place svelte-vw6znf");
-        toggle_class(div0, "contract", ctx[5]);
+        toggle_class(div0, "contract", ctx[6]);
         attr(div1, "class", "hoverer svelte-vw6znf");
-        toggle_class(div1, "visible", ctx[6] && ctx[5]);
-        toggle_class(div1, "unzipping", ctx[15]);
+        toggle_class(div1, "visible", ctx[7] && ctx[6]);
+        toggle_class(div1, "unzipping", ctx[16]);
       },
       m(target, anchor) {
         insert(target, div0, anchor);
@@ -13920,7 +14100,7 @@
         append(div0, t1);
         if (if_block2)
           if_block2.m(div0, null);
-        ctx[27](div0);
+        ctx[29](div0);
         insert(target, t2, anchor);
         insert(target, div1, anchor);
         if (if_block3)
@@ -13931,10 +14111,11 @@
         append(div1, t4);
         if (if_block5)
           if_block5.m(div1, null);
-        ctx[29](div1);
+        ctx[31](div1);
         if (!mounted) {
           dispose = [
-            listen(div0, "click", ctx[26]),
+            listen(div0, "click", ctx[1]),
+            listen(div0, "auxclick", ctx[1]),
             listen(div0, "mouseover", ctx[19]),
             listen(div0, "mouseout", ctx[20]),
             listen(div0, "mousemove", ctx[21]),
@@ -13944,7 +14125,7 @@
         }
       },
       p(ctx2, dirty) {
-        if (ctx2[2]) {
+        if (ctx2[3]) {
           if (if_block0) {
             if_block0.p(ctx2, dirty);
           } else {
@@ -13956,7 +14137,7 @@
           if_block0.d(1);
           if_block0 = null;
         }
-        if (ctx2[3]) {
+        if (ctx2[4]) {
           if (if_block1) {
             if_block1.p(ctx2, dirty);
           } else {
@@ -13968,7 +14149,7 @@
           if_block1.d(1);
           if_block1 = null;
         }
-        if (ctx2[1]) {
+        if (ctx2[2]) {
           if (if_block2) {
             if_block2.p(ctx2, dirty);
           } else {
@@ -13980,10 +14161,10 @@
           if_block2.d(1);
           if_block2 = null;
         }
-        if (dirty[0] & 32) {
-          toggle_class(div0, "contract", ctx2[5]);
+        if (dirty[0] & 64) {
+          toggle_class(div0, "contract", ctx2[6]);
         }
-        if (ctx2[15]) {
+        if (ctx2[16]) {
           if (if_block3) {
             if_block3.p(ctx2, dirty);
           } else {
@@ -13995,7 +14176,7 @@
           if_block3.d(1);
           if_block3 = null;
         }
-        if (ctx2[2]) {
+        if (ctx2[3]) {
           if (if_block4) {
             if_block4.p(ctx2, dirty);
           } else {
@@ -14007,7 +14188,7 @@
           if_block4.d(1);
           if_block4 = null;
         }
-        if (ctx2[1]) {
+        if (ctx2[2]) {
           if (if_block5) {
             if_block5.p(ctx2, dirty);
           } else {
@@ -14019,11 +14200,11 @@
           if_block5.d(1);
           if_block5 = null;
         }
-        if (dirty[0] & 96) {
-          toggle_class(div1, "visible", ctx2[6] && ctx2[5]);
+        if (dirty[0] & 192) {
+          toggle_class(div1, "visible", ctx2[7] && ctx2[6]);
         }
-        if (dirty[0] & 32768) {
-          toggle_class(div1, "unzipping", ctx2[15]);
+        if (dirty[0] & 65536) {
+          toggle_class(div1, "unzipping", ctx2[16]);
         }
       },
       d(detaching) {
@@ -14035,7 +14216,7 @@
           if_block1.d();
         if (if_block2)
           if_block2.d();
-        ctx[27](null);
+        ctx[29](null);
         if (detaching)
           detach(t2);
         if (detaching)
@@ -14046,7 +14227,7 @@
           if_block4.d();
         if (if_block5)
           if_block5.d();
-        ctx[29](null);
+        ctx[31](null);
         mounted = false;
         run_all(dispose);
       }
@@ -14060,26 +14241,26 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[4]))
+        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
         attr(img, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, img, anchor);
-        ctx[24](img);
+        ctx[27](img);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 8208 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
           attr(img, "src", img_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(img);
-        ctx[24](null);
+        ctx[27](null);
       }
     };
   }
@@ -14094,13 +14275,13 @@
       c() {
         audio = element("audio");
         source = element("source");
-        if (!src_url_equal(source.src, source_src_value = ctx[13] || ctx[4]))
+        if (!src_url_equal(source.src, source_src_value = ctx[14] || ctx[5]))
           attr(source, "src", source_src_value);
-        attr(source, "type", ctx[7]);
+        attr(source, "type", ctx[8]);
         audio.controls = true;
-        if (!src_url_equal(audio.src, audio_src_value = ctx[13] || ctx[4]))
+        if (!src_url_equal(audio.src, audio_src_value = ctx[14] || ctx[5]))
           attr(audio, "src", audio_src_value);
-        audio.loop = audio_loop_value = ctx[17].loop;
+        audio.loop = audio_loop_value = ctx[18].loop;
         attr(audio, "alt", audio_alt_value = ctx[0].filename);
       },
       m(target, anchor) {
@@ -14108,16 +14289,16 @@
         append(audio, source);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 8208 && !src_url_equal(source.src, source_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(source.src, source_src_value = ctx2[14] || ctx2[5])) {
           attr(source, "src", source_src_value);
         }
-        if (dirty[0] & 128) {
-          attr(source, "type", ctx2[7]);
+        if (dirty[0] & 256) {
+          attr(source, "type", ctx2[8]);
         }
-        if (dirty[0] & 8208 && !src_url_equal(audio.src, audio_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(audio.src, audio_src_value = ctx2[14] || ctx2[5])) {
           attr(audio, "src", audio_src_value);
         }
-        if (dirty[0] & 131072 && audio_loop_value !== (audio_loop_value = ctx2[17].loop)) {
+        if (dirty[0] & 262144 && audio_loop_value !== (audio_loop_value = ctx2[18].loop)) {
           audio.loop = audio_loop_value;
         }
         if (dirty[0] & 1 && audio_alt_value !== (audio_alt_value = ctx2[0].filename)) {
@@ -14137,37 +14318,37 @@
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[17].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[4]))
+        video.loop = video_loop_value = ctx[18].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
         attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[25](video);
+        ctx[28](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 131072 && video_loop_value !== (video_loop_value = ctx2[17].loop)) {
+        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 8208 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[25](null);
+        ctx[28](null);
       }
     };
   }
   function create_if_block_3(ctx) {
     let span;
     let t0;
-    let t1_value = ctx[16][0] + "";
+    let t1_value = ctx[17][0] + "";
     let t1;
     let t2;
-    let t3_value = ctx[16][1] + "";
+    let t3_value = ctx[17][1] + "";
     let t3;
     let t4;
     return {
@@ -14189,9 +14370,9 @@
         append(span, t4);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 65536 && t1_value !== (t1_value = ctx2[16][0] + ""))
+        if (dirty[0] & 131072 && t1_value !== (t1_value = ctx2[17][0] + ""))
           set_data(t1, t1_value);
-        if (dirty[0] & 65536 && t3_value !== (t3_value = ctx2[16][1] + ""))
+        if (dirty[0] & 131072 && t3_value !== (t3_value = ctx2[17][1] + ""))
           set_data(t3, t3_value);
       },
       d(detaching) {
@@ -14208,7 +14389,7 @@
       c() {
         img = element("img");
         attr(img, "alt", img_alt_value = ctx[0].filename);
-        if (!src_url_equal(img.src, img_src_value = ctx[13] || ctx[4]))
+        if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
         attr(img, "class", "svelte-vw6znf");
       },
@@ -14219,7 +14400,7 @@
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
           attr(img, "alt", img_alt_value);
         }
-        if (dirty[0] & 8208 && !src_url_equal(img.src, img_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(img.src, img_src_value = ctx2[14] || ctx2[5])) {
           attr(img, "src", img_src_value);
         }
       },
@@ -14236,33 +14417,33 @@
     return {
       c() {
         video = element("video");
-        video.loop = video_loop_value = ctx[17].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[13] || ctx[4]))
+        video.loop = video_loop_value = ctx[18].loop;
+        if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
         attr(video, "class", "svelte-vw6znf");
       },
       m(target, anchor) {
         insert(target, video, anchor);
-        ctx[28](video);
+        ctx[30](video);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 131072 && video_loop_value !== (video_loop_value = ctx2[17].loop)) {
+        if (dirty[0] & 262144 && video_loop_value !== (video_loop_value = ctx2[18].loop)) {
           video.loop = video_loop_value;
         }
-        if (dirty[0] & 8208 && !src_url_equal(video.src, video_src_value = ctx2[13] || ctx2[4])) {
+        if (dirty[0] & 16416 && !src_url_equal(video.src, video_src_value = ctx2[14] || ctx2[5])) {
           attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[28](null);
+        ctx[30](null);
       }
     };
   }
-  function create_fragment3(ctx) {
+  function create_fragment4(ctx) {
     let if_block_anchor;
-    let if_block = (!ctx[17].eye || ctx[14]) && create_if_block2(ctx);
+    let if_block = (!ctx[18].eye || ctx[15]) && create_if_block3(ctx);
     return {
       c() {
         if (if_block)
@@ -14275,11 +14456,11 @@
         insert(target, if_block_anchor, anchor);
       },
       p(ctx2, dirty) {
-        if (!ctx2[17].eye || ctx2[14]) {
+        if (!ctx2[18].eye || ctx2[15]) {
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
-            if_block = create_if_block2(ctx2);
+            if_block = create_if_block3(ctx2);
             if_block.c();
             if_block.m(if_block_anchor.parentNode, if_block_anchor);
           }
@@ -14301,9 +14482,12 @@
   function hasAudio(video) {
     return video.mozHasAudio || !!video.webkitAudioDecodedByteCount || !!(video.audioTracks && video.audioTracks.length);
   }
-  function instance3($$self, $$props, $$invalidate) {
+  function instance4($$self, $$props, $$invalidate) {
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(17, $settings = $$value));
+    let $appState;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(18, $settings = $$value));
+    component_subscribe($$self, appState, ($$value) => $$invalidate(35, $appState = $$value));
+    const dispatch = createEventDispatcher();
     let { file } = $$props;
     let isVideo = false;
     let isImage = false;
@@ -14321,28 +14505,52 @@
     let dims = [0, 0];
     let furl = void 0;
     let visible = false;
+    const isNotChrome = !navigator.userAgent.includes("Chrome/");
     let { id = "" } = $$props;
     document.addEventListener("reveal", (e) => {
       if (e.detail.id == id)
-        $$invalidate(14, visible = !visible);
+        $$invalidate(15, visible = !visible);
     });
+    function isContracted() {
+      return contracted;
+    }
     beforeUpdate(async () => {
       if (settled)
         return;
       settled = true;
       const thumb = file.thumbnail || file.data;
       const type = await fileTypeFromBuffer(thumb);
-      $$invalidate(4, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
+      $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
       if (!type)
         return;
-      $$invalidate(7, ftype = type.mime);
-      $$invalidate(1, isVideo = type.mime.startsWith("video/"));
-      $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
-      $$invalidate(2, isImage = type.mime.startsWith("image/"));
-      if (isImage)
-        $$invalidate(5, contracted = !$settings.xpi);
+      $$invalidate(8, ftype = type.mime);
+      $$invalidate(2, isVideo = type.mime.startsWith("video/"));
+      $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
+      $$invalidate(3, isImage = type.mime.startsWith("image/"));
+      dispatch("fileinfo", { type });
+      if (isImage) {
+        $$invalidate(6, contracted = !$settings.xpi && !$appState.isCatalog);
+      }
       if (isVideo) {
-        $$invalidate(5, contracted = !$settings.xpv);
+        $$invalidate(6, contracted = !$settings.xpv && !$appState.isCatalog);
+      }
+      if ($settings.pre) {
+        unzip();
+      }
+      if ($settings.prev) {
+        let obs = new IntersectionObserver((entries, obs2) => {
+          for (const item of entries) {
+            if (!item.isIntersecting)
+              continue;
+            unzip();
+            obs2.unobserve(place);
+          }
+        }, {
+          root: null,
+          rootMargin: "0px",
+          threshold: 0.01
+        });
+        obs.observe(place);
       }
     });
     let unzipping = false;
@@ -14350,20 +14558,23 @@
     async function unzip() {
       if (!file.thumbnail)
         return;
-      $$invalidate(15, unzipping = true);
+      if (unzipping)
+        return;
+      $$invalidate(16, unzipping = true);
       let lisn = new EventTarget();
       lisn.addEventListener("progress", (e) => {
-        $$invalidate(16, progress = e.detail);
+        $$invalidate(17, progress = e.detail);
       });
       let full = await file.data(lisn);
       const type = await fileTypeFromBuffer(full);
-      $$invalidate(13, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
-      $$invalidate(15, unzipping = false);
+      $$invalidate(14, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
+      $$invalidate(16, unzipping = false);
       if (!type)
         return;
-      $$invalidate(1, isVideo = type.mime.startsWith("video/"));
-      $$invalidate(3, isAudio = type.mime.startsWith("audio/"));
-      $$invalidate(2, isImage = type.mime.startsWith("image/"));
+      $$invalidate(2, isVideo = type.mime.startsWith("video/"));
+      $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
+      $$invalidate(3, isImage = type.mime.startsWith("image/"));
+      dispatch("fileinfo", { type });
       if (hovering) {
         setTimeout(() => {
           recompute();
@@ -14371,23 +14582,37 @@
         }, 20);
       }
     }
-    async function bepis() {
-      $$invalidate(5, contracted = !contracted);
-      if (hovering)
-        hoverStop();
-      if (contracted && isVideo) {
-        $$invalidate(11, videoElem.controls = false, videoElem);
-        videoElem.pause();
-      }
-      if (!contracted && isVideo) {
-        $$invalidate(11, videoElem.controls = true, videoElem);
-        setTimeout(async () => {
-          $$invalidate(11, videoElem.currentTime = hoverVideo.currentTime || 0, videoElem);
-          await videoElem.play();
-        }, 10);
-      }
-      if (file.thumbnail && !furl) {
-        unzip();
+    async function bepis(ev) {
+      if (ev.button == 0) {
+        $$invalidate(6, contracted = !contracted);
+        if (hovering)
+          hoverStop();
+        if (contracted && isVideo) {
+          $$invalidate(12, videoElem.controls = false, videoElem);
+          videoElem.pause();
+        }
+        if (!contracted && isVideo) {
+          $$invalidate(12, videoElem.controls = true, videoElem);
+          setTimeout(async () => {
+            $$invalidate(12, videoElem.currentTime = hoverVideo.currentTime || 0, videoElem);
+            await videoElem.play();
+          }, 10);
+        }
+        if (file.thumbnail && !furl) {
+          unzip();
+        }
+      } else if (ev.button == 1) {
+        let src = furl || url;
+        if (ev.altKey && file.source) {
+          src = file.source;
+        }
+        if (ev.shiftKey && file.page) {
+          src = file.page;
+        }
+        if (isNotChrome) {
+          window.open(src, "_blank");
+        } else
+          await GM.openInTab(src, { active: false, insert: true });
       }
     }
     const getViewport = () => (typeof visualViewport != "undefined" ? () => [visualViewport.width, visualViewport.height] : () => [document.documentElement.clientWidth, document.documentElement.clientHeight])();
@@ -14403,8 +14628,8 @@
       }
       let scale = Math.min(1, sw / iw, sh / ih);
       dims = [~~(iw * scale), ~~(ih * scale)];
-      $$invalidate(9, hoverElem.style.width = `${dims[0]}px`, hoverElem);
-      $$invalidate(9, hoverElem.style.height = `${dims[1]}px`, hoverElem);
+      $$invalidate(10, hoverElem.style.width = `${dims[0]}px`, hoverElem);
+      $$invalidate(10, hoverElem.style.height = `${dims[1]}px`, hoverElem);
     }
     async function hoverStart(ev) {
       if ($settings.dh)
@@ -14417,13 +14642,13 @@
       if (!contracted)
         return;
       recompute();
-      $$invalidate(6, hovering = true);
+      $$invalidate(7, hovering = true);
       if (isVideo) {
         try {
           await hoverVideo.play();
         } catch (e) {
-          $$invalidate(12, hoverVideo.muted = true, hoverVideo);
-          $$invalidate(12, hoverVideo.volume = 0, hoverVideo);
+          $$invalidate(13, hoverVideo.muted = true, hoverVideo);
+          $$invalidate(13, hoverVideo.volume = 0, hoverVideo);
           await hoverVideo.play();
         }
       }
@@ -14431,7 +14656,7 @@
     function hoverStop(ev) {
       if ($settings.dh)
         return;
-      $$invalidate(6, hovering = false);
+      $$invalidate(7, hovering = false);
       if (isVideo)
         hoverVideo.pause();
     }
@@ -14458,56 +14683,60 @@
       style.right = right;
     }
     function adjustAudio(ev) {
+      if (!$settings.ca)
+        return;
       if (!isVideo)
         return;
-      if (hasAudio(videoElem)) {
-        let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
-        vol = Math.max(0, Math.min(1, vol));
-        $$invalidate(11, videoElem.volume = vol, videoElem);
-        $$invalidate(12, hoverVideo.volume = videoElem.volume, hoverVideo);
-        $$invalidate(12, hoverVideo.muted = vol < 0, hoverVideo);
-        ev.preventDefault();
-      }
+      if ($settings.dh && contracted)
+        return;
+      if (!hasAudio(videoElem))
+        return;
+      let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
+      vol = Math.max(0, Math.min(1, vol));
+      $$invalidate(12, videoElem.volume = vol, videoElem);
+      $$invalidate(13, hoverVideo.volume = videoElem.volume, hoverVideo);
+      $$invalidate(13, hoverVideo.muted = vol < 0, hoverVideo);
+      ev.preventDefault();
     }
     function img_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         imgElem = $$value;
-        $$invalidate(10, imgElem);
+        $$invalidate(11, imgElem);
       });
     }
     function video_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         videoElem = $$value;
-        $$invalidate(11, videoElem);
+        $$invalidate(12, videoElem);
       });
     }
-    const click_handler = () => bepis();
     function div0_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         place = $$value;
-        $$invalidate(8, place);
+        $$invalidate(9, place);
       });
     }
     function video_binding_1($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverVideo = $$value;
-        $$invalidate(12, hoverVideo);
+        $$invalidate(13, hoverVideo);
       });
     }
     function div1_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         hoverElem = $$value;
-        $$invalidate(9, hoverElem);
+        $$invalidate(10, hoverElem);
       });
     }
     $$self.$$set = ($$props2) => {
       if ("file" in $$props2)
         $$invalidate(0, file = $$props2.file);
       if ("id" in $$props2)
-        $$invalidate(23, id = $$props2.id);
+        $$invalidate(25, id = $$props2.id);
     };
     return [
       file,
+      bepis,
       isVideo,
       isImage,
       isAudio,
@@ -14525,15 +14754,16 @@
       unzipping,
       progress,
       $settings,
-      bepis,
       hoverStart,
       hoverStop,
       hoverUpdate,
       adjustAudio,
+      dispatch,
+      isNotChrome,
       id,
+      isContracted,
       img_binding,
       video_binding,
-      click_handler,
       div0_binding,
       video_binding_1,
       div1_binding
@@ -14542,17 +14772,50 @@
   var Embedding = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance3, create_fragment3, safe_not_equal, { file: 0, id: 23 }, add_css3, [-1, -1]);
+      init(this, options, instance4, create_fragment4, safe_not_equal, {
+        dispatch: 23,
+        file: 0,
+        isNotChrome: 24,
+        id: 25,
+        isContracted: 26,
+        bepis: 1
+      }, add_css4, [-1, -1]);
+    }
+    get dispatch() {
+      return this.$$.ctx[23];
+    }
+    get file() {
+      return this.$$.ctx[0];
+    }
+    set file(file) {
+      this.$$set({ file });
+      flush();
+    }
+    get isNotChrome() {
+      return this.$$.ctx[24];
+    }
+    get id() {
+      return this.$$.ctx[25];
+    }
+    set id(id) {
+      this.$$set({ id });
+      flush();
+    }
+    get isContracted() {
+      return this.$$.ctx[26];
+    }
+    get bepis() {
+      return this.$$.ctx[1];
     }
   };
   var Embedding_default = Embedding;
 
   // src/EyeButton.svelte
   init_esbuild_inject();
-  function add_css4(target) {
+  function add_css5(target) {
     append_styles(target, "svelte-64lw6s", ".clickable.svelte-64lw6s{cursor:pointer;margin-left:5px}.clickable.svelte-64lw6s:hover{text-shadow:0 0 4px palevioletred}");
   }
-  function create_if_block3(ctx) {
+  function create_if_block_12(ctx) {
     let span;
     let mounted;
     let dispose;
@@ -14560,22 +14823,22 @@
       c() {
         span = element("span");
         attr(span, "class", "fa clickable svelte-64lw6s");
-        toggle_class(span, "fa-eye", !ctx[1]);
-        toggle_class(span, "fa-eye-slash", ctx[1]);
+        toggle_class(span, "fa-eye", !ctx[3]);
+        toggle_class(span, "fa-eye-slash", ctx[3]);
       },
       m(target, anchor) {
         insert(target, span, anchor);
         if (!mounted) {
-          dispose = listen(span, "click", ctx[3]);
+          dispose = listen(span, "click", ctx[5]);
           mounted = true;
         }
       },
       p(ctx2, dirty) {
-        if (dirty & 2) {
-          toggle_class(span, "fa-eye", !ctx2[1]);
+        if (dirty & 8) {
+          toggle_class(span, "fa-eye", !ctx2[3]);
         }
-        if (dirty & 2) {
-          toggle_class(span, "fa-eye-slash", ctx2[1]);
+        if (dirty & 8) {
+          toggle_class(span, "fa-eye-slash", ctx2[3]);
         }
       },
       d(detaching) {
@@ -14586,73 +14849,135 @@
       }
     };
   }
-  function create_fragment4(ctx) {
-    let t;
-    let span;
-    let span_title_value;
+  function create_if_block4(ctx) {
+    let a;
     let mounted;
     let dispose;
-    let if_block = ctx[2].eye && create_if_block3(ctx);
     return {
       c() {
-        if (if_block)
-          if_block.c();
-        t = space();
+        a = element("a");
+        a.textContent = "[PEE contract]";
+        attr(a, "alt", "By clicking this you agree to stay hydrated");
+        attr(a, "class", "clickable svelte-64lw6s");
+      },
+      m(target, anchor) {
+        insert(target, a, anchor);
+        if (!mounted) {
+          dispose = listen(a, "click", ctx[9]);
+          mounted = true;
+        }
+      },
+      p: noop,
+      d(detaching) {
+        if (detaching)
+          detach(a);
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function create_fragment5(ctx) {
+    let t0;
+    let span;
+    let span_title_value;
+    let t1;
+    let if_block1_anchor;
+    let mounted;
+    let dispose;
+    let if_block0 = ctx[4].eye && create_if_block_12(ctx);
+    let if_block1 = ctx[6] && ctx[2] && create_if_block4(ctx);
+    return {
+      c() {
+        if (if_block0)
+          if_block0.c();
+        t0 = space();
         span = element("span");
+        t1 = space();
+        if (if_block1)
+          if_block1.c();
+        if_block1_anchor = empty();
         attr(span, "title", span_title_value = ctx[0].filename);
         attr(span, "class", "fa fa-download clickable svelte-64lw6s");
       },
       m(target, anchor) {
-        if (if_block)
-          if_block.m(target, anchor);
-        insert(target, t, anchor);
+        if (if_block0)
+          if_block0.m(target, anchor);
+        insert(target, t0, anchor);
         insert(target, span, anchor);
+        insert(target, t1, anchor);
+        if (if_block1)
+          if_block1.m(target, anchor);
+        insert(target, if_block1_anchor, anchor);
         if (!mounted) {
-          dispose = listen(span, "click", ctx[4]);
+          dispose = listen(span, "click", ctx[7]);
           mounted = true;
         }
       },
       p(ctx2, [dirty]) {
-        if (ctx2[2].eye) {
-          if (if_block) {
-            if_block.p(ctx2, dirty);
+        if (ctx2[4].eye) {
+          if (if_block0) {
+            if_block0.p(ctx2, dirty);
           } else {
-            if_block = create_if_block3(ctx2);
-            if_block.c();
-            if_block.m(t.parentNode, t);
+            if_block0 = create_if_block_12(ctx2);
+            if_block0.c();
+            if_block0.m(t0.parentNode, t0);
           }
-        } else if (if_block) {
-          if_block.d(1);
-          if_block = null;
+        } else if (if_block0) {
+          if_block0.d(1);
+          if_block0 = null;
         }
         if (dirty & 1 && span_title_value !== (span_title_value = ctx2[0].filename)) {
           attr(span, "title", span_title_value);
+        }
+        if (ctx2[6] && ctx2[2]) {
+          if (if_block1) {
+            if_block1.p(ctx2, dirty);
+          } else {
+            if_block1 = create_if_block4(ctx2);
+            if_block1.c();
+            if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
+          }
+        } else if (if_block1) {
+          if_block1.d(1);
+          if_block1 = null;
         }
       },
       i: noop,
       o: noop,
       d(detaching) {
-        if (if_block)
-          if_block.d(detaching);
+        if (if_block0)
+          if_block0.d(detaching);
         if (detaching)
-          detach(t);
+          detach(t0);
         if (detaching)
           detach(span);
+        if (detaching)
+          detach(t1);
+        if (if_block1)
+          if_block1.d(detaching);
+        if (detaching)
+          detach(if_block1_anchor);
         mounted = false;
         dispose();
       }
     };
   }
-  function instance4($$self, $$props, $$invalidate) {
+  function instance5($$self, $$props, $$invalidate) {
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(2, $settings = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(4, $settings = $$value));
     let { id = "" } = $$props;
     let { file } = $$props;
+    let { inst } = $$props;
+    let isVideo = false;
+    inst.$on("fileinfo", (info) => {
+      $$invalidate(2, isVideo = info.detail.type.mime.startsWith("video/"));
+    });
     let visible = false;
     function reveal() {
-      $$invalidate(1, visible = !visible);
+      $$invalidate(3, visible = !visible);
       document.dispatchEvent(new CustomEvent("reveal", { detail: { id } }));
     }
+    const isNotChrome = !navigator.userAgent.includes("Chrome/");
     async function downloadFile() {
       const a = document.createElement("a");
       document.body.appendChild(a);
@@ -14665,18 +14990,55 @@
       a.click();
       window.URL.revokeObjectURL(url);
     }
+    const click_handler = (ev) => {
+      inst.bepis(ev);
+    };
     $$self.$$set = ($$props2) => {
       if ("id" in $$props2)
-        $$invalidate(5, id = $$props2.id);
+        $$invalidate(8, id = $$props2.id);
       if ("file" in $$props2)
         $$invalidate(0, file = $$props2.file);
+      if ("inst" in $$props2)
+        $$invalidate(1, inst = $$props2.inst);
     };
-    return [file, visible, $settings, reveal, downloadFile, id];
+    return [
+      file,
+      inst,
+      isVideo,
+      visible,
+      $settings,
+      reveal,
+      isNotChrome,
+      downloadFile,
+      id,
+      click_handler
+    ];
   }
   var EyeButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance4, create_fragment4, safe_not_equal, { id: 5, file: 0 }, add_css4);
+      init(this, options, instance5, create_fragment5, safe_not_equal, { id: 8, file: 0, inst: 1 }, add_css5);
+    }
+    get id() {
+      return this.$$.ctx[8];
+    }
+    set id(id) {
+      this.$$set({ id });
+      flush();
+    }
+    get file() {
+      return this.$$.ctx[0];
+    }
+    set file(file) {
+      this.$$set({ file });
+      flush();
+    }
+    get inst() {
+      return this.$$.ctx[1];
+    }
+    set inst(inst) {
+      this.$$set({ inst });
+      flush();
     }
   };
   var EyeButton_default = EyeButton;
@@ -14787,7 +15149,7 @@
         eyecont.innerHTML = "";
       }
       const id = ~~(Math.random() * 2e7);
-      new Embedding_default({
+      const emb = new Embedding_default({
         target: imgcont,
         props: {
           file: res,
@@ -14798,6 +15160,7 @@
         target: eyecont,
         props: {
           file: res,
+          inst: emb,
           id: "" + id
         }
       });
@@ -14855,6 +15218,10 @@
     const appHost = textToElement(`<div class="pee-settings"></div>`);
     const appInstance = new App_default({ target: appHost });
     document.body.append(appHost);
+    const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
+    new ScrollHighlighter_default({ target: scrollHost });
+    document.body.append(scrollHost);
+    appState.set({ isCatalog: !!document.querySelector(".catalog-small") });
     await Promise.all(posts.map((e) => processPost(e)));
   };
   var getSelectedFile = () => {

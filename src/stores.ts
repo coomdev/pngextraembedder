@@ -15,6 +15,9 @@ export const settings = writable(localLoad('settings', {
     xpi: false,
     te: false,
     eye: false,
+    ca: false,
+    pre: false,
+    prev: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],
     sources: ['gelbooru.com',
         'yande.re',
@@ -23,6 +26,14 @@ export const settings = writable(localLoad('settings', {
         'danbooru.donmai.us',
         'lolibooru.moe']
 }));
+
+export const appState = writable({
+    isCatalog: false
+});
+
+appState.subscribe(v => {
+    console.log(v);
+});
 
 settings.subscribe(newVal => {
     localSet('settings', newVal);

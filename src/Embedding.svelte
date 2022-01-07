@@ -1,8 +1,11 @@
 <script lang="ts">
   import { fileTypeFromBuffer } from 'file-type'
-  import { settings } from './stores'
+  import { settings, appState } from './stores'
   import { beforeUpdate, tick } from 'svelte'
   import type {EmbeddedFile} from './main';
+	import { createEventDispatcher } from 'svelte';
+
+  export const dispatch = createEventDispatcher();
 
   export let file: EmbeddedFile
   let isVideo = false
@@ -10,7 +13,7 @@
   let isAudio = false
   let url = ''
   let settled = false
-  let contracted = true
+  let contracted = true;
   let hovering = false
   let ftype = '';
 
@@ -23,12 +26,17 @@
   let furl: string | undefined = undefined;
 
   let visible = false;
+  export const isNotChrome = !navigator.userAgent.includes("Chrome/");
 
   export let id = ''; 
   document.addEventListener("reveal", (e: any) => {
     if (e.detail.id == id)
       visible = !visible;
   });
+
+  export function isContracted() {
+    return contracted;
+  }
 
   beforeUpdate(async () => {
     if (settled) return
@@ -43,17 +51,36 @@
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
+    dispatch("fileinfo", {type})
 
-    if (isImage) contracted = !$settings.xpi
-    if (isVideo) {
-      contracted = !$settings.xpv
+    if (isImage) {
+      contracted = !$settings.xpi && !$appState.isCatalog;
     }
-  })
+    if (isVideo) {
+      contracted = !$settings.xpv && !$appState.isCatalog
+    }
+    if ($settings.pre) {
+      unzip(); // not awaiting on purpose
+    }
+
+    if ($settings.prev) {
+      let obs = new IntersectionObserver((entries, obs) => {
+        for(const item of entries) {
+          if(!item.isIntersecting) continue
+          unzip();
+          obs.unobserve(place);
+        }
+      }, {root:null, rootMargin: '0px', threshold: 0.01});
+      obs.observe(place);
+    }
+  });
 
   let unzipping = false;
   let progress = [0, 0]
   async function unzip() {
     if (!file.thumbnail)
+      return;
+    if (unzipping)
       return;
     unzipping = true;
     let lisn = new EventTarget();
@@ -69,6 +96,8 @@
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
+    dispatch("fileinfo", {type})
+
     if (hovering) {
       // reset hovering to recompute proper image coordinates
       setTimeout(() => {
@@ -86,24 +115,38 @@
     )
   }
 
-  async function bepis() {
-    contracted = !contracted
-    if (hovering) hoverStop()
-    if (contracted && isVideo) {
-      videoElem.controls = false
-      videoElem.pause()
-    }
-    if (!contracted && isVideo) {
-      videoElem.controls = true
-      // has to be delayed
-      setTimeout(async () => {
-        videoElem.currentTime = hoverVideo.currentTime || 0;
-        await videoElem.play()
-      }, 10)
-    }
-    if (file.thumbnail && !furl) {
-      // don't know how you managed to click before hovering but oh well
-       unzip()
+  export async function bepis(ev: MouseEvent) {
+    if (ev.button == 0) {
+      contracted = !contracted
+      if (hovering) hoverStop()
+      if (contracted && isVideo) {
+        videoElem.controls = false
+        videoElem.pause()
+      }
+      if (!contracted && isVideo) {
+        videoElem.controls = true
+        // has to be delayed
+        setTimeout(async () => {
+          videoElem.currentTime = hoverVideo.currentTime || 0;
+          await videoElem.play()
+        }, 10)
+      }
+      if (file.thumbnail && !furl) {
+        // don't know how you managed to click before hovering but oh well
+        unzip()
+      }    
+    } else if (ev.button == 1) { // middle click
+      let src = furl || url;
+      if (ev.altKey && file.source) {
+        src = file.source;
+      }
+      if (ev.shiftKey && file.page) {
+        src = file.page;
+      }
+      if (isNotChrome) {
+        window.open(src, '_blank');
+      } else
+        await GM.openInTab(src, {active: false, insert: true});
     }
   }
 
@@ -179,15 +222,17 @@
   }
 
   function adjustAudio(ev: WheelEvent) {
+    if (!$settings.ca) return
     if (!isVideo) return
-    if (hasAudio(videoElem)) {
-      let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
-      vol = Math.max(0, Math.min(1, vol));
-      videoElem.volume = vol;
-      hoverVideo.volume = videoElem.volume;
-      hoverVideo.muted = vol < 0;
-      ev.preventDefault()
-    }
+    if ($settings.dh && contracted) return
+    if (!hasAudio(videoElem))
+      return;
+    let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
+    vol = Math.max(0, Math.min(1, vol));
+    videoElem.volume = vol;
+    hoverVideo.volume = videoElem.volume;
+    hoverVideo.muted = vol < 0;
+    ev.preventDefault()
   }
 </script>
 
@@ -196,7 +241,8 @@
   <div
     class:contract={contracted}
     class="place"
-    on:click={() => bepis()}
+    on:click={bepis}
+    on:auxclick={bepis}
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
     on:mousemove={hoverUpdate}

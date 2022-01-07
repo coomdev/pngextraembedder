@@ -9,6 +9,8 @@ export type Booru = {
 };
 
 export type BooruMatch = {
+    source?: string;
+    page?: string;
     tags: string[];
     full_url: string;
     preview_url: string;
@@ -17,25 +19,29 @@ export type BooruMatch = {
 
 type tran = (a: any) => BooruMatch[];
 
-const gelquirk: tran = a =>
+const gelquirk: (s: string) => tran = prefix => (a =>
     (a.post || a).map((e: any) => ({
         ext: e.image.substr(e.image.indexOf('.') + 1),
         full_url: e.file_url,
+        source: e.source,
+        page: `${prefix}${e.id}`,
         preview_url: e.preview_url,
         tags: e.tags.split(' ')
-    } as BooruMatch)) || [];
+    } as BooruMatch)) || []);
 
 export const boorus: Booru[] = [
     {
         domain: 'gelbooru.com',
         endpoint: '/index.php?page=dapi&s=post&q=index&json=1&tags=md5:',
-        quirks: gelquirk
+        quirks: gelquirk("https://gelbooru.com/index.php?page=post&s=view&id=")
     },
     {
         domain: 'yande.re',
         endpoint: '/post.json?tags=md5:',
         quirks: a =>
             a.map((e: any) => ({
+                source: e.source,
+                page: `https://yande.re/post/show/${e.id}`,
                 ext: e.file_ext,
                 full_url: e.file_url,
                 preview_url: e.preview_url,
@@ -47,6 +53,9 @@ export const boorus: Booru[] = [
         endpoint: '/posts/keyset?tags=md5:',
         quirks: a => a.data ?
             a.data.map((e: any) => ({
+                source: e.source,
+                // api cannot differenciate between idol and chan?
+                page: `https://chan.sankakucomplex.com/post/show/${e.id}`,
                 ext: e.file_type.substr(e.file_type.indexOf('/') + 1),
                 full_url: e.file_url,
                 preview_url: e.preview_url,
@@ -56,13 +65,16 @@ export const boorus: Booru[] = [
     {
         domain: 'api.rule34.xxx',
         endpoint: '/index.php?page=dapi&s=post&q=index&json=1&tags=md5:',
-        quirks: gelquirk
+        // note: rule34 do not seem to give source in their API
+        quirks: gelquirk("https://rule34.xxx/index.php?page=post&s=view&id=")
     },
     {
         domain: 'danbooru.donmai.us',
         endpoint: '/posts.json?tags=md5:',
         quirks: a =>
             a.map((e: any) => ({
+                source: e.source,
+                page: `https://danbooru.donmai.us/posts/${e.id}`,
                 ext: e.file_ext,
                 full_url: e.file_url,
                 preview_url: e.preview_url,
@@ -74,6 +86,8 @@ export const boorus: Booru[] = [
         endpoint: '/post.json?tags=md5:',
         quirks: a =>
             a.map((e: any) => ({
+                source: e.source,
+                page: `https://lolibooru.moe/post/show/${e.id}`,
                 ext: e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
                 full_url: e.file_url,
                 preview_url: e.preview_url,
@@ -120,6 +134,8 @@ const extract = async (b: Buffer, fn?: string) => {
     }
     let cachedFile: ArrayBuffer;
     return {
+        source: result[0].source,
+        page: result[0].page,
         filename: fn!.substring(0, 33) + result[0].ext,
         thumbnail: (await (await GM_fetch(result[0].preview_url)).arrayBuffer()),
         data: async (lsn) => {

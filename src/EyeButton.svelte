@@ -1,5 +1,6 @@
 <script lang="ts">
 import { fileTypeFromBuffer } from 'file-type';
+import type Embedding from './Embedding.svelte';
 
 import type { EmbeddedFile } from './main';
 
@@ -7,12 +8,20 @@ import type { EmbeddedFile } from './main';
 
   export let id = ''
   export let file: EmbeddedFile;
+  export let inst: Embedding;
+
+  let isVideo = false
+
+  inst.$on("fileinfo", (info) => {
+    isVideo = info.detail.type.mime.startsWith('video/');
+  })
 
   let visible = false
   function reveal() {
     visible = !visible
     document.dispatchEvent(new CustomEvent('reveal', { detail: { id } }))
   }
+  const isNotChrome = !navigator.userAgent.includes("Chrome/");
 
   async function downloadFile() {
     const a = document.createElement("a") as HTMLAnchorElement;
@@ -36,7 +45,20 @@ import type { EmbeddedFile } from './main';
     class="fa clickable"
   />
 {/if}
-<span title={file.filename} on:click={downloadFile} class="fa fa-download clickable" />
+<span
+  title={file.filename}
+  on:click={downloadFile}
+  class="fa fa-download clickable"
+/>
+{#if isNotChrome && isVideo}
+  <!-- svelte-ignore a11y-missing-attribute -->
+  <a on:click={(ev) => {
+    inst.bepis(ev);
+  }} alt="By clicking this you agree to stay hydrated"
+  class="clickable"
+    >[PEE contract]</a
+  >
+{/if}
 
 <style scoped>
   .clickable {

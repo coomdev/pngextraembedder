@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { settings } from "./stores";
+import { appState, settings } from "./stores";
 import globalCss from './global.css';
 
 import png from "./png";
@@ -10,6 +10,7 @@ import thirdeye from "./thirdeye";
 import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
 import App from "./App.svelte";
+import ScrollHighlighter from "./ScrollHighlighter.svelte";
 import SettingsButton from './SettingsButton.svelte';
 import Embedding from './Embedding.svelte';
 import EyeButton from './EyeButton.svelte';
@@ -59,12 +60,16 @@ async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonC
 }
 
 type EmbeddedFileWithPreview = {
+    page?: string; // can be a booru page
+    source?: string; // can be like a twitter post this was posted in originally
     thumbnail: Buffer;
     filename: string;
     data: (lisn?: EventTarget) => Promise<Buffer>;
 };
 
 type EmbeddedFileWithoutPreview = {
+    page: undefined;
+    source: undefined;
     thumbnail: undefined;
     filename: string;
     data: Buffer;
@@ -152,7 +157,7 @@ const processPost = async (post: HTMLDivElement) => {
             eyecont.innerHTML = '';
         }
         const id = ~~(Math.random() * 20000000);
-        new Embedding({
+        const emb = new Embedding({
             target: imgcont,
             props: {
                 file: res,
@@ -163,6 +168,7 @@ const processPost = async (post: HTMLDivElement) => {
             target: eyecont,
             props: {
                 file: res,
+                inst: emb,
                 id: '' + id
             }
         });
@@ -232,6 +238,11 @@ const startup = async () => {
     const appInstance = new App({ target: appHost });
     document.body.append(appHost);
 
+    const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
+    new ScrollHighlighter({ target: scrollHost });
+    document.body.append(scrollHost);
+
+    appState.set({isCatalog: !!document.querySelector('.catalog-small')});
     await Promise.all(posts.map(e => processPost(e as any)));
 };
 

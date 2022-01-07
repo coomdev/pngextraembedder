@@ -75,6 +75,18 @@
       Hide embedded content behind an eye.
     </label>
     <label>
+      <input type="checkbox" bind:checked={$settings.pre} />
+      Preload external files.
+    </label>
+    <label>
+      <input type="checkbox" bind:checked={$settings.prev} />
+      Preload external files when they are in view.
+    </label>
+    <label>
+      <input type="checkbox" bind:checked={$settings.ca} />
+      Control audio on videos with mouse wheel.
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.te} />
       Turn off third-eye.
     </label>
