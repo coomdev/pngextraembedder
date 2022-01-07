@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.95
+// @version      0.96
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -13974,8 +13974,8 @@
   }
   function get_each_context2(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[13] = list[i];
-    child_ctx[15] = i;
+    child_ctx[14] = list[i];
+    child_ctx[16] = i;
     return child_ctx;
   }
   function create_if_block2(ctx) {
@@ -14040,14 +14040,14 @@
     let mounted;
     let dispose;
     function click_handler() {
-      return ctx[4](ctx[15]);
+      return ctx[4](ctx[16]);
     }
     return {
       c() {
         span = element("span");
-        set_style(span, "top", ctx[0][ctx[15]][0] + "px");
-        set_style(span, "height", ctx[0][ctx[15]][1] + "px");
-        set_style(span, "background-color", ctx[0][ctx[15]][3]);
+        set_style(span, "top", ctx[0][ctx[16]][0] + "px");
+        set_style(span, "height", ctx[0][ctx[16]][1] + "px");
+        set_style(span, "background-color", ctx[0][ctx[16]][3]);
         attr(span, "class", "marker svelte-ausv8u");
       },
       m(target, anchor) {
@@ -14060,13 +14060,13 @@
       p(new_ctx, dirty) {
         ctx = new_ctx;
         if (dirty & 1) {
-          set_style(span, "top", ctx[0][ctx[15]][0] + "px");
+          set_style(span, "top", ctx[0][ctx[16]][0] + "px");
         }
         if (dirty & 1) {
-          set_style(span, "height", ctx[0][ctx[15]][1] + "px");
+          set_style(span, "height", ctx[0][ctx[16]][1] + "px");
         }
         if (dirty & 1) {
-          set_style(span, "background-color", ctx[0][ctx[15]][3]);
+          set_style(span, "background-color", ctx[0][ctx[16]][3]);
         }
       },
       d(detaching) {
@@ -14170,14 +14170,20 @@
       await new Promise((_) => requestAnimationFrame(_));
       locked = false;
     };
+    const docRszObserver = new ResizeObserver((e) => {
+      updatePositions($appState);
+      updateViewhint();
+    });
     onMount(() => {
       window.addEventListener("resize", handleResize);
       document.addEventListener("scroll", handleScroll);
       updateViewhint();
+      docRszObserver.observe(document.documentElement);
     });
     onDestroy(() => {
       window.removeEventListener("resize", handleResize);
       document.addEventListener("scroll", handleScroll);
+      docRszObserver.unobserve(document.documentElement);
     });
     const click_handler = (i) => window.scrollTo(0, positions[i][2]);
     function span_binding($$value) {

@@ -60,15 +60,22 @@ const handleScroll = async () => {
   locked = false;
 };
 
+const docRszObserver = new ResizeObserver(e => {
+  updatePositions($appState)
+  updateViewhint();
+});
+
 onMount(() => {
   window.addEventListener('resize', handleResize);
   document.addEventListener('scroll', handleScroll);
   updateViewhint();
+  docRszObserver.observe(document.documentElement);
 });
 
 onDestroy(() => {
   window.removeEventListener('resize', handleResize);
   document.addEventListener('scroll', handleScroll);
+  docRszObserver.unobserve(document.documentElement);
 })
 
 </script>
