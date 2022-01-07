@@ -91,6 +91,8 @@ onDestroy(() => {
 <style scoped>
   .hint {
     background-color: rgb(222 222 222 / 80%);
+    z-index: -1;
+    pointer-events: none;
   }
 
   .scroll-container {

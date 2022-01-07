@@ -14,6 +14,8 @@ import ScrollHighlighter from "./ScrollHighlighter.svelte";
 import SettingsButton from './SettingsButton.svelte';
 import Embedding from './Embedding.svelte';
 import EyeButton from './EyeButton.svelte';
+import { fileTypeFromBuffer } from "file-type";
+import { buf } from "crc-32";
 
 export interface ImageProcessor {
     skip?: true;
@@ -327,30 +329,36 @@ customStyles.appendChild(document.createTextNode(globalCss));
 
 document.documentElement.insertBefore(customStyles, null);
 
-// if ((window as any)['pagemode']) {
-//     onload = () => {
-//         const resbuf = async (s: EmbeddedFile['data']) => Buffer.isBuffer(s) ? s : await s();
-//         const container = document.getElementById("container") as HTMLInputElement;
-//         const injection = document.getElementById("injection") as HTMLInputElement;
-//         container.onchange = injection.onchange = async () => {
-//             console.log('eval changed');
-//             if (container.files?.length && injection.files?.length) {
-//                 const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-//                 const dle = document.getElementById("dle") as HTMLAnchorElement;
-//                 const res = await gif.inject!(container.files[0], injection.files[0]);
-//                 console.log('inj done');
-//                 const result = document.getElementById("result") as HTMLImageElement;
-//                 const extracted = document.getElementById("extracted") as HTMLImageElement;
-//                 const res2 = new Blob([res], {type: (await fileTypeFromBuffer(res))?.mime});
-//                 result.src = URL.createObjectURL(res2);
-//                 dlr.href = result.src;
-//                 console.log('url created');
-//                 const embedded = await gif.extract(res);
-//                 if (!embedded)
-//                     debugger;
-//                 extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded?.data!)]));
-//                 dle.href = extracted.src;
-//             }
-//         };
-//     };
-// }
+//if ((window as any)['pagemode']) {
+//    onload = () => {
+//        console.log("loaded");
+//        const resbuf = async (s: EmbeddedFile['data']) => Buffer.isBuffer(s) ? s : await s();
+//        const container = document.getElementById("container") as HTMLInputElement;
+//        const injection = document.getElementById("injection") as HTMLInputElement;
+//        container.onchange = injection.onchange = async () => {
+//            console.log('eval changed');
+//            if (container.files?.length && injection.files?.length) {
+//                const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+//                const dle = document.getElementById("dle") as HTMLAnchorElement;
+//                console.log(buf(new Uint8Array(await container.files[0].arrayBuffer())));
+//                console.log(buf(new Uint8Array(await injection.files[0].arrayBuffer())));
+//                const res = await gif.inject!(container.files[0], injection.files[0]);
+//                console.log('inj done', buf(res));
+//                const result = document.getElementById("result") as HTMLImageElement;
+//                const extracted = document.getElementById("extracted") as HTMLImageElement;
+//                const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
+//                result.src = URL.createObjectURL(res2);
+//                dlr.href = result.src;
+//                console.log('url created');
+//                const embedded = await gif.extract(res);
+//                console.log(buf(new Uint8Array(await resbuf(embedded.data))));
+//                if (!embedded) {
+//                    debugger;
+//                    return;
+//                }
+//                extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
+//                dle.href = extracted.src;
+//            }
+//        };
+//    };
+//}
