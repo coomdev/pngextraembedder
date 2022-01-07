@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.94
+// @version      0.95
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11452,14 +11452,16 @@
         break;
     }
     let cachedFile;
+    const prev = result[0].preview_url;
+    const full = result[0].full_url;
     return {
       source: result[0].source,
       page: result[0].page,
       filename: fn.substring(0, 33) + result[0].ext,
-      thumbnail: await (await GM_fetch(result[0].preview_url)).arrayBuffer(),
+      thumbnail: await (await GM_fetch(prev || full)).arrayBuffer(),
       data: async (lsn) => {
         if (!cachedFile)
-          cachedFile = await (await GM_fetch(result[0].full_url, void 0, lsn)).arrayBuffer();
+          cachedFile = await (await GM_fetch(full || prev, void 0, lsn)).arrayBuffer();
         return cachedFile;
       }
     };
@@ -11472,6 +11474,7 @@
       if (!sources.has(e.domain))
         continue;
       result = await findFileFrom(e, fn.substring(0, 32));
+      result = result.filter((e2) => e2.full_url || e2.preview_url);
       if (result.length)
         break;
     }

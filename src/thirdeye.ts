@@ -133,14 +133,16 @@ const extract = async (b: Buffer, fn?: string) => {
             break;
     }
     let cachedFile: ArrayBuffer;
+    const prev = result[0].preview_url;
+    const full = result[0].full_url;
     return {
         source: result[0].source,
         page: result[0].page,
         filename: fn!.substring(0, 33) + result[0].ext,
-        thumbnail: (await (await GM_fetch(result[0].preview_url)).arrayBuffer()),
+        thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()), // prefer preview
         data: async (lsn) => {
             if (!cachedFile)
-                cachedFile = (await (await GM_fetch(result[0].full_url, undefined, lsn)).arrayBuffer());
+                cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer()); // prefer full
             return cachedFile;
         }
     } as EmbeddedFile;
@@ -159,6 +161,7 @@ const has_embed = async (b: Buffer, fn?: string) => {
         if (!sources.has(e.domain))
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
+        result = result.filter(e => e.full_url || e.preview_url); // skips possible paywalls
         if (result.length)
             break;
     }
