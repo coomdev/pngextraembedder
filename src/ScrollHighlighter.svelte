@@ -34,6 +34,7 @@ const updatePositions = (v: typeof $appState) => {
 }
 
 const updateViewhint = () => {
+  if (!$settings.sh) return;
   const [sw, sh] = getViewport();
   const fromtop = getDistFromTop();
   const containerScrollHeight = document.documentElement.scrollHeight;
@@ -77,11 +78,13 @@ onDestroy(() => {
     {#each $appState.foundPosts as post, i}
       <span
         on:click={() => window.scrollTo(0, positions[i][2])}
-        style="top: {positions[i][0]}px; height: {positions[i][1]}px; background-color: {positions[i][3]}"
+        style="top: {positions[i][0]}px; height: {positions[
+          i
+        ][1]}px; background-color: {positions[i][3]}"
         class="marker"
       />
     {/each}
-    <span class="hint" bind:this={viewhint}></span>
+    <span class="hint" bind:this={viewhint} />
   </div>
 {/if}
 
