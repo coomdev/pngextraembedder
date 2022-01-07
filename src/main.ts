@@ -248,10 +248,10 @@ const startup = async () => {
     const appHost = textToElement(`<div class="pee-settings"></div>`);
     const appInstance = new App({ target: appHost });
     document.body.append(appHost);
-
+/*
     const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
     new ScrollHighlighter({ target: scrollHost });
-    document.body.append(scrollHost);
+    document.body.append(scrollHost);*/
 
     appState.set({
         ...cappState,

@@ -54,11 +54,13 @@
     dispatch("fileinfo", {type})
 
     if (isImage) {
-      contracted = !$settings.xpi && !$appState.isCatalog;
+      contracted = !$settings.xpi;
     }
     if (isVideo) {
       contracted = !$settings.xpv && !$appState.isCatalog
     }
+    if ($appState.isCatalog)
+        contracted = true;
     if ($settings.pre) {
       unzip(); // not awaiting on purpose
     }
@@ -116,6 +118,7 @@
   }
 
   export async function bepis(ev: MouseEvent) {
+    if ($appState.isCatalog) return;
     if (ev.button == 0) {
       contracted = !contracted
       if (hovering) hoverStop()
@@ -249,6 +252,7 @@
     on:wheel={adjustAudio}
     bind:this={place}
   >
+  {contracted}
     {#if isImage}
       <img bind:this={imgElem} alt={file.filename} src={furl || url} />
     {/if}
@@ -324,8 +328,8 @@
 
   .contract > img,
   .contract > video {
-    max-width: 125px;
-    max-height: 125px;
+    max-width: 125px !important;
+    max-height: 125px !important;
     width: auto;
     height: auto;
   }
