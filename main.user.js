@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.87
+// @version      0.88
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
-// @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
@@ -10596,6 +10595,9 @@
     if (text2.wholeText !== data)
       text2.data = data;
   }
+  function set_style(node, key, value, important) {
+    node.style.setProperty(key, value, important ? "important" : "");
+  }
   function toggle_class(element2, name, toggle) {
     element2.classList[toggle ? "add" : "remove"](name);
   }
@@ -10615,6 +10617,9 @@
   }
   function beforeUpdate(fn) {
     get_current_component().$$.before_update.push(fn);
+  }
+  function onMount(fn) {
+    get_current_component().$$.on_mount.push(fn);
   }
   function onDestroy(fn) {
     get_current_component().$$.on_destroy.push(fn);
@@ -10916,7 +10921,8 @@
     ]
   }));
   var appState = writable({
-    isCatalog: false
+    isCatalog: false,
+    foundPosts: []
   });
   appState.subscribe((v) => {
     console.log(v);
@@ -11470,14 +11476,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[20] = list[i];
-    child_ctx[22] = i;
+    child_ctx[21] = list[i];
+    child_ctx[23] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[20] = list[i];
-    child_ctx[22] = i;
+    child_ctx[21] = list[i];
+    child_ctx[23] = i;
     return child_ctx;
   }
   function create_if_block(ctx) {
@@ -11553,7 +11559,7 @@
         for (let i = 0; i < each_blocks_1.length; i += 1) {
           each_blocks_1[i].m(select0, null);
         }
-        ctx[16](select0);
+        ctx[17](select0);
         insert(target, t2, anchor);
         insert(target, button0, anchor);
         insert(target, t4, anchor);
@@ -11565,7 +11571,7 @@
         for (let i = 0; i < each_blocks.length; i += 1) {
           each_blocks[i].m(select1, null);
         }
-        ctx[17](select1);
+        ctx[18](select1);
         insert(target, t8, anchor);
         insert(target, button1, anchor);
         insert(target, t10, anchor);
@@ -11574,7 +11580,7 @@
           dispose = [
             listen(button0, "click", ctx[5]),
             listen(button1, "click", ctx[6]),
-            listen(input, "keydown", ctx[18])
+            listen(input, "keydown", ctx[19])
           ];
           mounted = true;
         }
@@ -11625,7 +11631,7 @@
         if (detaching)
           detach(select0);
         destroy_each(each_blocks_1, detaching);
-        ctx[16](null);
+        ctx[17](null);
         if (detaching)
           detach(t2);
         if (detaching)
@@ -11643,7 +11649,7 @@
         if (detaching)
           detach(select1);
         destroy_each(each_blocks, detaching);
-        ctx[17](null);
+        ctx[18](null);
         if (detaching)
           detach(t8);
         if (detaching)
@@ -11659,7 +11665,7 @@
   }
   function create_each_block_1(ctx) {
     let option;
-    let t_value = ctx[20] + "";
+    let t_value = ctx[21] + "";
     let t;
     let option_value_value;
     return {
@@ -11667,9 +11673,9 @@
         option = element("option");
         t = text(t_value);
         attr(option, "class", "sourcedi svelte-gdh57y");
-        option.__value = option_value_value = ctx[20];
+        option.__value = option_value_value = ctx[21];
         option.value = option.__value;
-        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[20]));
+        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[21]));
       },
       m(target, anchor) {
         insert(target, option, anchor);
@@ -11677,7 +11683,7 @@
       },
       p(ctx2, dirty) {
         if (dirty & 24) {
-          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[20]));
+          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[21]));
         }
       },
       d(detaching) {
@@ -11688,14 +11694,14 @@
   }
   function create_each_block(ctx) {
     let option;
-    let t_value = ctx[20] + "";
+    let t_value = ctx[21] + "";
     let t;
     let option_value_value;
     return {
       c() {
         option = element("option");
         t = text(t_value);
-        option.__value = option_value_value = ctx[20];
+        option.__value = option_value_value = ctx[21];
         option.value = option.__value;
       },
       m(target, anchor) {
@@ -11703,9 +11709,9 @@
         append(option, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 8 && t_value !== (t_value = ctx2[20] + ""))
+        if (dirty & 8 && t_value !== (t_value = ctx2[21] + ""))
           set_data(t, t_value);
-        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[20])) {
+        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[21])) {
           option.__value = option_value_value;
           option.value = option.__value;
         }
@@ -11759,6 +11765,10 @@
     let input8;
     let t19;
     let t20;
+    let label9;
+    let input9;
+    let t21;
+    let t22;
     let mounted;
     let dispose;
     let if_block = !ctx[3].te && create_if_block(ctx);
@@ -11805,8 +11815,12 @@
         t18 = space();
         label8 = element("label");
         input8 = element("input");
-        t19 = text("\n      Turn off third-eye.");
+        t19 = text("\n      Show Minimap");
         t20 = space();
+        label9 = element("label");
+        input9 = element("input");
+        t21 = text("\n      Turn off third-eye.");
+        t22 = space();
         if (if_block)
           if_block.c();
         attr(h1, "class", "svelte-gdh57y");
@@ -11820,6 +11834,7 @@
         attr(input6, "type", "checkbox");
         attr(input7, "type", "checkbox");
         attr(input8, "type", "checkbox");
+        attr(input9, "type", "checkbox");
         attr(div0, "class", "content svelte-gdh57y");
         attr(div1, "class", "backpanel svelte-gdh57y");
         toggle_class(div1, "enabled", ctx[0]);
@@ -11874,9 +11889,14 @@
         append(div0, t18);
         append(div0, label8);
         append(label8, input8);
-        input8.checked = ctx[3].te;
+        input8.checked = ctx[3].sh;
         append(label8, t19);
         append(div0, t20);
+        append(div0, label9);
+        append(label9, input9);
+        input9.checked = ctx[3].te;
+        append(label9, t21);
+        append(div0, t22);
         if (if_block)
           if_block.m(div0, null);
         if (!mounted) {
@@ -11889,7 +11909,8 @@
             listen(input5, "change", ctx[12]),
             listen(input6, "change", ctx[13]),
             listen(input7, "change", ctx[14]),
-            listen(input8, "change", ctx[15])
+            listen(input8, "change", ctx[15]),
+            listen(input9, "change", ctx[16])
           ];
           mounted = true;
         }
@@ -11920,7 +11941,10 @@
           input7.checked = ctx2[3].ca;
         }
         if (dirty & 8) {
-          input8.checked = ctx2[3].te;
+          input8.checked = ctx2[3].sh;
+        }
+        if (dirty & 8) {
+          input9.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block) {
@@ -12030,6 +12054,10 @@
       settings.set($settings);
     }
     function input8_change_handler() {
+      $settings.sh = this.checked;
+      settings.set($settings);
+    }
+    function input9_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -12069,6 +12097,7 @@
       input6_change_handler,
       input7_change_handler,
       input8_change_handler,
+      input9_change_handler,
       select0_binding,
       select1_binding,
       keydown_handler
@@ -13918,27 +13947,116 @@
 
   // src/ScrollHighlighter.svelte
   function add_css2(target) {
-    append_styles(target, "svelte-1yqxcfo", ".scroll-container.svelte-1yqxcfo{position:fixed;height:100%;width:12px;top:0;right:0;z-index:1000}");
+    append_styles(target, "svelte-17oglq", ".hint.svelte-17oglq.svelte-17oglq{background-color:rgb(222 222 222 / 80%)}.scroll-container.svelte-17oglq.svelte-17oglq{position:fixed;height:100%;width:12px;top:0;right:0;z-index:1000}.scroll-container.svelte-17oglq span.svelte-17oglq{position:absolute;right:0;width:33%;cursor:pointer;transition:width 200ms}.scroll-container.svelte-17oglq:hover span.svelte-17oglq{width:100%}");
+  }
+  function get_each_context2(ctx, list, i) {
+    const child_ctx = ctx.slice();
+    child_ctx[13] = list[i];
+    child_ctx[15] = i;
+    return child_ctx;
   }
   function create_if_block2(ctx) {
     let div;
+    let t;
+    let span;
+    let each_value = ctx[2].foundPosts;
+    let each_blocks = [];
+    for (let i = 0; i < each_value.length; i += 1) {
+      each_blocks[i] = create_each_block2(get_each_context2(ctx, each_value, i));
+    }
     return {
       c() {
         div = element("div");
-        attr(div, "class", "scroll-container svelte-1yqxcfo");
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].c();
+        }
+        t = space();
+        span = element("span");
+        attr(span, "class", "hint svelte-17oglq");
+        attr(div, "class", "scroll-container svelte-17oglq");
       },
       m(target, anchor) {
         insert(target, div, anchor);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].m(div, null);
+        }
+        append(div, t);
+        append(div, span);
+        ctx[5](span);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 5) {
+          each_value = ctx2[2].foundPosts;
+          let i;
+          for (i = 0; i < each_value.length; i += 1) {
+            const child_ctx = get_each_context2(ctx2, each_value, i);
+            if (each_blocks[i]) {
+              each_blocks[i].p(child_ctx, dirty);
+            } else {
+              each_blocks[i] = create_each_block2(child_ctx);
+              each_blocks[i].c();
+              each_blocks[i].m(div, t);
+            }
+          }
+          for (; i < each_blocks.length; i += 1) {
+            each_blocks[i].d(1);
+          }
+          each_blocks.length = each_value.length;
+        }
       },
       d(detaching) {
         if (detaching)
           detach(div);
+        destroy_each(each_blocks, detaching);
+        ctx[5](null);
+      }
+    };
+  }
+  function create_each_block2(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    function click_handler() {
+      return ctx[4](ctx[15]);
+    }
+    return {
+      c() {
+        span = element("span");
+        set_style(span, "top", ctx[0][ctx[15]][0] + "px");
+        set_style(span, "height", ctx[0][ctx[15]][1] + "px");
+        set_style(span, "background-color", ctx[0][ctx[15]][3]);
+        attr(span, "class", "marker svelte-17oglq");
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", click_handler);
+          mounted = true;
+        }
+      },
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
+        if (dirty & 1) {
+          set_style(span, "top", ctx[0][ctx[15]][0] + "px");
+        }
+        if (dirty & 1) {
+          set_style(span, "height", ctx[0][ctx[15]][1] + "px");
+        }
+        if (dirty & 1) {
+          set_style(span, "background-color", ctx[0][ctx[15]][3]);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
       }
     };
   }
   function create_fragment2(ctx) {
     let if_block_anchor;
-    let if_block = ctx[0].sh && create_if_block2(ctx);
+    let if_block = ctx[3].sh && create_if_block2(ctx);
     return {
       c() {
         if (if_block)
@@ -13951,8 +14069,9 @@
         insert(target, if_block_anchor, anchor);
       },
       p(ctx2, [dirty]) {
-        if (ctx2[0].sh) {
+        if (ctx2[3].sh) {
           if (if_block) {
+            if_block.p(ctx2, dirty);
           } else {
             if_block = create_if_block2(ctx2);
             if_block.c();
@@ -13973,10 +14092,76 @@
       }
     };
   }
+  function getOffset(el) {
+    var _x = 0;
+    var _y = 0;
+    while (el && el instanceof HTMLElement) {
+      _x += el.offsetLeft - el.scrollLeft;
+      _y += el.offsetTop - el.scrollTop;
+      el = el.offsetParent;
+    }
+    return { top: _y, left: _x };
+  }
   function instance2($$self, $$props, $$invalidate) {
+    let $appState;
     let $settings;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(0, $settings = $$value));
-    return [$settings];
+    component_subscribe($$self, appState, ($$value) => $$invalidate(2, $appState = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(3, $settings = $$value));
+    let positions = [];
+    const getViewport = () => (typeof visualViewport != "undefined" ? () => [visualViewport.width, visualViewport.height] : () => [document.documentElement.clientWidth, document.documentElement.clientHeight])();
+    const getDistFromTop = () => (typeof visualViewport != "undefined" ? () => visualViewport.pageTop : () => document.documentElement.scrollTop)();
+    let viewhint;
+    const updatePositions = (v) => {
+      const [sw, sh] = getViewport();
+      const containerScrollHeight = document.documentElement.scrollHeight;
+      $$invalidate(0, positions = v.foundPosts.map((v2) => {
+        const coords = getOffset(v2);
+        const top = sh * (coords.top / containerScrollHeight);
+        const bot = sh * ((coords.top + v2.offsetHeight) / containerScrollHeight);
+        const hei = bot - top;
+        return [top, hei, coords.top, getComputedStyle(v2)["borderRightColor"]];
+      }));
+    };
+    const updateViewhint = () => {
+      const [sw, sh] = getViewport();
+      const fromtop = getDistFromTop();
+      const containerScrollHeight = document.documentElement.scrollHeight;
+      const top = sh * (fromtop / containerScrollHeight);
+      const bot = sh * ((fromtop + sh) / containerScrollHeight);
+      const hei = bot - top;
+      $$invalidate(1, viewhint.style.top = top + "px", viewhint);
+      $$invalidate(1, viewhint.style.height = hei + "px", viewhint);
+    };
+    appState.subscribe((v) => updatePositions(v));
+    const handleResize = () => {
+      updatePositions($appState);
+    };
+    let locked = false;
+    const handleScroll = async () => {
+      if (locked)
+        return;
+      locked = true;
+      updateViewhint();
+      await new Promise((_) => requestAnimationFrame(_));
+      locked = false;
+    };
+    onMount(() => {
+      window.addEventListener("resize", handleResize);
+      document.addEventListener("scroll", handleScroll);
+      updateViewhint();
+    });
+    onDestroy(() => {
+      window.removeEventListener("resize", handleResize);
+      document.addEventListener("scroll", handleScroll);
+    });
+    const click_handler = (i) => window.scrollTo(0, positions[i][2]);
+    function span_binding($$value) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        viewhint = $$value;
+        $$invalidate(1, viewhint);
+      });
+    }
+    return [positions, viewhint, $appState, $settings, click_handler, span_binding];
   }
   var ScrollHighlighter = class extends SvelteComponent {
     constructor(options) {
@@ -15046,6 +15231,7 @@
   // src/main.ts
   var csettings;
   var processors = [thirdeye_default, png_default, webm_default, gif_default];
+  var cappState;
   settings.subscribe((b) => {
     csettings = b;
     processors = [
@@ -15054,6 +15240,9 @@
       webm_default,
       gif_default
     ];
+  });
+  appState.subscribe((v) => {
+    cappState = v;
   });
   async function* streamRemote(url, chunkSize = 16 * 1024, fetchRestOnNonCanceled = true) {
     const headers = await GM_head(url);
@@ -15127,6 +15316,9 @@
       replyBox?.classList.add("hasext");
     else
       replyBox?.classList.add("hasembed");
+    if (!cappState.foundPosts.includes(replyBox))
+      cappState.foundPosts.push(replyBox);
+    appState.set(cappState);
     const isCatalog = replyBox?.classList.contains("catalog-post");
     if (!isCatalog) {
       const ft = post.querySelector("div.file");
@@ -15221,7 +15413,10 @@
     const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
     new ScrollHighlighter_default({ target: scrollHost });
     document.body.append(scrollHost);
-    appState.set({ isCatalog: !!document.querySelector(".catalog-small") });
+    appState.set({
+      ...cappState,
+      isCatalog: !!document.querySelector(".catalog-small")
+    });
     await Promise.all(posts.map((e) => processPost(e)));
   };
   var getSelectedFile = () => {

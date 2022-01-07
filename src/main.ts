@@ -27,10 +27,15 @@ let csettings: any;
 let processors: ImageProcessor[] =
     [thirdeye, png, webm, gif];
 
+let cappState: Parameters<typeof appState['set']>[0];
 settings.subscribe(b => {
     csettings = b;
     processors = [...(!csettings.te ? [thirdeye] : []), png, webm, gif
     ];
+});
+
+appState.subscribe(v => {
+    cappState = v;
 });
 
 // most pngs are encoded with 65k idat chunks
@@ -131,7 +136,13 @@ const processPost = async (post: HTMLDivElement) => {
     const replyBox = post.querySelector('.post');
     if (external)
         replyBox?.classList.add('hasext');
-    else replyBox?.classList.add('hasembed');
+    else
+        replyBox?.classList.add('hasembed');
+
+    if (!cappState.foundPosts.includes(replyBox as HTMLElement))
+        cappState.foundPosts.push(replyBox as HTMLElement);
+    appState.set(cappState);
+
     const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
     if (!isCatalog) {
@@ -242,7 +253,10 @@ const startup = async () => {
     new ScrollHighlighter({ target: scrollHost });
     document.body.append(scrollHost);
 
-    appState.set({isCatalog: !!document.querySelector('.catalog-small')});
+    appState.set({
+        ...cappState,
+        isCatalog: !!document.querySelector('.catalog-small'),
+    });
     await Promise.all(posts.map(e => processPost(e as any)));
 };
 

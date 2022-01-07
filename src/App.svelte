@@ -87,6 +87,10 @@
       Control audio on videos with mouse wheel.
     </label>
     <label>
+      <input type="checkbox" bind:checked={$settings.sh} />
+      Show Minimap
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.te} />
       Turn off third-eye.
     </label>

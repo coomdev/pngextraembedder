@@ -28,7 +28,8 @@ export const settings = writable(localLoad('settings', {
 }));
 
 export const appState = writable({
-    isCatalog: false
+    isCatalog: false,
+    foundPosts: [] as HTMLElement[]
 });
 
 appState.subscribe(v => {

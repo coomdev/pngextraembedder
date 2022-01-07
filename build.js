@@ -17,10 +17,11 @@ const extheader = `// ==UserScript==
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
-// @icon         https://www.google.com/s2/favicons?domain=4channel.org
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
+// @grant        GM_openInTab
+// @grant        GM.openInTab
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
@@ -44,7 +45,7 @@ const extheader = `// ==UserScript==
       inject: ['./esbuild.inject.js'],
       plugins: [
         esbuildSvelte({
-          compilerOptions: { css: true },
+          compilerOptions: { css: true, accessors: true },
           preprocess: sveltePreprocess(),
         })
       ],
