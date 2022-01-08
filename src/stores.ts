@@ -31,6 +31,7 @@ export const settings = writable(localLoad('settings', {
 
 export const appState = writable({
     isCatalog: false,
+    is4chanX: false,
     foundPosts: [] as HTMLElement[]
 });
 

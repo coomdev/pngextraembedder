@@ -26,7 +26,7 @@ function firstThatFor<T>(promises: Promise<T>[], pred: (v: T) => boolean) {
         if (pred(v))
             return v;
         throw v;
-    }))
+    }));
 }
 
 const gelquirk: (s: string) => tran = prefix => (a =>
@@ -109,7 +109,34 @@ export const boorus: Booru[] = [
                 preview_url: e.preview_url,
                 tags: e.tags.split(' ')
             } as BooruMatch))
-    }
+    },
+    {
+        name: "ATFbooru",
+        domain: "booru.allthefallen.moe",
+        endpoint: "/posts.json?tags=md5:",
+        quirks: a =>
+            a.map((e: any) => ({
+                source: e.source,
+                page: `https://booru.allthefallen.moe/posts/${e.id}`,
+                ext: e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
+                full_url: e.file_url,
+                preview_url: e.preview_url,
+                tags: e.tag_string.split(' ')
+            } as BooruMatch))
+    },
+    // {
+    //     name: "Rule34Paheal", domain: "rule34.paheal.net",
+    //     endpoint: "/posts.json?tags=md5:",
+    //     quirks: a =>
+    //         a.map((e: any) => ({
+    //             source: e.source,
+    //             page: `https://rule34.paheal.net/post/view/${e.id}`,
+    //             ext: e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
+    //             full_url: e.file_url,
+    //             preview_url: e.preview_url,
+    //             tags: e.tag_string.split(' ')
+    //         } as BooruMatch))
+    // }
 ];
 
 let black = new Set<string>();

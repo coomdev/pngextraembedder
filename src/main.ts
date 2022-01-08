@@ -65,7 +65,7 @@ async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonC
 }
 
 type EmbeddedFileWithPreview = {
-    page?: {title: string, url: string}; // can be a booru page
+    page?: { title: string, url: string }; // can be a booru page
     source?: string; // can be like a twitter post this was posted in originally
     thumbnail: Buffer;
     filename: string;
@@ -205,17 +205,10 @@ const processPost = async (post: HTMLDivElement) => {
 };
 
 const startup = async () => {
+    if (typeof (window as any)['FCX'] != "undefined")
+        appState.set({ ...cappState, is4chanX: true });
 
     await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
-
-    // Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
-    document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
-        const newPosts = e.detail.newPosts;
-        for (const post of newPosts) {
-            const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1)) as HTMLDivElement;
-            processPost(postContainer);
-        }
-    }));
 
     // keep this to handle posts getting inlined
     const mo = new MutationObserver(reco => {
@@ -255,7 +248,7 @@ const startup = async () => {
 
     appState.set({
         ...cappState,
-        isCatalog: !!document.querySelector('.catalog-small'),
+        isCatalog: !!document.querySelector('.catalog-small') || !!location.pathname.match(/\/catalog$/),
     });
     await Promise.all(posts.map(e => processPost(e as any)));
 };
@@ -267,17 +260,54 @@ const getSelectedFile = () => {
     });
 };
 
-document.addEventListener('4chanXInitFinished', startup);
+//if (cappState!.is4chanX)
+    document.addEventListener('4chanXInitFinished', startup);
+/*else {
+    document.addEventListener("QRGetFile", (e) => {
+        const qr = document.getElementById('qrFile') as HTMLInputElement | null;
+        document.dispatchEvent(new CustomEvent("QRFile", { detail: (qr?.files || [])[0] }));
+    });
+    startup();
+}*/
 
-document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => {
-    const target = e.target as HTMLDivElement;
-    const bts = target.querySelector('#qr-filename-container');
+// Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
+document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
+    const newPosts = e.detail.newPosts;
+    for (const post of newPosts) {
+        const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1)) as HTMLDivElement;
+        processPost(postContainer);
+    }
+}));
+
+if (cappState!.is4chanX) {
+    const qr = (window as any)['QR'];
+    const show = qr.show.bind(qr);
+    qr.show = (...args: any[]) => {
+        show(...args);
+        document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+            detail: document.getElementById('quickReply')
+        }));
+    };
+}
+
+document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>) => {
+    const a = document.createElement('a');
     const i = document.createElement('i');
     i.className = "fa fa-magnet";
-    const a = document.createElement('a');
     a.appendChild(i);
     a.title = "Embed File (Select a file before...)";
-    bts?.appendChild(a);
+
+    let target;
+    if (cappState.is4chanX) {
+        i.innerText = "🧲";
+        target = e.detail;
+        target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
+    }
+    else {
+        target = e.target as HTMLDivElement;
+        target.querySelector('#qr-filename-container')?.appendChild(a);
+    }
+
     a.onclick = async (e) => {
         const file = await getSelectedFile();
         if (!file)
@@ -319,7 +349,7 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<string>) => 
         });
         input.click();
     };
-}), { once: true });
+}), { once: !cappState!.is4chanX }); // 4chan's normal extension destroys the QR form everytime
 
 const customStyles = document.createElement('style');
 

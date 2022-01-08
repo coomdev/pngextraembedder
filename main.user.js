@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.98
+// @version      0.99
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10924,6 +10924,7 @@
   }));
   var appState = writable({
     isCatalog: false,
+    is4chanX: false,
     foundPosts: []
   });
   appState.subscribe((v) => {
@@ -11425,6 +11426,19 @@
         full_url: e.file_url,
         preview_url: e.preview_url,
         tags: e.tags.split(" ")
+      }))
+    },
+    {
+      name: "ATFbooru",
+      domain: "booru.allthefallen.moe",
+      endpoint: "/posts.json?tags=md5:",
+      quirks: (a) => a.map((e) => ({
+        source: e.source,
+        page: `https://booru.allthefallen.moe/posts/${e.id}`,
+        ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
+        full_url: e.file_url,
+        preview_url: e.preview_url,
+        tags: e.tag_string.split(" ")
       }))
     }
   ];
@@ -12050,7 +12064,8 @@
       "capi-v2.sankakucomplex.com",
       "api.rule34.xxx",
       "danbooru.donmai.us",
-      "lolibooru.moe"
+      "lolibooru.moe",
+      "boory.allthefallen.moe"
     ];
     let selectobj;
     let selectobj2;
@@ -15560,14 +15575,9 @@
     post.setAttribute("data-processed", "true");
   };
   var startup = async () => {
+    if (typeof window["FCX"] != "undefined")
+      appState.set({ ...cappState, is4chanX: true });
     await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));
-    document.addEventListener("ThreadUpdate", async (e) => {
-      const newPosts = e.detail.newPosts;
-      for (const post of newPosts) {
-        const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
-        processPost(postContainer);
-      }
-    });
     const mo = new MutationObserver((reco) => {
       for (const rec of reco)
         if (rec.type == "childList")
@@ -15599,7 +15609,7 @@
     document.body.append(scrollHost);
     appState.set({
       ...cappState,
-      isCatalog: !!document.querySelector(".catalog-small")
+      isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
     await Promise.all(posts.map((e) => processPost(e)));
   };
@@ -15610,15 +15620,38 @@
     });
   };
   document.addEventListener("4chanXInitFinished", startup);
+  document.addEventListener("ThreadUpdate", async (e) => {
+    const newPosts = e.detail.newPosts;
+    for (const post of newPosts) {
+      const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
+      processPost(postContainer);
+    }
+  });
+  if (cappState.is4chanX) {
+    const qr = window["QR"];
+    const show = qr.show.bind(qr);
+    qr.show = (...args) => {
+      show(...args);
+      document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+        detail: document.getElementById("quickReply")
+      }));
+    };
+  }
   document.addEventListener("QRDialogCreation", (e) => {
-    const target = e.target;
-    const bts = target.querySelector("#qr-filename-container");
+    const a = document.createElement("a");
     const i = document.createElement("i");
     i.className = "fa fa-magnet";
-    const a = document.createElement("a");
     a.appendChild(i);
     a.title = "Embed File (Select a file before...)";
-    bts?.appendChild(a);
+    let target;
+    if (cappState.is4chanX) {
+      i.innerText = "\u{1F9F2}";
+      target = e.detail;
+      target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
+    } else {
+      target = e.target;
+      target.querySelector("#qr-filename-container")?.appendChild(a);
+    }
     a.onclick = async (e2) => {
       const file = await getSelectedFile();
       if (!file)
@@ -15659,7 +15692,7 @@
       };
       input.click();
     };
-  }, { once: true });
+  }, { once: !cappState.is4chanX });
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
