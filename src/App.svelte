@@ -91,6 +91,11 @@
       Show Minimap
     </label>
     <label>
+      <input type="checkbox" bind:checked={$settings.ep} />
+      <!-- svelte-ignore a11y-missing-attribute -->
+      Turn off embedded file preloading<a title="You might still want to enable 'preload external files'">?</a>
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.te} />
       Turn off third-eye.
     </label>

@@ -119,6 +119,7 @@
 
   export async function bepis(ev: MouseEvent) {
     if ($appState.isCatalog) return;
+
     if (ev.button == 0) {
       contracted = !contracted
       if (hovering) hoverStop()
@@ -137,15 +138,17 @@
       if (file.thumbnail && !furl) {
         // don't know how you managed to click before hovering but oh well
         unzip()
-      }    
+      }
+      ev.preventDefault();
     } else if (ev.button == 1) { // middle click
       let src = furl || url;
       if (ev.altKey && file.source) {
         src = file.source;
       }
       if (ev.shiftKey && file.page) {
-        src = file.page;
+        src = file.page.url;
       }
+      ev.preventDefault();
       if (isNotChrome) {
         window.open(src, '_blank');
       } else
@@ -244,8 +247,11 @@
   <div
     class:contract={contracted}
     class="place"
-    on:click={bepis}
-    on:auxclick={bepis}
+
+    on:click={e => e.preventDefault()}
+    on:auxclick={e => e.preventDefault()}
+    on:mousedown={bepis}
+
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
     on:mousemove={hoverUpdate}
@@ -253,7 +259,12 @@
     bind:this={place}
   >
     {#if isImage}
-      <img bind:this={imgElem} alt={file.filename} src={furl || url} />
+      <!-- svelte-ignore a11y-missing-attribute -->
+        <img
+          bind:this={imgElem}
+          alt={file.filename}
+          src={furl || url}
+        />
     {/if}
     {#if isAudio}
       <audio
@@ -267,7 +278,8 @@
     {/if}
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
-      <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
+      <!-- svelte-ignore a11y-missing-attribute -->
+        <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
   </div>
@@ -325,16 +337,16 @@
     z-index: 9;
   }
 
-  .contract > img,
-  .contract > video {
+  .contract img,
+  .contract video {
     max-width: 125px !important;
     max-height: 125px !important;
     width: auto;
     height: auto;
   }
 
-  .place:not(.contract) > video,
-  .place:not(.contract) > img,
+  .place:not(.contract) video,
+  .place:not(.contract) img,
   .hoverer > video,
   .hoverer > img {
     max-width: 100vw;

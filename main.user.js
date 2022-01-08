@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.96
+// @version      0.97
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -277,9 +277,9 @@
         if (length > K_MAX_LENGTH) {
           throw new RangeError('The value "' + length + '" is invalid for option "size"');
         }
-        const buf3 = new Uint8Array(length);
-        Object.setPrototypeOf(buf3, Buffer11.prototype);
-        return buf3;
+        const buf2 = new Uint8Array(length);
+        Object.setPrototypeOf(buf2, Buffer11.prototype);
+        return buf2;
       }
       function Buffer11(arg, encodingOrOffset, length) {
         if (typeof arg === "number") {
@@ -365,20 +365,20 @@
           throw new TypeError("Unknown encoding: " + encoding);
         }
         const length = byteLength(string, encoding) | 0;
-        let buf3 = createBuffer(length);
-        const actual = buf3.write(string, encoding);
+        let buf2 = createBuffer(length);
+        const actual = buf2.write(string, encoding);
         if (actual !== length) {
-          buf3 = buf3.slice(0, actual);
+          buf2 = buf2.slice(0, actual);
         }
-        return buf3;
+        return buf2;
       }
       function fromArrayLike(array) {
         const length = array.length < 0 ? 0 : checked(array.length) | 0;
-        const buf3 = createBuffer(length);
+        const buf2 = createBuffer(length);
         for (let i = 0; i < length; i += 1) {
-          buf3[i] = array[i] & 255;
+          buf2[i] = array[i] & 255;
         }
-        return buf3;
+        return buf2;
       }
       function fromArrayView(arrayView) {
         if (isInstance(arrayView, Uint8Array)) {
@@ -394,26 +394,26 @@
         if (array.byteLength < byteOffset + (length || 0)) {
           throw new RangeError('"length" is outside of buffer bounds');
         }
-        let buf3;
+        let buf2;
         if (byteOffset === void 0 && length === void 0) {
-          buf3 = new Uint8Array(array);
+          buf2 = new Uint8Array(array);
         } else if (length === void 0) {
-          buf3 = new Uint8Array(array, byteOffset);
+          buf2 = new Uint8Array(array, byteOffset);
         } else {
-          buf3 = new Uint8Array(array, byteOffset, length);
+          buf2 = new Uint8Array(array, byteOffset, length);
         }
-        Object.setPrototypeOf(buf3, Buffer11.prototype);
-        return buf3;
+        Object.setPrototypeOf(buf2, Buffer11.prototype);
+        return buf2;
       }
       function fromObject(obj) {
         if (Buffer11.isBuffer(obj)) {
           const len = checked(obj.length) | 0;
-          const buf3 = createBuffer(len);
-          if (buf3.length === 0) {
-            return buf3;
+          const buf2 = createBuffer(len);
+          if (buf2.length === 0) {
+            return buf2;
           }
-          obj.copy(buf3, 0, 0, len);
-          return buf3;
+          obj.copy(buf2, 0, 0, len);
+          return buf2;
         }
         if (obj.length !== void 0) {
           if (typeof obj.length !== "number" || numberIsNaN(obj.length)) {
@@ -500,21 +500,21 @@
         const buffer = Buffer11.allocUnsafe(length);
         let pos = 0;
         for (i = 0; i < list.length; ++i) {
-          let buf3 = list[i];
-          if (isInstance(buf3, Uint8Array)) {
-            if (pos + buf3.length > buffer.length) {
-              if (!Buffer11.isBuffer(buf3))
-                buf3 = Buffer11.from(buf3);
-              buf3.copy(buffer, pos);
+          let buf2 = list[i];
+          if (isInstance(buf2, Uint8Array)) {
+            if (pos + buf2.length > buffer.length) {
+              if (!Buffer11.isBuffer(buf2))
+                buf2 = Buffer11.from(buf2);
+              buf2.copy(buffer, pos);
             } else {
-              Uint8Array.prototype.set.call(buffer, buf3, pos);
+              Uint8Array.prototype.set.call(buffer, buf2, pos);
             }
-          } else if (!Buffer11.isBuffer(buf3)) {
+          } else if (!Buffer11.isBuffer(buf2)) {
             throw new TypeError('"list" argument must be an Array of Buffers');
           } else {
-            buf3.copy(buffer, pos);
+            buf2.copy(buffer, pos);
           }
-          pos += buf3.length;
+          pos += buf2.length;
         }
         return buffer;
       };
@@ -796,11 +796,11 @@
             byteOffset /= 2;
           }
         }
-        function read2(buf3, i2) {
+        function read2(buf2, i2) {
           if (indexSize === 1) {
-            return buf3[i2];
+            return buf2[i2];
           } else {
-            return buf3.readUInt16BE(i2 * indexSize);
+            return buf2.readUInt16BE(i2 * indexSize);
           }
         }
         let i;
@@ -844,9 +844,9 @@
       Buffer11.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
         return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
       };
-      function hexWrite(buf3, string, offset, length) {
+      function hexWrite(buf2, string, offset, length) {
         offset = Number(offset) || 0;
-        const remaining = buf3.length - offset;
+        const remaining = buf2.length - offset;
         if (!length) {
           length = remaining;
         } else {
@@ -864,21 +864,21 @@
           const parsed = parseInt(string.substr(i * 2, 2), 16);
           if (numberIsNaN(parsed))
             return i;
-          buf3[offset + i] = parsed;
+          buf2[offset + i] = parsed;
         }
         return i;
       }
-      function utf8Write(buf3, string, offset, length) {
-        return blitBuffer(utf8ToBytes(string, buf3.length - offset), buf3, offset, length);
+      function utf8Write(buf2, string, offset, length) {
+        return blitBuffer(utf8ToBytes(string, buf2.length - offset), buf2, offset, length);
       }
-      function asciiWrite(buf3, string, offset, length) {
-        return blitBuffer(asciiToBytes(string), buf3, offset, length);
+      function asciiWrite(buf2, string, offset, length) {
+        return blitBuffer(asciiToBytes(string), buf2, offset, length);
       }
-      function base64Write(buf3, string, offset, length) {
-        return blitBuffer(base64ToBytes(string), buf3, offset, length);
+      function base64Write(buf2, string, offset, length) {
+        return blitBuffer(base64ToBytes(string), buf2, offset, length);
       }
-      function ucs2Write(buf3, string, offset, length) {
-        return blitBuffer(utf16leToBytes(string, buf3.length - offset), buf3, offset, length);
+      function ucs2Write(buf2, string, offset, length) {
+        return blitBuffer(utf16leToBytes(string, buf2.length - offset), buf2, offset, length);
       }
       Buffer11.prototype.write = function write2(string, offset, length, encoding) {
         if (offset === void 0) {
@@ -943,19 +943,19 @@
           data: Array.prototype.slice.call(this._arr || this, 0)
         };
       };
-      function base64Slice(buf3, start, end) {
-        if (start === 0 && end === buf3.length) {
-          return base64.fromByteArray(buf3);
+      function base64Slice(buf2, start, end) {
+        if (start === 0 && end === buf2.length) {
+          return base64.fromByteArray(buf2);
         } else {
-          return base64.fromByteArray(buf3.slice(start, end));
+          return base64.fromByteArray(buf2.slice(start, end));
         }
       }
-      function utf8Slice(buf3, start, end) {
-        end = Math.min(buf3.length, end);
+      function utf8Slice(buf2, start, end) {
+        end = Math.min(buf2.length, end);
         const res = [];
         let i = start;
         while (i < end) {
-          const firstByte = buf3[i];
+          const firstByte = buf2[i];
           let codePoint = null;
           let bytesPerSequence = firstByte > 239 ? 4 : firstByte > 223 ? 3 : firstByte > 191 ? 2 : 1;
           if (i + bytesPerSequence <= end) {
@@ -967,7 +967,7 @@
                 }
                 break;
               case 2:
-                secondByte = buf3[i + 1];
+                secondByte = buf2[i + 1];
                 if ((secondByte & 192) === 128) {
                   tempCodePoint = (firstByte & 31) << 6 | secondByte & 63;
                   if (tempCodePoint > 127) {
@@ -976,8 +976,8 @@
                 }
                 break;
               case 3:
-                secondByte = buf3[i + 1];
-                thirdByte = buf3[i + 2];
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
                 if ((secondByte & 192) === 128 && (thirdByte & 192) === 128) {
                   tempCodePoint = (firstByte & 15) << 12 | (secondByte & 63) << 6 | thirdByte & 63;
                   if (tempCodePoint > 2047 && (tempCodePoint < 55296 || tempCodePoint > 57343)) {
@@ -986,9 +986,9 @@
                 }
                 break;
               case 4:
-                secondByte = buf3[i + 1];
-                thirdByte = buf3[i + 2];
-                fourthByte = buf3[i + 3];
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
+                fourthByte = buf2[i + 3];
                 if ((secondByte & 192) === 128 && (thirdByte & 192) === 128 && (fourthByte & 192) === 128) {
                   tempCodePoint = (firstByte & 15) << 18 | (secondByte & 63) << 12 | (thirdByte & 63) << 6 | fourthByte & 63;
                   if (tempCodePoint > 65535 && tempCodePoint < 1114112) {
@@ -1023,36 +1023,36 @@
         }
         return res;
       }
-      function asciiSlice(buf3, start, end) {
+      function asciiSlice(buf2, start, end) {
         let ret = "";
-        end = Math.min(buf3.length, end);
+        end = Math.min(buf2.length, end);
         for (let i = start; i < end; ++i) {
-          ret += String.fromCharCode(buf3[i] & 127);
+          ret += String.fromCharCode(buf2[i] & 127);
         }
         return ret;
       }
-      function latin1Slice(buf3, start, end) {
+      function latin1Slice(buf2, start, end) {
         let ret = "";
-        end = Math.min(buf3.length, end);
+        end = Math.min(buf2.length, end);
         for (let i = start; i < end; ++i) {
-          ret += String.fromCharCode(buf3[i]);
+          ret += String.fromCharCode(buf2[i]);
         }
         return ret;
       }
-      function hexSlice(buf3, start, end) {
-        const len = buf3.length;
+      function hexSlice(buf2, start, end) {
+        const len = buf2.length;
         if (!start || start < 0)
           start = 0;
         if (!end || end < 0 || end > len)
           end = len;
         let out = "";
         for (let i = start; i < end; ++i) {
-          out += hexSliceLookupTable[buf3[i]];
+          out += hexSliceLookupTable[buf2[i]];
         }
         return out;
       }
-      function utf16leSlice(buf3, start, end) {
-        const bytes = buf3.slice(start, end);
+      function utf16leSlice(buf2, start, end) {
+        const bytes = buf2.slice(start, end);
         let res = "";
         for (let i = 0; i < bytes.length - 1; i += 2) {
           res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
@@ -1281,12 +1281,12 @@
           checkOffset(offset, 8, this.length);
         return ieee7542.read(this, offset, false, 52, 8);
       };
-      function checkInt(buf3, value, offset, ext, max, min) {
-        if (!Buffer11.isBuffer(buf3))
+      function checkInt(buf2, value, offset, ext, max, min) {
+        if (!Buffer11.isBuffer(buf2))
           throw new TypeError('"buffer" argument must be a Buffer instance');
         if (value > max || value < min)
           throw new RangeError('"value" argument is out of bounds');
-        if (offset + ext > buf3.length)
+        if (offset + ext > buf2.length)
           throw new RangeError("Index out of range");
       }
       Buffer11.prototype.writeUintLE = Buffer11.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength2, noAssert) {
@@ -1369,44 +1369,44 @@
         this[offset + 3] = value & 255;
         return offset + 4;
       };
-      function wrtBigUInt64LE(buf3, value, offset, min, max) {
-        checkIntBI(value, min, max, buf3, offset, 7);
+      function wrtBigUInt64LE(buf2, value, offset, min, max) {
+        checkIntBI(value, min, max, buf2, offset, 7);
         let lo = Number(value & BigInt(4294967295));
-        buf3[offset++] = lo;
+        buf2[offset++] = lo;
         lo = lo >> 8;
-        buf3[offset++] = lo;
+        buf2[offset++] = lo;
         lo = lo >> 8;
-        buf3[offset++] = lo;
+        buf2[offset++] = lo;
         lo = lo >> 8;
-        buf3[offset++] = lo;
+        buf2[offset++] = lo;
         let hi = Number(value >> BigInt(32) & BigInt(4294967295));
-        buf3[offset++] = hi;
+        buf2[offset++] = hi;
         hi = hi >> 8;
-        buf3[offset++] = hi;
+        buf2[offset++] = hi;
         hi = hi >> 8;
-        buf3[offset++] = hi;
+        buf2[offset++] = hi;
         hi = hi >> 8;
-        buf3[offset++] = hi;
+        buf2[offset++] = hi;
         return offset;
       }
-      function wrtBigUInt64BE(buf3, value, offset, min, max) {
-        checkIntBI(value, min, max, buf3, offset, 7);
+      function wrtBigUInt64BE(buf2, value, offset, min, max) {
+        checkIntBI(value, min, max, buf2, offset, 7);
         let lo = Number(value & BigInt(4294967295));
-        buf3[offset + 7] = lo;
+        buf2[offset + 7] = lo;
         lo = lo >> 8;
-        buf3[offset + 6] = lo;
+        buf2[offset + 6] = lo;
         lo = lo >> 8;
-        buf3[offset + 5] = lo;
+        buf2[offset + 5] = lo;
         lo = lo >> 8;
-        buf3[offset + 4] = lo;
+        buf2[offset + 4] = lo;
         let hi = Number(value >> BigInt(32) & BigInt(4294967295));
-        buf3[offset + 3] = hi;
+        buf2[offset + 3] = hi;
         hi = hi >> 8;
-        buf3[offset + 2] = hi;
+        buf2[offset + 2] = hi;
         hi = hi >> 8;
-        buf3[offset + 1] = hi;
+        buf2[offset + 1] = hi;
         hi = hi >> 8;
-        buf3[offset] = hi;
+        buf2[offset] = hi;
         return offset + 8;
       }
       Buffer11.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE(value, offset = 0) {
@@ -1511,19 +1511,19 @@
       Buffer11.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE(value, offset = 0) {
         return wrtBigUInt64BE(this, value, offset, -BigInt("0x8000000000000000"), BigInt("0x7fffffffffffffff"));
       });
-      function checkIEEE754(buf3, value, offset, ext, max, min) {
-        if (offset + ext > buf3.length)
+      function checkIEEE754(buf2, value, offset, ext, max, min) {
+        if (offset + ext > buf2.length)
           throw new RangeError("Index out of range");
         if (offset < 0)
           throw new RangeError("Index out of range");
       }
-      function writeFloat(buf3, value, offset, littleEndian, noAssert) {
+      function writeFloat(buf2, value, offset, littleEndian, noAssert) {
         value = +value;
         offset = offset >>> 0;
         if (!noAssert) {
-          checkIEEE754(buf3, value, offset, 4, 34028234663852886e22, -34028234663852886e22);
+          checkIEEE754(buf2, value, offset, 4, 34028234663852886e22, -34028234663852886e22);
         }
-        ieee7542.write(buf3, value, offset, littleEndian, 23, 4);
+        ieee7542.write(buf2, value, offset, littleEndian, 23, 4);
         return offset + 4;
       }
       Buffer11.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
@@ -1532,13 +1532,13 @@
       Buffer11.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
         return writeFloat(this, value, offset, false, noAssert);
       };
-      function writeDouble(buf3, value, offset, littleEndian, noAssert) {
+      function writeDouble(buf2, value, offset, littleEndian, noAssert) {
         value = +value;
         offset = offset >>> 0;
         if (!noAssert) {
-          checkIEEE754(buf3, value, offset, 8, 17976931348623157e292, -17976931348623157e292);
+          checkIEEE754(buf2, value, offset, 8, 17976931348623157e292, -17976931348623157e292);
         }
-        ieee7542.write(buf3, value, offset, littleEndian, 52, 8);
+        ieee7542.write(buf2, value, offset, littleEndian, 52, 8);
         return offset + 8;
       }
       Buffer11.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
@@ -1701,13 +1701,13 @@
         }
         return `${val.slice(0, i)}${res}`;
       }
-      function checkBounds(buf3, offset, byteLength2) {
+      function checkBounds(buf2, offset, byteLength2) {
         validateNumber(offset, "offset");
-        if (buf3[offset] === void 0 || buf3[offset + byteLength2] === void 0) {
-          boundsError(offset, buf3.length - (byteLength2 + 1));
+        if (buf2[offset] === void 0 || buf2[offset + byteLength2] === void 0) {
+          boundsError(offset, buf2.length - (byteLength2 + 1));
         }
       }
-      function checkIntBI(value, min, max, buf3, offset, byteLength2) {
+      function checkIntBI(value, min, max, buf2, offset, byteLength2) {
         if (value > max || value < min) {
           const n = typeof min === "bigint" ? "n" : "";
           let range;
@@ -1722,7 +1722,7 @@
           }
           throw new errors.ERR_OUT_OF_RANGE("value", range, value);
         }
-        checkBounds(buf3, offset, byteLength2);
+        checkBounds(buf2, offset, byteLength2);
       }
       function validateNumber(value, name) {
         if (typeof value !== "number") {
@@ -1923,34 +1923,34 @@
             C = C >>> 8 ^ T[(C ^ bstr.charCodeAt(i)) & 255];
           return C ^ -1;
         }
-        function crc32_buf(buf3, seed) {
-          if (buf3.length > 1e4)
-            return crc32_buf_8(buf3, seed);
-          var C = seed ^ -1, L = buf3.length - 3;
+        function crc32_buf(buf2, seed) {
+          if (buf2.length > 1e4)
+            return crc32_buf_8(buf2, seed);
+          var C = seed ^ -1, L = buf2.length - 3;
           for (var i = 0; i < L; ) {
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
           }
           while (i < L + 3)
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
           return C ^ -1;
         }
-        function crc32_buf_8(buf3, seed) {
-          var C = seed ^ -1, L = buf3.length - 7;
+        function crc32_buf_8(buf2, seed) {
+          var C = seed ^ -1, L = buf2.length - 7;
           for (var i = 0; i < L; ) {
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
           }
           while (i < L + 7)
-            C = C >>> 8 ^ T[(C ^ buf3[i++]) & 255];
+            C = C >>> 8 ^ T[(C ^ buf2[i++]) & 255];
           return C ^ -1;
         }
         function crc32_str(str, seed) {
@@ -4467,9 +4467,9 @@
         if (length > K_MAX_LENGTH) {
           throw new RangeError('The value "' + length + '" is invalid for option "size"');
         }
-        var buf3 = new Uint8Array(length);
-        Object.setPrototypeOf(buf3, Buffer11.prototype);
-        return buf3;
+        var buf2 = new Uint8Array(length);
+        Object.setPrototypeOf(buf2, Buffer11.prototype);
+        return buf2;
       }
       function Buffer11(arg, encodingOrOffset, length) {
         if (typeof arg === "number") {
@@ -4555,20 +4555,20 @@
           throw new TypeError("Unknown encoding: " + encoding);
         }
         var length = byteLength(string, encoding) | 0;
-        var buf3 = createBuffer(length);
-        var actual = buf3.write(string, encoding);
+        var buf2 = createBuffer(length);
+        var actual = buf2.write(string, encoding);
         if (actual !== length) {
-          buf3 = buf3.slice(0, actual);
+          buf2 = buf2.slice(0, actual);
         }
-        return buf3;
+        return buf2;
       }
       function fromArrayLike(array) {
         var length = array.length < 0 ? 0 : checked(array.length) | 0;
-        var buf3 = createBuffer(length);
+        var buf2 = createBuffer(length);
         for (var i = 0; i < length; i += 1) {
-          buf3[i] = array[i] & 255;
+          buf2[i] = array[i] & 255;
         }
-        return buf3;
+        return buf2;
       }
       function fromArrayView(arrayView) {
         if (isInstance(arrayView, Uint8Array)) {
@@ -4584,26 +4584,26 @@
         if (array.byteLength < byteOffset + (length || 0)) {
           throw new RangeError('"length" is outside of buffer bounds');
         }
-        var buf3;
+        var buf2;
         if (byteOffset === void 0 && length === void 0) {
-          buf3 = new Uint8Array(array);
+          buf2 = new Uint8Array(array);
         } else if (length === void 0) {
-          buf3 = new Uint8Array(array, byteOffset);
+          buf2 = new Uint8Array(array, byteOffset);
         } else {
-          buf3 = new Uint8Array(array, byteOffset, length);
+          buf2 = new Uint8Array(array, byteOffset, length);
         }
-        Object.setPrototypeOf(buf3, Buffer11.prototype);
-        return buf3;
+        Object.setPrototypeOf(buf2, Buffer11.prototype);
+        return buf2;
       }
       function fromObject(obj) {
         if (Buffer11.isBuffer(obj)) {
           var len = checked(obj.length) | 0;
-          var buf3 = createBuffer(len);
-          if (buf3.length === 0) {
-            return buf3;
+          var buf2 = createBuffer(len);
+          if (buf2.length === 0) {
+            return buf2;
           }
-          obj.copy(buf3, 0, 0, len);
-          return buf3;
+          obj.copy(buf2, 0, 0, len);
+          return buf2;
         }
         if (obj.length !== void 0) {
           if (typeof obj.length !== "number" || numberIsNaN(obj.length)) {
@@ -4690,19 +4690,19 @@
         var buffer = Buffer11.allocUnsafe(length);
         var pos = 0;
         for (i = 0; i < list.length; ++i) {
-          var buf3 = list[i];
-          if (isInstance(buf3, Uint8Array)) {
-            if (pos + buf3.length > buffer.length) {
-              Buffer11.from(buf3).copy(buffer, pos);
+          var buf2 = list[i];
+          if (isInstance(buf2, Uint8Array)) {
+            if (pos + buf2.length > buffer.length) {
+              Buffer11.from(buf2).copy(buffer, pos);
             } else {
-              Uint8Array.prototype.set.call(buffer, buf3, pos);
+              Uint8Array.prototype.set.call(buffer, buf2, pos);
             }
-          } else if (!Buffer11.isBuffer(buf3)) {
+          } else if (!Buffer11.isBuffer(buf2)) {
             throw new TypeError('"list" argument must be an Array of Buffers');
           } else {
-            buf3.copy(buffer, pos);
+            buf2.copy(buffer, pos);
           }
-          pos += buf3.length;
+          pos += buf2.length;
         }
         return buffer;
       };
@@ -4984,11 +4984,11 @@
             byteOffset /= 2;
           }
         }
-        function read2(buf3, i2) {
+        function read2(buf2, i2) {
           if (indexSize === 1) {
-            return buf3[i2];
+            return buf2[i2];
           } else {
-            return buf3.readUInt16BE(i2 * indexSize);
+            return buf2.readUInt16BE(i2 * indexSize);
           }
         }
         var i;
@@ -5032,9 +5032,9 @@
       Buffer11.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
         return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
       };
-      function hexWrite(buf3, string, offset, length) {
+      function hexWrite(buf2, string, offset, length) {
         offset = Number(offset) || 0;
-        var remaining = buf3.length - offset;
+        var remaining = buf2.length - offset;
         if (!length) {
           length = remaining;
         } else {
@@ -5051,21 +5051,21 @@
           var parsed = parseInt(string.substr(i * 2, 2), 16);
           if (numberIsNaN(parsed))
             return i;
-          buf3[offset + i] = parsed;
+          buf2[offset + i] = parsed;
         }
         return i;
       }
-      function utf8Write(buf3, string, offset, length) {
-        return blitBuffer(utf8ToBytes(string, buf3.length - offset), buf3, offset, length);
+      function utf8Write(buf2, string, offset, length) {
+        return blitBuffer(utf8ToBytes(string, buf2.length - offset), buf2, offset, length);
       }
-      function asciiWrite(buf3, string, offset, length) {
-        return blitBuffer(asciiToBytes(string), buf3, offset, length);
+      function asciiWrite(buf2, string, offset, length) {
+        return blitBuffer(asciiToBytes(string), buf2, offset, length);
       }
-      function base64Write(buf3, string, offset, length) {
-        return blitBuffer(base64ToBytes(string), buf3, offset, length);
+      function base64Write(buf2, string, offset, length) {
+        return blitBuffer(base64ToBytes(string), buf2, offset, length);
       }
-      function ucs2Write(buf3, string, offset, length) {
-        return blitBuffer(utf16leToBytes(string, buf3.length - offset), buf3, offset, length);
+      function ucs2Write(buf2, string, offset, length) {
+        return blitBuffer(utf16leToBytes(string, buf2.length - offset), buf2, offset, length);
       }
       Buffer11.prototype.write = function write2(string, offset, length, encoding) {
         if (offset === void 0) {
@@ -5130,19 +5130,19 @@
           data: Array.prototype.slice.call(this._arr || this, 0)
         };
       };
-      function base64Slice(buf3, start, end) {
-        if (start === 0 && end === buf3.length) {
-          return base64.fromByteArray(buf3);
+      function base64Slice(buf2, start, end) {
+        if (start === 0 && end === buf2.length) {
+          return base64.fromByteArray(buf2);
         } else {
-          return base64.fromByteArray(buf3.slice(start, end));
+          return base64.fromByteArray(buf2.slice(start, end));
         }
       }
-      function utf8Slice(buf3, start, end) {
-        end = Math.min(buf3.length, end);
+      function utf8Slice(buf2, start, end) {
+        end = Math.min(buf2.length, end);
         var res = [];
         var i = start;
         while (i < end) {
-          var firstByte = buf3[i];
+          var firstByte = buf2[i];
           var codePoint = null;
           var bytesPerSequence = firstByte > 239 ? 4 : firstByte > 223 ? 3 : firstByte > 191 ? 2 : 1;
           if (i + bytesPerSequence <= end) {
@@ -5154,7 +5154,7 @@
                 }
                 break;
               case 2:
-                secondByte = buf3[i + 1];
+                secondByte = buf2[i + 1];
                 if ((secondByte & 192) === 128) {
                   tempCodePoint = (firstByte & 31) << 6 | secondByte & 63;
                   if (tempCodePoint > 127) {
@@ -5163,8 +5163,8 @@
                 }
                 break;
               case 3:
-                secondByte = buf3[i + 1];
-                thirdByte = buf3[i + 2];
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
                 if ((secondByte & 192) === 128 && (thirdByte & 192) === 128) {
                   tempCodePoint = (firstByte & 15) << 12 | (secondByte & 63) << 6 | thirdByte & 63;
                   if (tempCodePoint > 2047 && (tempCodePoint < 55296 || tempCodePoint > 57343)) {
@@ -5173,9 +5173,9 @@
                 }
                 break;
               case 4:
-                secondByte = buf3[i + 1];
-                thirdByte = buf3[i + 2];
-                fourthByte = buf3[i + 3];
+                secondByte = buf2[i + 1];
+                thirdByte = buf2[i + 2];
+                fourthByte = buf2[i + 3];
                 if ((secondByte & 192) === 128 && (thirdByte & 192) === 128 && (fourthByte & 192) === 128) {
                   tempCodePoint = (firstByte & 15) << 18 | (secondByte & 63) << 12 | (thirdByte & 63) << 6 | fourthByte & 63;
                   if (tempCodePoint > 65535 && tempCodePoint < 1114112) {
@@ -5210,36 +5210,36 @@
         }
         return res;
       }
-      function asciiSlice(buf3, start, end) {
+      function asciiSlice(buf2, start, end) {
         var ret = "";
-        end = Math.min(buf3.length, end);
+        end = Math.min(buf2.length, end);
         for (var i = start; i < end; ++i) {
-          ret += String.fromCharCode(buf3[i] & 127);
+          ret += String.fromCharCode(buf2[i] & 127);
         }
         return ret;
       }
-      function latin1Slice(buf3, start, end) {
+      function latin1Slice(buf2, start, end) {
         var ret = "";
-        end = Math.min(buf3.length, end);
+        end = Math.min(buf2.length, end);
         for (var i = start; i < end; ++i) {
-          ret += String.fromCharCode(buf3[i]);
+          ret += String.fromCharCode(buf2[i]);
         }
         return ret;
       }
-      function hexSlice(buf3, start, end) {
-        var len = buf3.length;
+      function hexSlice(buf2, start, end) {
+        var len = buf2.length;
         if (!start || start < 0)
           start = 0;
         if (!end || end < 0 || end > len)
           end = len;
         var out = "";
         for (var i = start; i < end; ++i) {
-          out += hexSliceLookupTable[buf3[i]];
+          out += hexSliceLookupTable[buf2[i]];
         }
         return out;
       }
-      function utf16leSlice(buf3, start, end) {
-        var bytes = buf3.slice(start, end);
+      function utf16leSlice(buf2, start, end) {
+        var bytes = buf2.slice(start, end);
         var res = "";
         for (var i = 0; i < bytes.length - 1; i += 2) {
           res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
@@ -5422,12 +5422,12 @@
           checkOffset(offset, 8, this.length);
         return ieee7542.read(this, offset, false, 52, 8);
       };
-      function checkInt(buf3, value, offset, ext, max, min) {
-        if (!Buffer11.isBuffer(buf3))
+      function checkInt(buf2, value, offset, ext, max, min) {
+        if (!Buffer11.isBuffer(buf2))
           throw new TypeError('"buffer" argument must be a Buffer instance');
         if (value > max || value < min)
           throw new RangeError('"value" argument is out of bounds');
-        if (offset + ext > buf3.length)
+        if (offset + ext > buf2.length)
           throw new RangeError("Index out of range");
       }
       Buffer11.prototype.writeUintLE = Buffer11.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength2, noAssert) {
@@ -5600,19 +5600,19 @@
         this[offset + 3] = value & 255;
         return offset + 4;
       };
-      function checkIEEE754(buf3, value, offset, ext, max, min) {
-        if (offset + ext > buf3.length)
+      function checkIEEE754(buf2, value, offset, ext, max, min) {
+        if (offset + ext > buf2.length)
           throw new RangeError("Index out of range");
         if (offset < 0)
           throw new RangeError("Index out of range");
       }
-      function writeFloat(buf3, value, offset, littleEndian, noAssert) {
+      function writeFloat(buf2, value, offset, littleEndian, noAssert) {
         value = +value;
         offset = offset >>> 0;
         if (!noAssert) {
-          checkIEEE754(buf3, value, offset, 4, 34028234663852886e22, -34028234663852886e22);
+          checkIEEE754(buf2, value, offset, 4, 34028234663852886e22, -34028234663852886e22);
         }
-        ieee7542.write(buf3, value, offset, littleEndian, 23, 4);
+        ieee7542.write(buf2, value, offset, littleEndian, 23, 4);
         return offset + 4;
       }
       Buffer11.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
@@ -5621,13 +5621,13 @@
       Buffer11.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
         return writeFloat(this, value, offset, false, noAssert);
       };
-      function writeDouble(buf3, value, offset, littleEndian, noAssert) {
+      function writeDouble(buf2, value, offset, littleEndian, noAssert) {
         value = +value;
         offset = offset >>> 0;
         if (!noAssert) {
-          checkIEEE754(buf3, value, offset, 8, 17976931348623157e292, -17976931348623157e292);
+          checkIEEE754(buf2, value, offset, 8, 17976931348623157e292, -17976931348623157e292);
         }
-        ieee7542.write(buf3, value, offset, littleEndian, 52, 8);
+        ieee7542.write(buf2, value, offset, littleEndian, 52, 8);
         return offset + 8;
       }
       Buffer11.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
@@ -6070,8 +6070,8 @@
       exports.readVint = _tools.readVint;
       exports.writeVint = _tools.writeVint;
       exports.ebmlBlock = _block;
-      function readBlock(buf3) {
-        return exports.ebmlBlock(new exports.Buffer(buf3));
+      function readBlock(buf2) {
+        return exports.ebmlBlock(new exports.Buffer(buf2));
       }
       exports.readBlock = readBlock;
       function encodeTag(tagId, tagData, unknownSize) {
@@ -6316,8 +6316,8 @@
         var encorder = new EBMLEncoder_1.default();
         return refinedMetaData.reduce(function(lst, elm) {
           return lst.concat(encorder.encode([elm]));
-        }, []).reduce(function(o, buf3) {
-          return o + buf3.byteLength;
+        }, []).reduce(function(o, buf2) {
+          return o + buf2.byteLength;
         }, 0);
       }
       function refineMetadata(mesetadata, sizeDiff, info) {
@@ -6405,9 +6405,9 @@
         var buffer = exports.Buffer.allocUnsafe(length);
         var pos = 0;
         for (i = 0; i < list.length; ++i) {
-          var buf3 = list[i];
-          buf3.copy(buffer, pos);
-          pos += buf3.length;
+          var buf2 = list[i];
+          buf2.copy(buffer, pos);
+          pos += buf2.length;
         }
         return buffer;
       }
@@ -6559,8 +6559,8 @@
           if (tag == null) {
             return false;
           }
-          var buf3 = this._buffer.slice(this._cursor, this._cursor + tag.length);
-          var tagNum = buf3.reduce(function(o, v, i, arr) {
+          var buf2 = this._buffer.slice(this._cursor, this._cursor + tag.length);
+          var tagNum = buf2.reduce(function(o, v, i, arr) {
             return o + v * Math.pow(16, 2 * (arr.length - 1 - i));
           }, 0);
           var schema2 = this.getSchemaInfo(tagNum);
@@ -7874,12 +7874,12 @@
             p.data.copy(ret);
             n -= p.data.length;
             while (p = p.next) {
-              var buf3 = p.data;
-              var nb = n > buf3.length ? buf3.length : n;
-              buf3.copy(ret, ret.length - n, 0, nb);
+              var buf2 = p.data;
+              var nb = n > buf2.length ? buf2.length : n;
+              buf2.copy(ret, ret.length - n, 0, nb);
               n -= nb;
               if (n === 0) {
-                if (nb === buf3.length) {
+                if (nb === buf2.length) {
                   ++c;
                   if (p.next)
                     this.head = p.next;
@@ -7887,7 +7887,7 @@
                     this.head = this.tail = null;
                 } else {
                   this.head = p;
-                  p.data = buf3.slice(nb);
+                  p.data = buf2.slice(nb);
                 }
                 break;
               }
@@ -8823,17 +8823,17 @@
         if (typeof size !== "number") {
           throw new TypeError("Argument must be a number");
         }
-        var buf3 = Buffer11(size);
+        var buf2 = Buffer11(size);
         if (fill !== void 0) {
           if (typeof encoding === "string") {
-            buf3.fill(fill, encoding);
+            buf2.fill(fill, encoding);
           } else {
-            buf3.fill(fill);
+            buf2.fill(fill);
           }
         } else {
-          buf3.fill(0);
+          buf2.fill(0);
         }
-        return buf3;
+        return buf2;
       };
       SafeBuffer.allocUnsafe = function(size) {
         if (typeof size !== "number") {
@@ -8938,13 +8938,13 @@
         this.lastTotal = 0;
         this.lastChar = Buffer11.allocUnsafe(nb);
       }
-      StringDecoder.prototype.write = function(buf3) {
-        if (buf3.length === 0)
+      StringDecoder.prototype.write = function(buf2) {
+        if (buf2.length === 0)
           return "";
         var r;
         var i;
         if (this.lastNeed) {
-          r = this.fillLast(buf3);
+          r = this.fillLast(buf2);
           if (r === void 0)
             return "";
           i = this.lastNeed;
@@ -8952,19 +8952,19 @@
         } else {
           i = 0;
         }
-        if (i < buf3.length)
-          return r ? r + this.text(buf3, i) : this.text(buf3, i);
+        if (i < buf2.length)
+          return r ? r + this.text(buf2, i) : this.text(buf2, i);
         return r || "";
       };
       StringDecoder.prototype.end = utf8End;
       StringDecoder.prototype.text = utf8Text;
-      StringDecoder.prototype.fillLast = function(buf3) {
-        if (this.lastNeed <= buf3.length) {
-          buf3.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, this.lastNeed);
+      StringDecoder.prototype.fillLast = function(buf2) {
+        if (this.lastNeed <= buf2.length) {
+          buf2.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, this.lastNeed);
           return this.lastChar.toString(this.encoding, 0, this.lastTotal);
         }
-        buf3.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, buf3.length);
-        this.lastNeed -= buf3.length;
+        buf2.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, buf2.length);
+        this.lastNeed -= buf2.length;
       };
       function utf8CheckByte(byte) {
         if (byte <= 127)
@@ -8977,11 +8977,11 @@
           return 4;
         return byte >> 6 === 2 ? -1 : -2;
       }
-      function utf8CheckIncomplete(self, buf3, i) {
-        var j = buf3.length - 1;
+      function utf8CheckIncomplete(self, buf2, i) {
+        var j = buf2.length - 1;
         if (j < i)
           return 0;
-        var nb = utf8CheckByte(buf3[j]);
+        var nb = utf8CheckByte(buf2[j]);
         if (nb >= 0) {
           if (nb > 0)
             self.lastNeed = nb - 1;
@@ -8989,7 +8989,7 @@
         }
         if (--j < i || nb === -2)
           return 0;
-        nb = utf8CheckByte(buf3[j]);
+        nb = utf8CheckByte(buf2[j]);
         if (nb >= 0) {
           if (nb > 0)
             self.lastNeed = nb - 2;
@@ -8997,7 +8997,7 @@
         }
         if (--j < i || nb === -2)
           return 0;
-        nb = utf8CheckByte(buf3[j]);
+        nb = utf8CheckByte(buf2[j]);
         if (nb >= 0) {
           if (nb > 0) {
             if (nb === 2)
@@ -9009,61 +9009,61 @@
         }
         return 0;
       }
-      function utf8CheckExtraBytes(self, buf3, p) {
-        if ((buf3[0] & 192) !== 128) {
+      function utf8CheckExtraBytes(self, buf2, p) {
+        if ((buf2[0] & 192) !== 128) {
           self.lastNeed = 0;
           return "\uFFFD";
         }
-        if (self.lastNeed > 1 && buf3.length > 1) {
-          if ((buf3[1] & 192) !== 128) {
+        if (self.lastNeed > 1 && buf2.length > 1) {
+          if ((buf2[1] & 192) !== 128) {
             self.lastNeed = 1;
             return "\uFFFD";
           }
-          if (self.lastNeed > 2 && buf3.length > 2) {
-            if ((buf3[2] & 192) !== 128) {
+          if (self.lastNeed > 2 && buf2.length > 2) {
+            if ((buf2[2] & 192) !== 128) {
               self.lastNeed = 2;
               return "\uFFFD";
             }
           }
         }
       }
-      function utf8FillLast(buf3) {
+      function utf8FillLast(buf2) {
         var p = this.lastTotal - this.lastNeed;
-        var r = utf8CheckExtraBytes(this, buf3, p);
+        var r = utf8CheckExtraBytes(this, buf2, p);
         if (r !== void 0)
           return r;
-        if (this.lastNeed <= buf3.length) {
-          buf3.copy(this.lastChar, p, 0, this.lastNeed);
+        if (this.lastNeed <= buf2.length) {
+          buf2.copy(this.lastChar, p, 0, this.lastNeed);
           return this.lastChar.toString(this.encoding, 0, this.lastTotal);
         }
-        buf3.copy(this.lastChar, p, 0, buf3.length);
-        this.lastNeed -= buf3.length;
+        buf2.copy(this.lastChar, p, 0, buf2.length);
+        this.lastNeed -= buf2.length;
       }
-      function utf8Text(buf3, i) {
-        var total = utf8CheckIncomplete(this, buf3, i);
+      function utf8Text(buf2, i) {
+        var total = utf8CheckIncomplete(this, buf2, i);
         if (!this.lastNeed)
-          return buf3.toString("utf8", i);
+          return buf2.toString("utf8", i);
         this.lastTotal = total;
-        var end = buf3.length - (total - this.lastNeed);
-        buf3.copy(this.lastChar, 0, end);
-        return buf3.toString("utf8", i, end);
+        var end = buf2.length - (total - this.lastNeed);
+        buf2.copy(this.lastChar, 0, end);
+        return buf2.toString("utf8", i, end);
       }
-      function utf8End(buf3) {
-        var r = buf3 && buf3.length ? this.write(buf3) : "";
+      function utf8End(buf2) {
+        var r = buf2 && buf2.length ? this.write(buf2) : "";
         if (this.lastNeed)
           return r + "\uFFFD";
         return r;
       }
-      function utf16Text(buf3, i) {
-        if ((buf3.length - i) % 2 === 0) {
-          var r = buf3.toString("utf16le", i);
+      function utf16Text(buf2, i) {
+        if ((buf2.length - i) % 2 === 0) {
+          var r = buf2.toString("utf16le", i);
           if (r) {
             var c = r.charCodeAt(r.length - 1);
             if (c >= 55296 && c <= 56319) {
               this.lastNeed = 2;
               this.lastTotal = 4;
-              this.lastChar[0] = buf3[buf3.length - 2];
-              this.lastChar[1] = buf3[buf3.length - 1];
+              this.lastChar[0] = buf2[buf2.length - 2];
+              this.lastChar[1] = buf2[buf2.length - 1];
               return r.slice(0, -1);
             }
           }
@@ -9071,42 +9071,42 @@
         }
         this.lastNeed = 1;
         this.lastTotal = 2;
-        this.lastChar[0] = buf3[buf3.length - 1];
-        return buf3.toString("utf16le", i, buf3.length - 1);
+        this.lastChar[0] = buf2[buf2.length - 1];
+        return buf2.toString("utf16le", i, buf2.length - 1);
       }
-      function utf16End(buf3) {
-        var r = buf3 && buf3.length ? this.write(buf3) : "";
+      function utf16End(buf2) {
+        var r = buf2 && buf2.length ? this.write(buf2) : "";
         if (this.lastNeed) {
           var end = this.lastTotal - this.lastNeed;
           return r + this.lastChar.toString("utf16le", 0, end);
         }
         return r;
       }
-      function base64Text(buf3, i) {
-        var n = (buf3.length - i) % 3;
+      function base64Text(buf2, i) {
+        var n = (buf2.length - i) % 3;
         if (n === 0)
-          return buf3.toString("base64", i);
+          return buf2.toString("base64", i);
         this.lastNeed = 3 - n;
         this.lastTotal = 3;
         if (n === 1) {
-          this.lastChar[0] = buf3[buf3.length - 1];
+          this.lastChar[0] = buf2[buf2.length - 1];
         } else {
-          this.lastChar[0] = buf3[buf3.length - 2];
-          this.lastChar[1] = buf3[buf3.length - 1];
+          this.lastChar[0] = buf2[buf2.length - 2];
+          this.lastChar[1] = buf2[buf2.length - 1];
         }
-        return buf3.toString("base64", i, buf3.length - n);
+        return buf2.toString("base64", i, buf2.length - n);
       }
-      function base64End(buf3) {
-        var r = buf3 && buf3.length ? this.write(buf3) : "";
+      function base64End(buf2) {
+        var r = buf2 && buf2.length ? this.write(buf2) : "";
         if (this.lastNeed)
           return r + this.lastChar.toString("base64", 0, 3 - this.lastNeed);
         return r;
       }
-      function simpleWrite(buf3) {
-        return buf3.toString(this.encoding);
+      function simpleWrite(buf2) {
+        return buf2.toString(this.encoding);
       }
-      function simpleEnd(buf3) {
-        return buf3 && buf3.length ? this.write(buf3) : "";
+      function simpleEnd(buf2) {
+        return buf2 && buf2.length ? this.write(buf2) : "";
       }
     }
   });
@@ -10910,6 +10910,8 @@
     ca: false,
     pre: false,
     prev: false,
+    sh: false,
+    ep: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
     sources: [
       "gelbooru.com",
@@ -11153,10 +11155,10 @@
   var read_section = (gif, pos) => {
     const begin = pos;
     pos += 3 + gif[pos + 2];
-    let buf3 = import_buffer3.Buffer.alloc(0);
+    let buf2 = import_buffer3.Buffer.alloc(0);
     while (pos < gif.byteLength) {
       const v = gif[pos++];
-      buf3 = import_buffer3.Buffer.concat([buf3, gif.slice(pos, pos + v)]);
+      buf2 = import_buffer3.Buffer.concat([buf2, gif.slice(pos, pos + v)]);
       if (v == 0)
         break;
       pos += v;
@@ -11164,7 +11166,7 @@
     const appname = gif.slice(begin + 3, begin + 11).toString("ascii");
     return {
       appname,
-      data: buf3,
+      data: buf2,
       end: pos
     };
   };
@@ -11362,11 +11364,13 @@
   })) || [];
   var boorus = [
     {
+      name: "Gelbooru",
       domain: "gelbooru.com",
       endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
       quirks: gelquirk("https://gelbooru.com/index.php?page=post&s=view&id=")
     },
     {
+      name: "Yandere",
       domain: "yande.re",
       endpoint: "/post.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
@@ -11379,6 +11383,7 @@
       }))
     },
     {
+      name: "Sankaku",
       domain: "capi-v2.sankakucomplex.com",
       endpoint: "/posts/keyset?tags=md5:",
       quirks: (a) => a.data ? a.data.map((e) => ({
@@ -11391,11 +11396,13 @@
       })) : []
     },
     {
+      name: "Rule34",
       domain: "api.rule34.xxx",
       endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
       quirks: gelquirk("https://rule34.xxx/index.php?page=post&s=view&id=")
     },
     {
+      name: "Danbooru",
       domain: "danbooru.donmai.us",
       endpoint: "/posts.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
@@ -11408,6 +11415,7 @@
       }))
     },
     {
+      name: "Lolibooru",
       domain: "lolibooru.moe",
       endpoint: "/post.json?tags=md5:",
       quirks: (a) => a.map((e) => ({
@@ -11444,19 +11452,22 @@
   };
   var extract4 = async (b, fn) => {
     let result;
+    let booru;
     for (const e of Object.values(boorus)) {
       if (!sources.has(e.domain))
         continue;
       result = await findFileFrom(e, fn.substring(0, 32));
-      if (result.length)
+      if (result.length) {
+        booru = e.name;
         break;
+      }
     }
     let cachedFile;
     const prev = result[0].preview_url;
     const full = result[0].full_url;
     return {
       source: result[0].source,
-      page: result[0].page,
+      page: { title: booru, url: result[0].page },
       filename: fn.substring(0, 33) + result[0].ext,
       thumbnail: await (await GM_fetch(prev || full)).arrayBuffer(),
       data: async (lsn) => {
@@ -11499,14 +11510,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[21] = list[i];
-    child_ctx[23] = i;
+    child_ctx[22] = list[i];
+    child_ctx[24] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[21] = list[i];
-    child_ctx[23] = i;
+    child_ctx[22] = list[i];
+    child_ctx[24] = i;
     return child_ctx;
   }
   function create_if_block(ctx) {
@@ -11582,7 +11593,7 @@
         for (let i = 0; i < each_blocks_1.length; i += 1) {
           each_blocks_1[i].m(select0, null);
         }
-        ctx[17](select0);
+        ctx[18](select0);
         insert(target, t2, anchor);
         insert(target, button0, anchor);
         insert(target, t4, anchor);
@@ -11594,7 +11605,7 @@
         for (let i = 0; i < each_blocks.length; i += 1) {
           each_blocks[i].m(select1, null);
         }
-        ctx[18](select1);
+        ctx[19](select1);
         insert(target, t8, anchor);
         insert(target, button1, anchor);
         insert(target, t10, anchor);
@@ -11603,7 +11614,7 @@
           dispose = [
             listen(button0, "click", ctx[5]),
             listen(button1, "click", ctx[6]),
-            listen(input, "keydown", ctx[19])
+            listen(input, "keydown", ctx[20])
           ];
           mounted = true;
         }
@@ -11654,7 +11665,7 @@
         if (detaching)
           detach(select0);
         destroy_each(each_blocks_1, detaching);
-        ctx[17](null);
+        ctx[18](null);
         if (detaching)
           detach(t2);
         if (detaching)
@@ -11672,7 +11683,7 @@
         if (detaching)
           detach(select1);
         destroy_each(each_blocks, detaching);
-        ctx[18](null);
+        ctx[19](null);
         if (detaching)
           detach(t8);
         if (detaching)
@@ -11688,7 +11699,7 @@
   }
   function create_each_block_1(ctx) {
     let option;
-    let t_value = ctx[21] + "";
+    let t_value = ctx[22] + "";
     let t;
     let option_value_value;
     return {
@@ -11696,9 +11707,9 @@
         option = element("option");
         t = text(t_value);
         attr(option, "class", "sourcedi svelte-gdh57y");
-        option.__value = option_value_value = ctx[21];
+        option.__value = option_value_value = ctx[22];
         option.value = option.__value;
-        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[21]));
+        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[22]));
       },
       m(target, anchor) {
         insert(target, option, anchor);
@@ -11706,7 +11717,7 @@
       },
       p(ctx2, dirty) {
         if (dirty & 24) {
-          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[21]));
+          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[22]));
         }
       },
       d(detaching) {
@@ -11717,14 +11728,14 @@
   }
   function create_each_block(ctx) {
     let option;
-    let t_value = ctx[21] + "";
+    let t_value = ctx[22] + "";
     let t;
     let option_value_value;
     return {
       c() {
         option = element("option");
         t = text(t_value);
-        option.__value = option_value_value = ctx[21];
+        option.__value = option_value_value = ctx[22];
         option.value = option.__value;
       },
       m(target, anchor) {
@@ -11732,9 +11743,9 @@
         append(option, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 8 && t_value !== (t_value = ctx2[21] + ""))
+        if (dirty & 8 && t_value !== (t_value = ctx2[22] + ""))
           set_data(t, t_value);
-        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[21])) {
+        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[22])) {
           option.__value = option_value_value;
           option.value = option.__value;
         }
@@ -11791,7 +11802,12 @@
     let label9;
     let input9;
     let t21;
-    let t22;
+    let a;
+    let t23;
+    let label10;
+    let input10;
+    let t24;
+    let t25;
     let mounted;
     let dispose;
     let if_block = !ctx[3].te && create_if_block(ctx);
@@ -11842,8 +11858,14 @@
         t20 = space();
         label9 = element("label");
         input9 = element("input");
-        t21 = text("\n      Turn off third-eye.");
-        t22 = space();
+        t21 = text("\n      \n      Turn off embedded file preloading");
+        a = element("a");
+        a.textContent = "?";
+        t23 = space();
+        label10 = element("label");
+        input10 = element("input");
+        t24 = text("\n      Turn off third-eye.");
+        t25 = space();
         if (if_block)
           if_block.c();
         attr(h1, "class", "svelte-gdh57y");
@@ -11858,6 +11880,8 @@
         attr(input7, "type", "checkbox");
         attr(input8, "type", "checkbox");
         attr(input9, "type", "checkbox");
+        attr(a, "title", "You might still want to enable 'preload external files'");
+        attr(input10, "type", "checkbox");
         attr(div0, "class", "content svelte-gdh57y");
         attr(div1, "class", "backpanel svelte-gdh57y");
         toggle_class(div1, "enabled", ctx[0]);
@@ -11917,9 +11941,15 @@
         append(div0, t20);
         append(div0, label9);
         append(label9, input9);
-        input9.checked = ctx[3].te;
+        input9.checked = ctx[3].ep;
         append(label9, t21);
-        append(div0, t22);
+        append(label9, a);
+        append(div0, t23);
+        append(div0, label10);
+        append(label10, input10);
+        input10.checked = ctx[3].te;
+        append(label10, t24);
+        append(div0, t25);
         if (if_block)
           if_block.m(div0, null);
         if (!mounted) {
@@ -11933,7 +11963,8 @@
             listen(input6, "change", ctx[13]),
             listen(input7, "change", ctx[14]),
             listen(input8, "change", ctx[15]),
-            listen(input9, "change", ctx[16])
+            listen(input9, "change", ctx[16]),
+            listen(input10, "change", ctx[17])
           ];
           mounted = true;
         }
@@ -11967,7 +11998,10 @@
           input8.checked = ctx2[3].sh;
         }
         if (dirty & 8) {
-          input9.checked = ctx2[3].te;
+          input9.checked = ctx2[3].ep;
+        }
+        if (dirty & 8) {
+          input10.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block) {
@@ -12081,6 +12115,10 @@
       settings.set($settings);
     }
     function input9_change_handler() {
+      $settings.ep = this.checked;
+      settings.set($settings);
+    }
+    function input10_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -12121,6 +12159,7 @@
       input7_change_handler,
       input8_change_handler,
       input9_change_handler,
+      input10_change_handler,
       select0_binding,
       select1_binding,
       keydown_handler
@@ -14039,7 +14078,7 @@
     let span;
     let mounted;
     let dispose;
-    function click_handler() {
+    function click_handler2() {
       return ctx[4](ctx[16]);
     }
     return {
@@ -14053,7 +14092,7 @@
       m(target, anchor) {
         insert(target, span, anchor);
         if (!mounted) {
-          dispose = listen(span, "click", click_handler);
+          dispose = listen(span, "click", click_handler2);
           mounted = true;
         }
       },
@@ -14185,14 +14224,14 @@
       document.addEventListener("scroll", handleScroll);
       docRszObserver.unobserve(document.documentElement);
     });
-    const click_handler = (i) => window.scrollTo(0, positions[i][2]);
+    const click_handler2 = (i) => window.scrollTo(0, positions[i][2]);
     function span_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
         viewhint = $$value;
         $$invalidate(1, viewhint);
       });
     }
-    return [positions, viewhint, $appState, $settings, click_handler, span_binding];
+    return [positions, viewhint, $appState, $settings, click_handler2, span_binding];
   }
   var ScrollHighlighter = class extends SvelteComponent {
     constructor(options) {
@@ -14247,8 +14286,8 @@
       $$invalidate(0, visible = !visible);
       document.dispatchEvent(new CustomEvent("penis"));
     }
-    const click_handler = () => opensettings();
-    return [visible, opensettings, click_handler];
+    const click_handler2 = () => opensettings();
+    return [visible, opensettings, click_handler2];
   }
   var SettingsButton = class extends SvelteComponent {
     constructor(options) {
@@ -14261,7 +14300,7 @@
   // src/Embedding.svelte
   init_esbuild_inject();
   function add_css4(target) {
-    append_styles(target, "svelte-3nbis9", ".place.svelte-3nbis9.svelte-3nbis9{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-3nbis9>img.svelte-3nbis9{filter:brightness(0.5) blur(10px)}.progress.svelte-3nbis9.svelte-3nbis9{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-3nbis9.svelte-3nbis9{display:none;position:fixed;pointer-events:none}.visible.svelte-3nbis9.svelte-3nbis9{display:block;z-index:9}.contract.svelte-3nbis9>img.svelte-3nbis9,.contract.svelte-3nbis9>video.svelte-3nbis9{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-3nbis9:not(.contract)>video.svelte-3nbis9,.place.svelte-3nbis9:not(.contract)>img.svelte-3nbis9,.hoverer.svelte-3nbis9>video.svelte-3nbis9,.hoverer.svelte-3nbis9>img.svelte-3nbis9{max-width:100vw;max-height:100vh}");
+    append_styles(target, "svelte-yvh28x", ".place.svelte-yvh28x.svelte-yvh28x{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-yvh28x>img.svelte-yvh28x{filter:brightness(0.5) blur(10px)}.progress.svelte-yvh28x.svelte-yvh28x{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-yvh28x.svelte-yvh28x{display:none;position:fixed;pointer-events:none}.visible.svelte-yvh28x.svelte-yvh28x{display:block;z-index:9}.contract.svelte-yvh28x img.svelte-yvh28x,.contract.svelte-yvh28x video.svelte-yvh28x{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-yvh28x:not(.contract) video.svelte-yvh28x,.place.svelte-yvh28x:not(.contract) img.svelte-yvh28x,.hoverer.svelte-yvh28x>video.svelte-yvh28x,.hoverer.svelte-yvh28x>img.svelte-yvh28x{max-width:100vw;max-height:100vh}");
   }
   function create_if_block3(ctx) {
     let div0;
@@ -14300,9 +14339,9 @@
         t4 = space();
         if (if_block5)
           if_block5.c();
-        attr(div0, "class", "place svelte-3nbis9");
+        attr(div0, "class", "place svelte-yvh28x");
         toggle_class(div0, "contract", ctx[6]);
-        attr(div1, "class", "hoverer svelte-3nbis9");
+        attr(div1, "class", "hoverer svelte-yvh28x");
         toggle_class(div1, "visible", ctx[7] && ctx[6]);
         toggle_class(div1, "unzipping", ctx[16]);
       },
@@ -14330,8 +14369,9 @@
         ctx[31](div1);
         if (!mounted) {
           dispose = [
-            listen(div0, "click", ctx[1]),
-            listen(div0, "auxclick", ctx[1]),
+            listen(div0, "click", click_handler),
+            listen(div0, "auxclick", auxclick_handler),
+            listen(div0, "mousedown", ctx[1]),
             listen(div0, "mouseover", ctx[19]),
             listen(div0, "mouseout", ctx[20]),
             listen(div0, "mousemove", ctx[21]),
@@ -14459,7 +14499,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-3nbis9");
+        attr(img, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14537,7 +14577,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-3nbis9");
+        attr(video, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14575,7 +14615,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-3nbis9");
+        attr(span, "class", "progress svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -14607,7 +14647,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-3nbis9");
+        attr(img, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -14636,7 +14676,7 @@
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
-        attr(video, "class", "svelte-3nbis9");
+        attr(video, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -14698,6 +14738,8 @@
   function hasAudio(video) {
     return video.mozHasAudio || !!video.webkitAudioDecodedByteCount || !!(video.audioTracks && video.audioTracks.length);
   }
+  var click_handler = (e) => e.preventDefault();
+  var auxclick_handler = (e) => e.preventDefault();
   function instance4($$self, $$props, $$invalidate) {
     let $settings;
     let $appState;
@@ -14821,14 +14863,16 @@
         if (file.thumbnail && !furl) {
           unzip();
         }
+        ev.preventDefault();
       } else if (ev.button == 1) {
         let src = furl || url;
         if (ev.altKey && file.source) {
           src = file.source;
         }
         if (ev.shiftKey && file.page) {
-          src = file.page;
+          src = file.page.url;
         }
+        ev.preventDefault();
         if (isNotChrome) {
           window.open(src, "_blank");
         } else
@@ -15035,7 +15079,7 @@
   function add_css5(target) {
     append_styles(target, "svelte-64lw6s", ".clickable.svelte-64lw6s{cursor:pointer;margin-left:5px}.clickable.svelte-64lw6s:hover{text-shadow:0 0 4px palevioletred}");
   }
-  function create_if_block_12(ctx) {
+  function create_if_block_32(ctx) {
     let span;
     let mounted;
     let dispose;
@@ -15066,6 +15110,63 @@
           detach(span);
         mounted = false;
         dispose();
+      }
+    };
+  }
+  function create_if_block_22(ctx) {
+    let a;
+    let t;
+    let a_href_value;
+    return {
+      c() {
+        a = element("a");
+        t = text("Source");
+        attr(a, "href", a_href_value = ctx[0].source);
+        attr(a, "target", "_blank");
+        attr(a, "class", "clickable svelte-64lw6s");
+      },
+      m(target, anchor) {
+        insert(target, a, anchor);
+        append(a, t);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[0].source)) {
+          attr(a, "href", a_href_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(a);
+      }
+    };
+  }
+  function create_if_block_12(ctx) {
+    let a;
+    let t_value = ctx[0].page.title + "";
+    let t;
+    let a_href_value;
+    return {
+      c() {
+        a = element("a");
+        t = text(t_value);
+        attr(a, "href", a_href_value = ctx[0].page.url);
+        attr(a, "target", "_blank");
+        attr(a, "class", "clickable svelte-64lw6s");
+      },
+      m(target, anchor) {
+        insert(target, a, anchor);
+        append(a, t);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 1 && t_value !== (t_value = ctx2[0].page.title + ""))
+          set_data(t, t_value);
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[0].page.url)) {
+          attr(a, "href", a_href_value);
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(a);
       }
     };
   }
@@ -15101,11 +15202,15 @@
     let span;
     let span_title_value;
     let t1;
-    let if_block1_anchor;
+    let t2;
+    let t3;
+    let if_block3_anchor;
     let mounted;
     let dispose;
-    let if_block0 = ctx[4].eye && create_if_block_12(ctx);
-    let if_block1 = ctx[6] && ctx[2] && create_if_block4(ctx);
+    let if_block0 = ctx[4].eye && create_if_block_32(ctx);
+    let if_block1 = ctx[0].source && create_if_block_22(ctx);
+    let if_block2 = ctx[0].page && create_if_block_12(ctx);
+    let if_block3 = ctx[6] && ctx[2] && create_if_block4(ctx);
     return {
       c() {
         if (if_block0)
@@ -15115,7 +15220,13 @@
         t1 = space();
         if (if_block1)
           if_block1.c();
-        if_block1_anchor = empty();
+        t2 = space();
+        if (if_block2)
+          if_block2.c();
+        t3 = space();
+        if (if_block3)
+          if_block3.c();
+        if_block3_anchor = empty();
         attr(span, "title", span_title_value = ctx[0].filename);
         attr(span, "class", "fa fa-download clickable svelte-64lw6s");
       },
@@ -15127,7 +15238,13 @@
         insert(target, t1, anchor);
         if (if_block1)
           if_block1.m(target, anchor);
-        insert(target, if_block1_anchor, anchor);
+        insert(target, t2, anchor);
+        if (if_block2)
+          if_block2.m(target, anchor);
+        insert(target, t3, anchor);
+        if (if_block3)
+          if_block3.m(target, anchor);
+        insert(target, if_block3_anchor, anchor);
         if (!mounted) {
           dispose = listen(span, "click", ctx[7]);
           mounted = true;
@@ -15138,7 +15255,7 @@
           if (if_block0) {
             if_block0.p(ctx2, dirty);
           } else {
-            if_block0 = create_if_block_12(ctx2);
+            if_block0 = create_if_block_32(ctx2);
             if_block0.c();
             if_block0.m(t0.parentNode, t0);
           }
@@ -15149,17 +15266,41 @@
         if (dirty & 1 && span_title_value !== (span_title_value = ctx2[0].filename)) {
           attr(span, "title", span_title_value);
         }
-        if (ctx2[6] && ctx2[2]) {
+        if (ctx2[0].source) {
           if (if_block1) {
             if_block1.p(ctx2, dirty);
           } else {
-            if_block1 = create_if_block4(ctx2);
+            if_block1 = create_if_block_22(ctx2);
             if_block1.c();
-            if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
+            if_block1.m(t2.parentNode, t2);
           }
         } else if (if_block1) {
           if_block1.d(1);
           if_block1 = null;
+        }
+        if (ctx2[0].page) {
+          if (if_block2) {
+            if_block2.p(ctx2, dirty);
+          } else {
+            if_block2 = create_if_block_12(ctx2);
+            if_block2.c();
+            if_block2.m(t3.parentNode, t3);
+          }
+        } else if (if_block2) {
+          if_block2.d(1);
+          if_block2 = null;
+        }
+        if (ctx2[6] && ctx2[2]) {
+          if (if_block3) {
+            if_block3.p(ctx2, dirty);
+          } else {
+            if_block3 = create_if_block4(ctx2);
+            if_block3.c();
+            if_block3.m(if_block3_anchor.parentNode, if_block3_anchor);
+          }
+        } else if (if_block3) {
+          if_block3.d(1);
+          if_block3 = null;
         }
       },
       i: noop,
@@ -15176,7 +15317,15 @@
         if (if_block1)
           if_block1.d(detaching);
         if (detaching)
-          detach(if_block1_anchor);
+          detach(t2);
+        if (if_block2)
+          if_block2.d(detaching);
+        if (detaching)
+          detach(t3);
+        if (if_block3)
+          if_block3.d(detaching);
+        if (detaching)
+          detach(if_block3_anchor);
         mounted = false;
         dispose();
       }
@@ -15210,7 +15359,7 @@
       a.click();
       window.URL.revokeObjectURL(url);
     }
-    const click_handler = (ev) => {
+    const click_handler2 = (ev) => {
       inst.bepis(ev);
     };
     $$self.$$set = ($$props2) => {
@@ -15231,7 +15380,7 @@
       isNotChrome,
       downloadFile,
       id,
-      click_handler
+      click_handler2
     ];
   }
   var EyeButton = class extends SvelteComponent {
@@ -15264,7 +15413,6 @@
   var EyeButton_default = EyeButton;
 
   // src/main.ts
-  var import_crc_322 = __toESM(require_crc32(), 1);
   var csettings;
   var processors = [thirdeye_default, png_default, webm_default, gif_default];
   var cappState;

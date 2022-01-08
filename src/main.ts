@@ -14,8 +14,6 @@ import ScrollHighlighter from "./ScrollHighlighter.svelte";
 import SettingsButton from './SettingsButton.svelte';
 import Embedding from './Embedding.svelte';
 import EyeButton from './EyeButton.svelte';
-import { fileTypeFromBuffer } from "file-type";
-import { buf } from "crc-32";
 
 export interface ImageProcessor {
     skip?: true;
@@ -25,7 +23,7 @@ export interface ImageProcessor {
     inject?(b: File, c: File): Buffer | Promise<Buffer>;
 }
 
-let csettings: any;
+export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
     [thirdeye, png, webm, gif];
 
@@ -67,7 +65,7 @@ async function* streamRemote(url: string, chunkSize = 16 * 1024, fetchRestOnNonC
 }
 
 type EmbeddedFileWithPreview = {
-    page?: string; // can be a booru page
+    page?: {title: string, url: string}; // can be a booru page
     source?: string; // can be like a twitter post this was posted in originally
     thumbnail: Buffer;
     filename: string;

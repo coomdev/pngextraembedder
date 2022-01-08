@@ -50,6 +50,22 @@ import type { EmbeddedFile } from './main';
   on:click={downloadFile}
   class="fa fa-download clickable"
 />
+{#if file.source}
+<!-- svelte-ignore a11y-missing-content -->
+<a
+  href={file.source}
+  target="_blank"
+  class="clickable"
+>Source</a>
+{/if}
+{#if file.page}
+<!-- svelte-ignore a11y-missing-content -->
+<a
+  href={file.page.url}
+  target="_blank"
+  class="clickable"
+>{file.page.title}</a>
+{/if}
 {#if isNotChrome && isVideo}
   <!-- svelte-ignore a11y-missing-attribute -->
   <a on:click={(ev) => {

@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
 
-const localLoad = (key: string, def: any) =>
+const localLoad = <T>(key: string, def: T) =>
     ('__pee__' + key) in localStorage
-        ? JSON.parse(localStorage.getItem('__pee__' + key)!)
+        ? JSON.parse(localStorage.getItem('__pee__' + key)!) as T
         : def;
 
 const localSet = (key: string, value: any) =>
@@ -18,6 +18,8 @@ export const settings = writable(localLoad('settings', {
     ca: false,
     pre: false,
     prev: false,
+    sh: false,
+    ep: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],
     sources: ['gelbooru.com',
         'yande.re',

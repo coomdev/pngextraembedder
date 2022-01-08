@@ -3,6 +3,7 @@ import { GM_fetch } from "./requests";
 import { settings } from "./stores";
 
 export type Booru = {
+    name: string;
     domain: string;
     endpoint: string;
     quirks: tran;
@@ -19,6 +20,15 @@ export type BooruMatch = {
 
 type tran = (a: any) => BooruMatch[];
 
+function firstThatFor<T>(promises: Promise<T>[], pred: (v: T) => boolean) {
+    Promise.any(promises.map(async p => {
+        const v = await p;
+        if (pred(v))
+            return v;
+        throw v;
+    }))
+}
+
 const gelquirk: (s: string) => tran = prefix => (a =>
     (a.post || a).map((e: any) => ({
         ext: e.image.substr(e.image.indexOf('.') + 1),
@@ -31,11 +41,13 @@ const gelquirk: (s: string) => tran = prefix => (a =>
 
 export const boorus: Booru[] = [
     {
+        name: 'Gelbooru',
         domain: 'gelbooru.com',
         endpoint: '/index.php?page=dapi&s=post&q=index&json=1&tags=md5:',
         quirks: gelquirk("https://gelbooru.com/index.php?page=post&s=view&id=")
     },
     {
+        name: 'Yandere',
         domain: 'yande.re',
         endpoint: '/post.json?tags=md5:',
         quirks: a =>
@@ -49,6 +61,7 @@ export const boorus: Booru[] = [
             } as BooruMatch))
     },
     {
+        name: 'Sankaku',
         domain: 'capi-v2.sankakucomplex.com',
         endpoint: '/posts/keyset?tags=md5:',
         quirks: a => a.data ?
@@ -63,12 +76,14 @@ export const boorus: Booru[] = [
             } as BooruMatch)) : []
     },
     {
+        name: 'Rule34',
         domain: 'api.rule34.xxx',
         endpoint: '/index.php?page=dapi&s=post&q=index&json=1&tags=md5:',
         // note: rule34 do not seem to give source in their API
         quirks: gelquirk("https://rule34.xxx/index.php?page=post&s=view&id=")
     },
     {
+        name: 'Danbooru',
         domain: 'danbooru.donmai.us',
         endpoint: '/posts.json?tags=md5:',
         quirks: a =>
@@ -82,6 +97,7 @@ export const boorus: Booru[] = [
             } as BooruMatch))
     },
     {
+        name: 'Lolibooru',
         domain: 'lolibooru.moe',
         endpoint: '/post.json?tags=md5:',
         quirks: a =>
@@ -125,19 +141,22 @@ const findFileFrom = async (b: Booru, hex: string) => {
 
 const extract = async (b: Buffer, fn?: string) => {
     let result!: BooruMatch[];
+    let booru!: string;
     for (const e of Object.values(boorus)) {
         if (!sources.has(e.domain))
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
-        if (result.length)
+        if (result.length) {
+            booru = e.name;
             break;
+        }
     }
     let cachedFile: ArrayBuffer;
     const prev = result[0].preview_url;
     const full = result[0].full_url;
     return {
         source: result[0].source,
-        page: result[0].page,
+        page: { title: booru, url: result[0].page },
         filename: fn!.substring(0, 33) + result[0].ext,
         thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()), // prefer preview
         data: async (lsn) => {
