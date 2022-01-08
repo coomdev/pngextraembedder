@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.99
+// @version      0.100
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12065,7 +12065,7 @@
       "api.rule34.xxx",
       "danbooru.donmai.us",
       "lolibooru.moe",
-      "boory.allthefallen.moe"
+      "booru.allthefallen.moe"
     ];
     let selectobj;
     let selectobj2;

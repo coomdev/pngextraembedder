@@ -18,7 +18,7 @@
     'api.rule34.xxx',
     'danbooru.donmai.us',
     'lolibooru.moe',
-    'boory.allthefallen.moe'
+    'booru.allthefallen.moe'
   ]
 
   let selectobj: HTMLSelectElement
