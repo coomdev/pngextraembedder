@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.97
+// @version      0.98
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11435,7 +11435,7 @@
     sources = new Set(s.sources);
   });
   var cache = {};
-  var findFileFrom = async (b, hex) => {
+  var findFileFrom = async (b, hex, abort) => {
     try {
       if (b.domain in cache && hex in cache[b.domain])
         return cache[b.domain][hex];
@@ -11495,7 +11495,7 @@
     skip: true,
     extract: extract4,
     has_embed: has_embed4,
-    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
+    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
   };
 
   // src/App.svelte

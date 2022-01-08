@@ -1,7 +1,12 @@
-// ==UserScript==
+import { spawnSync } from 'child_process';
+
+let res = spawnSync("git", ["rev-list", "--count", "HEAD"]);
+let rev = +res.stdout;
+
+export const extheader = `// ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.98
+// @version      0.${rev}
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -18,3 +23,4 @@
 // @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
+`;

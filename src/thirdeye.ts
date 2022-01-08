@@ -122,7 +122,7 @@ settings.subscribe(s => {
 
 const cache: any = {};
 
-const findFileFrom = async (b: Booru, hex: string) => {
+const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
     try {
         if (b.domain in cache && hex in cache[b.domain])
             return cache[b.domain][hex] as BooruMatch[];
@@ -191,5 +191,5 @@ export default {
     skip: true,
     extract,
     has_embed,
-    match: fn => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
+    match: fn => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
 } as ImageProcessor;
