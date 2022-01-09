@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.102
+// @version      0.103
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -7704,8 +7704,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance7, Constructor) {
-        if (!(instance7 instanceof Constructor)) {
+      function _classCallCheck(instance9, Constructor) {
+        if (!(instance9 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -10482,6 +10482,11 @@
   init_esbuild_inject();
   function noop() {
   }
+  function assign(tar, src) {
+    for (const k in src)
+      tar[k] = src[k];
+    return tar;
+  }
   function run(fn) {
     return fn();
   }
@@ -10517,6 +10522,50 @@
   }
   function component_subscribe(component, store, callback) {
     component.$$.on_destroy.push(subscribe(store, callback));
+  }
+  function create_slot(definition, ctx, $$scope, fn) {
+    if (definition) {
+      const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
+      return definition[0](slot_ctx);
+    }
+  }
+  function get_slot_context(definition, ctx, $$scope, fn) {
+    return definition[1] && fn ? assign($$scope.ctx.slice(), definition[1](fn(ctx))) : $$scope.ctx;
+  }
+  function get_slot_changes(definition, $$scope, dirty, fn) {
+    if (definition[2] && fn) {
+      const lets = definition[2](fn(dirty));
+      if ($$scope.dirty === void 0) {
+        return lets;
+      }
+      if (typeof lets === "object") {
+        const merged = [];
+        const len = Math.max($$scope.dirty.length, lets.length);
+        for (let i = 0; i < len; i += 1) {
+          merged[i] = $$scope.dirty[i] | lets[i];
+        }
+        return merged;
+      }
+      return $$scope.dirty | lets;
+    }
+    return $$scope.dirty;
+  }
+  function update_slot_base(slot, slot_definition, ctx, $$scope, slot_changes, get_slot_context_fn) {
+    if (slot_changes) {
+      const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
+      slot.p(slot_context, slot_changes);
+    }
+  }
+  function get_all_dirty_from_scope($$scope) {
+    if ($$scope.ctx.length > 32) {
+      const dirty = [];
+      const length = $$scope.ctx.length / 32;
+      for (let i = 0; i < length; i++) {
+        dirty[i] = -1;
+      }
+      return dirty;
+    }
+    return -1;
   }
   function set_store_value(store, ret, value) {
     store.set(value);
@@ -10594,6 +10643,9 @@
     data = "" + data;
     if (text2.wholeText !== data)
       text2.data = data;
+  }
+  function set_input_value(input, value) {
+    input.value = value == null ? "" : value;
   }
   function set_style(node, key, value, important) {
     node.style.setProperty(key, value, important ? "important" : "");
@@ -10767,7 +10819,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance7, create_fragment7, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance9, create_fragment9, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -10790,7 +10842,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance7 ? instance7(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance9 ? instance9(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -10803,7 +10855,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment7 ? create_fragment7($$.ctx) : false;
+    $$.fragment = create_fragment9 ? create_fragment9($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -10933,7 +10985,8 @@
   // src/stores.ts
   var localLoad = (key, def) => "__pee__" + key in localStorage ? JSON.parse(localStorage.getItem("__pee__" + key)) : def;
   var localSet = (key, value) => localStorage.setItem("__pee__" + key, JSON.stringify(value));
-  var settings = writable(localLoad("settings", {
+  var settings = writable(localLoad("settingsv2", {
+    ...localLoad("settings", {}),
     loop: true,
     dh: false,
     xpv: false,
@@ -10946,13 +10999,49 @@
     sh: false,
     ep: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
-    sources: [
-      "gelbooru.com",
-      "yande.re",
-      "capi-v2.sankakucomplex.com",
-      "api.rule34.xxx",
-      "danbooru.donmai.us",
-      "lolibooru.moe"
+    rsources: [
+      {
+        name: "Gelbooru",
+        domain: "gelbooru.com",
+        endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
+        view: "https://gelbooru.com/index.php?page=post&s=view&id="
+      },
+      {
+        name: "Yandere",
+        domain: "yande.re",
+        endpoint: "/post.json?tags=md5:",
+        view: `https://yande.re/post/show/`
+      },
+      {
+        name: "Sankaku",
+        domain: "capi-v2.sankakucomplex.com",
+        endpoint: "/posts/keyset?tags=md5:",
+        view: `https://chan.sankakucomplex.com/post/show/`
+      },
+      {
+        name: "Rule34",
+        domain: "api.rule34.xxx",
+        endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
+        view: "https://rule34.xxx/index.php?page=post&s=view&id="
+      },
+      {
+        name: "Danbooru",
+        domain: "danbooru.donmai.us",
+        endpoint: "/posts.json?tags=md5:",
+        view: "https://danbooru.donmai.us/posts/"
+      },
+      {
+        name: "Lolibooru",
+        domain: "lolibooru.moe",
+        endpoint: "/post.json?tags=md5:",
+        view: "https://lolibooru.moe/post/show/"
+      },
+      {
+        name: "ATFbooru",
+        domain: "booru.allthefallen.moe",
+        endpoint: "/posts.json?tags=md5:",
+        view: "https://booru.allthefallen.moe/posts/"
+      }
     ]
   }));
   var appState = writable({
@@ -10961,7 +11050,7 @@
     foundPosts: []
   });
   settings.subscribe((newVal) => {
-    localSet("settings", newVal);
+    localSet("settingsv2", newVal);
   });
 
   // src/global.css
@@ -11386,97 +11475,25 @@
 
   // src/thirdeye.ts
   var gelquirk = (prefix) => (a) => (a.post || a).map((e) => ({
-    ext: e.image.substr(e.image.indexOf(".") + 1),
     full_url: e.file_url,
-    source: e.source,
-    page: `${prefix}${e.id}`,
     preview_url: e.preview_url,
-    tags: e.tags.split(" ")
+    source: e.source,
+    ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
+    page: `${prefix}${e.id}`,
+    tags: (e.tag_string || e.tags || "").split(" ")
   })) || [];
-  var boorus = [
-    {
-      name: "Gelbooru",
-      domain: "gelbooru.com",
-      endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
-      quirks: gelquirk("https://gelbooru.com/index.php?page=post&s=view&id=")
-    },
-    {
-      name: "Yandere",
-      domain: "yande.re",
-      endpoint: "/post.json?tags=md5:",
-      quirks: (a) => a.map((e) => ({
-        source: e.source,
-        page: `https://yande.re/post/show/${e.id}`,
-        ext: e.file_ext,
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tags.split(" ")
-      }))
-    },
-    {
-      name: "Sankaku",
-      domain: "capi-v2.sankakucomplex.com",
-      endpoint: "/posts/keyset?tags=md5:",
-      quirks: (a) => a.data ? a.data.map((e) => ({
-        source: e.source,
-        page: `https://chan.sankakucomplex.com/post/show/${e.id}`,
-        ext: e.file_type.substr(e.file_type.indexOf("/") + 1),
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tags.map((e2) => e2.name_en)
-      })) : []
-    },
-    {
-      name: "Rule34",
-      domain: "api.rule34.xxx",
-      endpoint: "/index.php?page=dapi&s=post&q=index&json=1&tags=md5:",
-      quirks: gelquirk("https://rule34.xxx/index.php?page=post&s=view&id=")
-    },
-    {
-      name: "Danbooru",
-      domain: "danbooru.donmai.us",
-      endpoint: "/posts.json?tags=md5:",
-      quirks: (a) => a.map((e) => ({
-        source: e.source,
-        page: `https://danbooru.donmai.us/posts/${e.id}`,
-        ext: e.file_ext,
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tag_string.split(" ")
-      }))
-    },
-    {
-      name: "Lolibooru",
-      domain: "lolibooru.moe",
-      endpoint: "/post.json?tags=md5:",
-      quirks: (a) => a.map((e) => ({
-        source: e.source,
-        page: `https://lolibooru.moe/post/show/${e.id}`,
-        ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tags.split(" ")
-      }))
-    },
-    {
-      name: "ATFbooru",
-      domain: "booru.allthefallen.moe",
-      endpoint: "/posts.json?tags=md5:",
-      quirks: (a) => a.map((e) => ({
-        source: e.source,
-        page: `https://booru.allthefallen.moe/posts/${e.id}`,
-        ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tag_string.split(" ")
-      }))
-    }
-  ];
+  settings.subscribe((s) => {
+    boorus = s.rsources.map((e) => ({
+      ...e,
+      quirks: gelquirk(e.view)
+    }));
+  });
+  var boorus = [];
   var black = /* @__PURE__ */ new Set();
   var sources = /* @__PURE__ */ new Set();
   settings.subscribe((s) => {
     black = new Set(s.blacklist);
-    sources = new Set(s.sources);
+    sources = new Set(s.rsources.map((e) => e.domain));
   });
   var cache = {};
   var findFileFrom = async (b, hex, abort) => {
@@ -11548,158 +11565,487 @@
   // node_modules/svelte/index.mjs
   init_esbuild_inject();
 
-  // src/App.svelte
+  // src/Dialog.svelte
+  init_esbuild_inject();
   function add_css(target) {
-    append_styles(target, "svelte-gdh57y", "select.svelte-gdh57y{font-size:1.2em}.enabled.svelte-gdh57y{display:block}.sourcedi.svelte-gdh57y{border-right:10px solid lightcoral}.sourceen.svelte-gdh57y{border-right:10px solid lightgreen}.disabled.svelte-gdh57y{display:none}.content.svelte-gdh57y{display:flex;flex-direction:column}hr.svelte-gdh57y{width:100%}h1.svelte-gdh57y{text-align:center}.backpanel.svelte-gdh57y{position:absolute;right:32px;padding:10px;width:15%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2);pointer-events:all;backdrop-filter:blur(9px)}");
+    append_styles(target, "svelte-1edrz51", ".dialog.svelte-1edrz51{position:relative}");
+  }
+  function create_if_block(ctx) {
+    let div;
+    let current;
+    const default_slot_template = ctx[5].default;
+    const default_slot = create_slot(default_slot_template, ctx, ctx[4], null);
+    return {
+      c() {
+        div = element("div");
+        if (default_slot)
+          default_slot.c();
+        set_style(div, "top", ctx[0][1] + "px");
+        set_style(div, "left", ctx[0][0] + "px");
+        attr(div, "class", "dialog svelte-1edrz51");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+        if (default_slot) {
+          default_slot.m(div, null);
+        }
+        current = true;
+      },
+      p(ctx2, dirty) {
+        if (default_slot) {
+          if (default_slot.p && (!current || dirty & 16)) {
+            update_slot_base(default_slot, default_slot_template, ctx2, ctx2[4], !current ? get_all_dirty_from_scope(ctx2[4]) : get_slot_changes(default_slot_template, ctx2[4], dirty, null), null);
+          }
+        }
+        if (!current || dirty & 1) {
+          set_style(div, "top", ctx2[0][1] + "px");
+        }
+        if (!current || dirty & 1) {
+          set_style(div, "left", ctx2[0][0] + "px");
+        }
+      },
+      i(local) {
+        if (current)
+          return;
+        transition_in(default_slot, local);
+        current = true;
+      },
+      o(local) {
+        transition_out(default_slot, local);
+        current = false;
+      },
+      d(detaching) {
+        if (detaching)
+          detach(div);
+        if (default_slot)
+          default_slot.d(detaching);
+      }
+    };
+  }
+  function create_fragment(ctx) {
+    let if_block_anchor;
+    let current;
+    let if_block = ctx[1] && create_if_block(ctx);
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
+        current = true;
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[1]) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+            if (dirty & 2) {
+              transition_in(if_block, 1);
+            }
+          } else {
+            if_block = create_if_block(ctx2);
+            if_block.c();
+            transition_in(if_block, 1);
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+          }
+        } else if (if_block) {
+          group_outros();
+          transition_out(if_block, 1, 1, () => {
+            if_block = null;
+          });
+          check_outros();
+        }
+      },
+      i(local) {
+        if (current)
+          return;
+        transition_in(if_block);
+        current = true;
+      },
+      o(local) {
+        transition_out(if_block);
+        current = false;
+      },
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(if_block_anchor);
+      }
+    };
+  }
+  function setPos(p) {
+  }
+  function instance($$self, $$props, $$invalidate) {
+    let { $$slots: slots = {}, $$scope } = $$props;
+    let { pos = [0, 0] } = $$props;
+    let visible = false;
+    function toggle() {
+      $$invalidate(1, visible = !visible);
+    }
+    $$self.$$set = ($$props2) => {
+      if ("pos" in $$props2)
+        $$invalidate(0, pos = $$props2.pos);
+      if ("$$scope" in $$props2)
+        $$invalidate(4, $$scope = $$props2.$$scope);
+    };
+    return [pos, visible, toggle, setPos, $$scope, slots];
+  }
+  var Dialog = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance, create_fragment, safe_not_equal, { pos: 0, toggle: 2, setPos: 3 }, add_css);
+    }
+    get pos() {
+      return this.$$.ctx[0];
+    }
+    set pos(pos) {
+      this.$$set({ pos });
+      flush();
+    }
+    get toggle() {
+      return this.$$.ctx[2];
+    }
+    get setPos() {
+      return setPos;
+    }
+  };
+  var Dialog_default = Dialog;
+
+  // src/Tag.svelte
+  init_esbuild_inject();
+  function add_css2(target) {
+    append_styles(target, "svelte-gsq99c", ".tag.svelte-gsq99c.svelte-gsq99c{padding:5px;border:1px solid;border-radius:55px;cursor:pointer;display:inline-flex}.tag.toggled.svelte-gsq99c.svelte-gsq99c{background-color:rgb(213, 255, 212)}span.tag.svelte-gsq99c>span.svelte-gsq99c{margin-left:5px;border-left:1px solid;padding-left:5px}.tag.toggled.svelte-gsq99c.svelte-gsq99c:hover{color:white;background-color:rgb(255 156 156 / 80%);color:white}.tag.svelte-gsq99c.svelte-gsq99c:not(.toggled):hover{color:white;background-color:rgb(213, 255, 212);color:white}");
+  }
+  function create_if_block2(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        span = element("span");
+        span.textContent = "x";
+        attr(span, "class", "svelte-gsq99c");
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[4]);
+          mounted = true;
+        }
+      },
+      p: noop,
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function create_fragment2(ctx) {
+    let span;
+    let t0;
+    let t1;
+    let mounted;
+    let dispose;
+    let if_block = ctx[1] && create_if_block2(ctx);
+    return {
+      c() {
+        span = element("span");
+        t0 = text(ctx[0]);
+        t1 = space();
+        if (if_block)
+          if_block.c();
+        attr(span, "class", "tag svelte-gsq99c");
+        toggle_class(span, "toggle", ctx[1]);
+        toggle_class(span, "toggled", ctx[1] && ctx[2]);
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        append(span, t0);
+        append(span, t1);
+        if (if_block)
+          if_block.m(span, null);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[5]);
+          mounted = true;
+        }
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & 1)
+          set_data(t0, ctx2[0]);
+        if (ctx2[1]) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block2(ctx2);
+            if_block.c();
+            if_block.m(span, null);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+        if (dirty & 2) {
+          toggle_class(span, "toggle", ctx2[1]);
+        }
+        if (dirty & 6) {
+          toggle_class(span, "toggled", ctx2[1] && ctx2[2]);
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        if (if_block)
+          if_block.d();
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function instance2($$self, $$props, $$invalidate) {
+    let { tag } = $$props;
+    let { toggleable = false } = $$props;
+    let { toggled = false } = $$props;
+    const dispatch = createEventDispatcher();
+    const click_handler2 = (e) => (e.preventDefault(), dispatch("remove"));
+    const click_handler_1 = () => dispatch("toggle");
+    $$self.$$set = ($$props2) => {
+      if ("tag" in $$props2)
+        $$invalidate(0, tag = $$props2.tag);
+      if ("toggleable" in $$props2)
+        $$invalidate(1, toggleable = $$props2.toggleable);
+      if ("toggled" in $$props2)
+        $$invalidate(2, toggled = $$props2.toggled);
+    };
+    return [tag, toggleable, toggled, dispatch, click_handler2, click_handler_1];
+  }
+  var Tag = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance2, create_fragment2, safe_not_equal, { tag: 0, toggleable: 1, toggled: 2 }, add_css2);
+    }
+    get tag() {
+      return this.$$.ctx[0];
+    }
+    set tag(tag) {
+      this.$$set({ tag });
+      flush();
+    }
+    get toggleable() {
+      return this.$$.ctx[1];
+    }
+    set toggleable(toggleable) {
+      this.$$set({ toggleable });
+      flush();
+    }
+    get toggled() {
+      return this.$$.ctx[2];
+    }
+    set toggled(toggled) {
+      this.$$set({ toggled });
+      flush();
+    }
+  };
+  var Tag_default = Tag;
+
+  // src/App.svelte
+  function add_css3(target) {
+    append_styles(target, "svelte-1ag7hmv", ".tagcont.svelte-1ag7hmv.svelte-1ag7hmv{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}.enabled.svelte-1ag7hmv.svelte-1ag7hmv{display:block}.disabled.svelte-1ag7hmv.svelte-1ag7hmv{display:none}.content.svelte-1ag7hmv.svelte-1ag7hmv{display:flex;flex-direction:column}hr.svelte-1ag7hmv.svelte-1ag7hmv{width:100%}h1.svelte-1ag7hmv.svelte-1ag7hmv{text-align:center}.form.svelte-1ag7hmv.svelte-1ag7hmv{display:flex;flex-direction:column;gap:20px;position:absolute;padding:15px;border:1px solid white;background-color:inherit;border-radius:10px}.form.svelte-1ag7hmv>label.svelte-1ag7hmv{display:flex;flex-direction:column;gap:10px}.backpanel.svelte-1ag7hmv.svelte-1ag7hmv{position:absolute;right:32px;padding:10px;width:15%;top:32px;border:1px solid;border-radius:5px;background-color:rgba(0, 0, 0, 0.2);pointer-events:all;backdrop-filter:blur(9px);max-height:80vh;min-width:321px}");
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[22] = list[i];
-    child_ctx[24] = i;
+    child_ctx[31] = list[i];
+    child_ctx[33] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[22] = list[i];
-    child_ctx[24] = i;
+    child_ctx[34] = list[i];
+    child_ctx[33] = i;
     return child_ctx;
   }
-  function create_if_block(ctx) {
+  function create_if_block3(ctx) {
     let h30;
     let t1;
-    let select0;
-    let select0_size_value;
+    let div0;
     let t2;
-    let button0;
+    let button;
     let t4;
-    let hr;
+    let dialog;
     let t5;
+    let hr;
+    let t6;
     let h31;
-    let t7;
-    let select1;
-    let select1_size_value;
     let t8;
-    let button1;
-    let t10;
+    let div1;
+    let t9;
     let input;
+    let current;
     let mounted;
     let dispose;
-    let each_value_1 = ctx[4];
+    let each_value_1 = ctx[3].rsources;
     let each_blocks_1 = [];
     for (let i = 0; i < each_value_1.length; i += 1) {
       each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     }
+    const out = (i) => transition_out(each_blocks_1[i], 1, 1, () => {
+      each_blocks_1[i] = null;
+    });
+    let dialog_props = {
+      $$slots: { default: [create_default_slot] },
+      $$scope: { ctx }
+    };
+    dialog = new Dialog_default({ props: dialog_props });
+    ctx[27](dialog);
     let each_value = ctx[3].blacklist;
     let each_blocks = [];
     for (let i = 0; i < each_value.length; i += 1) {
       each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     }
+    const out_1 = (i) => transition_out(each_blocks[i], 1, 1, () => {
+      each_blocks[i] = null;
+    });
     return {
       c() {
         h30 = element("h3");
         h30.textContent = "Booru sources";
         t1 = space();
-        select0 = element("select");
+        div0 = element("div");
         for (let i = 0; i < each_blocks_1.length; i += 1) {
           each_blocks_1[i].c();
         }
         t2 = space();
-        button0 = element("button");
-        button0.textContent = "Toggle sources";
+        button = element("button");
+        button.textContent = "Add a source";
         t4 = space();
-        hr = element("hr");
+        create_component(dialog.$$.fragment);
         t5 = space();
+        hr = element("hr");
+        t6 = space();
         h31 = element("h3");
         h31.textContent = "Blacklisted tags";
-        t7 = space();
-        select1 = element("select");
+        t8 = space();
+        div1 = element("div");
         for (let i = 0; i < each_blocks.length; i += 1) {
           each_blocks[i].c();
         }
-        t8 = space();
-        button1 = element("button");
-        button1.textContent = "Remove";
-        t10 = space();
+        t9 = space();
         input = element("input");
-        select0.multiple = true;
-        attr(select0, "size", select0_size_value = ctx[4].length);
-        attr(select0, "class", "svelte-gdh57y");
-        attr(hr, "class", "svelte-gdh57y");
-        select1.multiple = true;
-        attr(select1, "size", select1_size_value = ctx[4].length);
-        attr(select1, "class", "svelte-gdh57y");
+        attr(div0, "class", "tagcont svelte-1ag7hmv");
+        attr(hr, "class", "svelte-1ag7hmv");
+        attr(div1, "class", "tagcont svelte-1ag7hmv");
         attr(input, "placeholder", "Press enter after typing your tag");
       },
       m(target, anchor) {
         insert(target, h30, anchor);
         insert(target, t1, anchor);
-        insert(target, select0, anchor);
+        insert(target, div0, anchor);
         for (let i = 0; i < each_blocks_1.length; i += 1) {
-          each_blocks_1[i].m(select0, null);
+          each_blocks_1[i].m(div0, null);
         }
-        ctx[18](select0);
         insert(target, t2, anchor);
-        insert(target, button0, anchor);
+        insert(target, button, anchor);
         insert(target, t4, anchor);
-        insert(target, hr, anchor);
+        mount_component(dialog, target, anchor);
         insert(target, t5, anchor);
+        insert(target, hr, anchor);
+        insert(target, t6, anchor);
         insert(target, h31, anchor);
-        insert(target, t7, anchor);
-        insert(target, select1, anchor);
-        for (let i = 0; i < each_blocks.length; i += 1) {
-          each_blocks[i].m(select1, null);
-        }
-        ctx[19](select1);
         insert(target, t8, anchor);
-        insert(target, button1, anchor);
-        insert(target, t10, anchor);
+        insert(target, div1, anchor);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].m(div1, null);
+        }
+        insert(target, t9, anchor);
         insert(target, input, anchor);
+        current = true;
         if (!mounted) {
           dispose = [
-            listen(button0, "click", ctx[5]),
-            listen(button1, "click", ctx[6]),
-            listen(input, "keydown", ctx[20])
+            listen(button, "click", ctx[22]),
+            listen(input, "keydown", ctx[29])
           ];
           mounted = true;
         }
       },
       p(ctx2, dirty) {
-        if (dirty & 24) {
-          each_value_1 = ctx2[4];
+        if (dirty[0] & 200) {
+          each_value_1 = ctx2[3].rsources;
           let i;
           for (i = 0; i < each_value_1.length; i += 1) {
             const child_ctx = get_each_context_1(ctx2, each_value_1, i);
             if (each_blocks_1[i]) {
               each_blocks_1[i].p(child_ctx, dirty);
+              transition_in(each_blocks_1[i], 1);
             } else {
               each_blocks_1[i] = create_each_block_1(child_ctx);
               each_blocks_1[i].c();
-              each_blocks_1[i].m(select0, null);
+              transition_in(each_blocks_1[i], 1);
+              each_blocks_1[i].m(div0, null);
             }
           }
-          for (; i < each_blocks_1.length; i += 1) {
-            each_blocks_1[i].d(1);
+          group_outros();
+          for (i = each_value_1.length; i < each_blocks_1.length; i += 1) {
+            out(i);
           }
-          each_blocks_1.length = each_value_1.length;
+          check_outros();
         }
-        if (dirty & 8) {
+        const dialog_changes = {};
+        if (dirty[0] & 1 | dirty[1] & 32) {
+          dialog_changes.$$scope = { dirty, ctx: ctx2 };
+        }
+        dialog.$set(dialog_changes);
+        if (dirty[0] & 40) {
           each_value = ctx2[3].blacklist;
           let i;
           for (i = 0; i < each_value.length; i += 1) {
             const child_ctx = get_each_context(ctx2, each_value, i);
             if (each_blocks[i]) {
               each_blocks[i].p(child_ctx, dirty);
+              transition_in(each_blocks[i], 1);
             } else {
               each_blocks[i] = create_each_block(child_ctx);
               each_blocks[i].c();
-              each_blocks[i].m(select1, null);
+              transition_in(each_blocks[i], 1);
+              each_blocks[i].m(div1, null);
             }
           }
-          for (; i < each_blocks.length; i += 1) {
-            each_blocks[i].d(1);
+          group_outros();
+          for (i = each_value.length; i < each_blocks.length; i += 1) {
+            out_1(i);
           }
-          each_blocks.length = each_value.length;
+          check_outros();
         }
+      },
+      i(local) {
+        if (current)
+          return;
+        for (let i = 0; i < each_value_1.length; i += 1) {
+          transition_in(each_blocks_1[i]);
+        }
+        transition_in(dialog.$$.fragment, local);
+        for (let i = 0; i < each_value.length; i += 1) {
+          transition_in(each_blocks[i]);
+        }
+        current = true;
+      },
+      o(local) {
+        each_blocks_1 = each_blocks_1.filter(Boolean);
+        for (let i = 0; i < each_blocks_1.length; i += 1) {
+          transition_out(each_blocks_1[i]);
+        }
+        transition_out(dialog.$$.fragment, local);
+        each_blocks = each_blocks.filter(Boolean);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          transition_out(each_blocks[i]);
+        }
+        current = false;
       },
       d(detaching) {
         if (detaching)
@@ -11707,33 +12053,31 @@
         if (detaching)
           detach(t1);
         if (detaching)
-          detach(select0);
+          detach(div0);
         destroy_each(each_blocks_1, detaching);
-        ctx[18](null);
         if (detaching)
           detach(t2);
         if (detaching)
-          detach(button0);
+          detach(button);
         if (detaching)
           detach(t4);
-        if (detaching)
-          detach(hr);
+        ctx[27](null);
+        destroy_component(dialog, detaching);
         if (detaching)
           detach(t5);
         if (detaching)
+          detach(hr);
+        if (detaching)
+          detach(t6);
+        if (detaching)
           detach(h31);
-        if (detaching)
-          detach(t7);
-        if (detaching)
-          detach(select1);
-        destroy_each(each_blocks, detaching);
-        ctx[19](null);
         if (detaching)
           detach(t8);
         if (detaching)
-          detach(button1);
+          detach(div1);
+        destroy_each(each_blocks, detaching);
         if (detaching)
-          detach(t10);
+          detach(t9);
         if (detaching)
           detach(input);
         mounted = false;
@@ -11742,65 +12086,209 @@
     };
   }
   function create_each_block_1(ctx) {
-    let option;
-    let t_value = ctx[22] + "";
-    let t;
-    let option_value_value;
+    let tag;
+    let current;
+    function func(...args) {
+      return ctx[19](ctx[34], ...args);
+    }
+    function remove_handler() {
+      return ctx[20](ctx[34]);
+    }
+    function toggle_handler() {
+      return ctx[21](ctx[34]);
+    }
+    tag = new Tag_default({
+      props: {
+        tag: ctx[34].name,
+        toggleable: true,
+        toggled: !ctx[3].rsources.find(func)?.disabled
+      }
+    });
+    tag.$on("remove", remove_handler);
+    tag.$on("toggle", toggle_handler);
     return {
       c() {
-        option = element("option");
-        t = text(t_value);
-        attr(option, "class", "sourcedi svelte-gdh57y");
-        option.__value = option_value_value = ctx[22];
-        option.value = option.__value;
-        toggle_class(option, "sourceen", ctx[3].sources.includes(ctx[22]));
+        create_component(tag.$$.fragment);
       },
       m(target, anchor) {
-        insert(target, option, anchor);
-        append(option, t);
+        mount_component(tag, target, anchor);
+        current = true;
+      },
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
+        const tag_changes = {};
+        if (dirty[0] & 8)
+          tag_changes.tag = ctx[34].name;
+        if (dirty[0] & 8)
+          tag_changes.toggled = !ctx[3].rsources.find(func)?.disabled;
+        tag.$set(tag_changes);
+      },
+      i(local) {
+        if (current)
+          return;
+        transition_in(tag.$$.fragment, local);
+        current = true;
+      },
+      o(local) {
+        transition_out(tag.$$.fragment, local);
+        current = false;
+      },
+      d(detaching) {
+        destroy_component(tag, detaching);
+      }
+    };
+  }
+  function create_default_slot(ctx) {
+    let div;
+    let label0;
+    let t0;
+    let input0;
+    let t1;
+    let label1;
+    let t2;
+    let input1;
+    let t3;
+    let label2;
+    let t4;
+    let input2;
+    let t5;
+    let label3;
+    let t6;
+    let input3;
+    let t7;
+    let button;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        div = element("div");
+        label0 = element("label");
+        t0 = text("Name\n            ");
+        input0 = element("input");
+        t1 = space();
+        label1 = element("label");
+        t2 = text("Domain\n            ");
+        input1 = element("input");
+        t3 = space();
+        label2 = element("label");
+        t4 = text("API Endpoint\n            ");
+        input2 = element("input");
+        t5 = space();
+        label3 = element("label");
+        t6 = text("Post page prefix (for sources)\n            ");
+        input3 = element("input");
+        t7 = space();
+        button = element("button");
+        button.textContent = "Add";
+        attr(input0, "type", "text");
+        attr(input0, "placeholder", "Gelbooru");
+        attr(label0, "class", "svelte-1ag7hmv");
+        attr(input1, "type", "text");
+        attr(input1, "placeholder", "gelbooru.com");
+        attr(label1, "class", "svelte-1ag7hmv");
+        attr(input2, "type", "text");
+        attr(input2, "placeholder", "/post.json?tags=md5:");
+        attr(label2, "class", "svelte-1ag7hmv");
+        attr(input3, "type", "text");
+        attr(input3, "placeholder", "https://yande.re/post/show/");
+        attr(label3, "class", "svelte-1ag7hmv");
+        attr(div, "class", "form svelte-1ag7hmv");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+        append(div, label0);
+        append(label0, t0);
+        append(label0, input0);
+        set_input_value(input0, ctx[0].name);
+        append(div, t1);
+        append(div, label1);
+        append(label1, t2);
+        append(label1, input1);
+        set_input_value(input1, ctx[0].domain);
+        append(div, t3);
+        append(div, label2);
+        append(label2, t4);
+        append(label2, input2);
+        set_input_value(input2, ctx[0].endpoint);
+        append(div, t5);
+        append(div, label3);
+        append(label3, t6);
+        append(label3, input3);
+        set_input_value(input3, ctx[0].view);
+        append(div, t7);
+        append(div, button);
+        if (!mounted) {
+          dispose = [
+            listen(input0, "input", ctx[23]),
+            listen(input1, "input", ctx[24]),
+            listen(input2, "input", ctx[25]),
+            listen(input3, "input", ctx[26]),
+            listen(button, "click", ctx[4])
+          ];
+          mounted = true;
+        }
       },
       p(ctx2, dirty) {
-        if (dirty & 24) {
-          toggle_class(option, "sourceen", ctx2[3].sources.includes(ctx2[22]));
+        if (dirty[0] & 1 && input0.value !== ctx2[0].name) {
+          set_input_value(input0, ctx2[0].name);
+        }
+        if (dirty[0] & 1 && input1.value !== ctx2[0].domain) {
+          set_input_value(input1, ctx2[0].domain);
+        }
+        if (dirty[0] & 1 && input2.value !== ctx2[0].endpoint) {
+          set_input_value(input2, ctx2[0].endpoint);
+        }
+        if (dirty[0] & 1 && input3.value !== ctx2[0].view) {
+          set_input_value(input3, ctx2[0].view);
         }
       },
       d(detaching) {
         if (detaching)
-          detach(option);
+          detach(div);
+        mounted = false;
+        run_all(dispose);
       }
     };
   }
   function create_each_block(ctx) {
-    let option;
-    let t_value = ctx[22] + "";
-    let t;
-    let option_value_value;
+    let tag;
+    let current;
+    function toggle_handler_1() {
+      return ctx[28](ctx[31]);
+    }
+    tag = new Tag_default({ props: { tag: ctx[31] } });
+    tag.$on("toggle", toggle_handler_1);
     return {
       c() {
-        option = element("option");
-        t = text(t_value);
-        option.__value = option_value_value = ctx[22];
-        option.value = option.__value;
+        create_component(tag.$$.fragment);
       },
       m(target, anchor) {
-        insert(target, option, anchor);
-        append(option, t);
+        mount_component(tag, target, anchor);
+        current = true;
       },
-      p(ctx2, dirty) {
-        if (dirty & 8 && t_value !== (t_value = ctx2[22] + ""))
-          set_data(t, t_value);
-        if (dirty & 8 && option_value_value !== (option_value_value = ctx2[22])) {
-          option.__value = option_value_value;
-          option.value = option.__value;
-        }
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
+        const tag_changes = {};
+        if (dirty[0] & 8)
+          tag_changes.tag = ctx[31];
+        tag.$set(tag_changes);
+      },
+      i(local) {
+        if (current)
+          return;
+        transition_in(tag.$$.fragment, local);
+        current = true;
+      },
+      o(local) {
+        transition_out(tag.$$.fragment, local);
+        current = false;
       },
       d(detaching) {
-        if (detaching)
-          detach(option);
+        destroy_component(tag, detaching);
       }
     };
   }
-  function create_fragment(ctx) {
+  function create_fragment3(ctx) {
     let div1;
     let div0;
     let h1;
@@ -11852,9 +12340,10 @@
     let input10;
     let t24;
     let t25;
+    let current;
     let mounted;
     let dispose;
-    let if_block = !ctx[3].te && create_if_block(ctx);
+    let if_block = !ctx[3].te && create_if_block3(ctx);
     return {
       c() {
         div1 = element("div");
@@ -11912,8 +12401,8 @@
         t25 = space();
         if (if_block)
           if_block.c();
-        attr(h1, "class", "svelte-gdh57y");
-        attr(hr, "class", "svelte-gdh57y");
+        attr(h1, "class", "svelte-1ag7hmv");
+        attr(hr, "class", "svelte-1ag7hmv");
         attr(input0, "type", "checkbox");
         attr(input1, "type", "checkbox");
         attr(input2, "type", "checkbox");
@@ -11926,10 +12415,10 @@
         attr(input9, "type", "checkbox");
         attr(a, "title", "You might still want to enable 'preload external files'");
         attr(input10, "type", "checkbox");
-        attr(div0, "class", "content svelte-gdh57y");
-        attr(div1, "class", "backpanel svelte-gdh57y");
-        toggle_class(div1, "enabled", ctx[0]);
-        toggle_class(div1, "disabled", !ctx[0]);
+        attr(div0, "class", "content svelte-1ag7hmv");
+        attr(div1, "class", "backpanel svelte-1ag7hmv");
+        toggle_class(div1, "enabled", ctx[2]);
+        toggle_class(div1, "disabled", !ctx[2]);
       },
       m(target, anchor) {
         insert(target, div1, anchor);
@@ -11996,78 +12485,94 @@
         append(div0, t25);
         if (if_block)
           if_block.m(div0, null);
+        current = true;
         if (!mounted) {
           dispose = [
-            listen(input0, "change", ctx[7]),
-            listen(input1, "change", ctx[8]),
-            listen(input2, "change", ctx[9]),
-            listen(input3, "change", ctx[10]),
-            listen(input4, "change", ctx[11]),
-            listen(input5, "change", ctx[12]),
-            listen(input6, "change", ctx[13]),
-            listen(input7, "change", ctx[14]),
-            listen(input8, "change", ctx[15]),
-            listen(input9, "change", ctx[16]),
-            listen(input10, "change", ctx[17])
+            listen(input0, "change", ctx[8]),
+            listen(input1, "change", ctx[9]),
+            listen(input2, "change", ctx[10]),
+            listen(input3, "change", ctx[11]),
+            listen(input4, "change", ctx[12]),
+            listen(input5, "change", ctx[13]),
+            listen(input6, "change", ctx[14]),
+            listen(input7, "change", ctx[15]),
+            listen(input8, "change", ctx[16]),
+            listen(input9, "change", ctx[17]),
+            listen(input10, "change", ctx[18])
           ];
           mounted = true;
         }
       },
-      p(ctx2, [dirty]) {
-        if (dirty & 8) {
+      p(ctx2, dirty) {
+        if (dirty[0] & 8) {
           input0.checked = ctx2[3].xpi;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input1.checked = ctx2[3].xpv;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input2.checked = ctx2[3].loop;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input3.checked = ctx2[3].dh;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input4.checked = ctx2[3].eye;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input5.checked = ctx2[3].pre;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input6.checked = ctx2[3].prev;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input7.checked = ctx2[3].ca;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input8.checked = ctx2[3].sh;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input9.checked = ctx2[3].ep;
         }
-        if (dirty & 8) {
+        if (dirty[0] & 8) {
           input10.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block) {
             if_block.p(ctx2, dirty);
+            if (dirty[0] & 8) {
+              transition_in(if_block, 1);
+            }
           } else {
-            if_block = create_if_block(ctx2);
+            if_block = create_if_block3(ctx2);
             if_block.c();
+            transition_in(if_block, 1);
             if_block.m(div0, null);
           }
         } else if (if_block) {
-          if_block.d(1);
-          if_block = null;
+          group_outros();
+          transition_out(if_block, 1, 1, () => {
+            if_block = null;
+          });
+          check_outros();
         }
-        if (dirty & 1) {
-          toggle_class(div1, "enabled", ctx2[0]);
+        if (dirty[0] & 4) {
+          toggle_class(div1, "enabled", ctx2[2]);
         }
-        if (dirty & 1) {
-          toggle_class(div1, "disabled", !ctx2[0]);
+        if (dirty[0] & 4) {
+          toggle_class(div1, "disabled", !ctx2[2]);
         }
       },
-      i: noop,
-      o: noop,
+      i(local) {
+        if (current)
+          return;
+        transition_in(if_block);
+        current = true;
+      },
+      o(local) {
+        transition_out(if_block);
+        current = false;
+      },
       d(detaching) {
         if (detaching)
           detach(div1);
@@ -12078,47 +12583,40 @@
       }
     };
   }
-  function instance($$self, $$props, $$invalidate) {
+  function instance3($$self, $$props, $$invalidate) {
     let $settings;
     component_subscribe($$self, settings, ($$value) => $$invalidate(3, $settings = $$value));
+    let newbooru = {};
+    let dial;
+    function appendBooru() {
+      set_store_value(settings, $settings.rsources = [...$settings.rsources, newbooru], $settings);
+      dial.toggle();
+      $$invalidate(0, newbooru = {});
+    }
     let visible = false;
     let penisEvent = () => {
       console.log("bepis");
-      $$invalidate(0, visible = !visible);
+      $$invalidate(2, visible = !visible);
     };
     document.addEventListener("penis", penisEvent);
     console.log("app loaded");
-    let sources2 = [
-      "gelbooru.com",
-      "yande.re",
-      "capi-v2.sankakucomplex.com",
-      "api.rule34.xxx",
-      "danbooru.donmai.us",
-      "lolibooru.moe",
-      "booru.allthefallen.moe"
-    ];
-    let selectobj;
-    let selectobj2;
-    function toggleSelection() {
-      for (let i = 0; i < selectobj.selectedOptions.length; ++i) {
-        let item = selectobj.selectedOptions.item(i);
-        if (!item)
-          continue;
-        if ($settings.sources.includes(item.value))
-          set_store_value(settings, $settings.sources = $settings.sources.filter((e) => e != item.value), $settings);
-        else
-          set_store_value(settings, $settings.sources = [...$settings.sources, item.value], $settings);
-      }
+    function removeTag(t) {
+      set_store_value(settings, $settings.blacklist = $settings.blacklist.filter((e) => e != t), $settings);
     }
-    function removeSelection() {
-      let s = /* @__PURE__ */ new Set();
-      for (let i = 0; i < selectobj2.selectedOptions.length; ++i) {
-        let obj = selectobj2.selectedOptions.item(i);
-        if (!obj)
-          continue;
-        s.add(obj.value);
-        set_store_value(settings, $settings.blacklist = $settings.blacklist.filter((e) => !s.has(e)), $settings);
-      }
+    function removeBooru(t) {
+      const idx = $settings.rsources.findIndex((e) => e.domain == t);
+      const rep = prompt("You DO know what you're doing, right? (type 'y')");
+      if (!rep || rep != "y")
+        return;
+      if (idx >= 0)
+        $settings.rsources.splice(idx, 1);
+      settings.set($settings);
+    }
+    function toggleBooru(t) {
+      const elem = $settings.rsources.find((e) => e.domain == t);
+      if (elem)
+        elem.disabled = !elem.disabled;
+      settings.set($settings);
     }
     onDestroy(() => {
       document.removeEventListener("penis", penisEvent);
@@ -12167,19 +12665,36 @@
       $settings.te = this.checked;
       settings.set($settings);
     }
-    function select0_binding($$value) {
+    const func = (source, e) => e.domain == source.domain;
+    const remove_handler = (source) => removeBooru(source.domain);
+    const toggle_handler = (source) => toggleBooru(source.domain);
+    const click_handler2 = (ev) => {
+      dial.setPos([ev.clientX, ev.clientY]);
+      dial.toggle();
+    };
+    function input0_input_handler() {
+      newbooru.name = this.value;
+      $$invalidate(0, newbooru);
+    }
+    function input1_input_handler() {
+      newbooru.domain = this.value;
+      $$invalidate(0, newbooru);
+    }
+    function input2_input_handler() {
+      newbooru.endpoint = this.value;
+      $$invalidate(0, newbooru);
+    }
+    function input3_input_handler() {
+      newbooru.view = this.value;
+      $$invalidate(0, newbooru);
+    }
+    function dialog_binding($$value) {
       binding_callbacks[$$value ? "unshift" : "push"](() => {
-        selectobj = $$value;
-        $$invalidate(1, selectobj);
-        $$invalidate(4, sources2);
+        dial = $$value;
+        $$invalidate(1, dial);
       });
     }
-    function select1_binding($$value) {
-      binding_callbacks[$$value ? "unshift" : "push"](() => {
-        selectobj2 = $$value;
-        $$invalidate(2, selectobj2);
-      });
-    }
+    const toggle_handler_1 = (tag) => removeTag(tag);
     const keydown_handler = (ev) => {
       if (ev.key == "Enter") {
         set_store_value(settings, $settings.blacklist = [...$settings.blacklist, ev.currentTarget.value], $settings);
@@ -12187,13 +12702,14 @@
       }
     };
     return [
+      newbooru,
+      dial,
       visible,
-      selectobj,
-      selectobj2,
       $settings,
-      sources2,
-      toggleSelection,
-      removeSelection,
+      appendBooru,
+      removeTag,
+      removeBooru,
+      toggleBooru,
       input0_change_handler,
       input1_change_handler,
       input2_change_handler,
@@ -12205,15 +12721,23 @@
       input8_change_handler,
       input9_change_handler,
       input10_change_handler,
-      select0_binding,
-      select1_binding,
+      func,
+      remove_handler,
+      toggle_handler,
+      click_handler2,
+      input0_input_handler,
+      input1_input_handler,
+      input2_input_handler,
+      input3_input_handler,
+      dialog_binding,
+      toggle_handler_1,
       keydown_handler
     ];
   }
   var App = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance, create_fragment, safe_not_equal, {}, add_css);
+      init(this, options, instance3, create_fragment3, safe_not_equal, {}, add_css3, [-1, -1]);
     }
   };
   var App_default = App;
@@ -14053,7 +14577,7 @@
   var supportedMimeTypes = new Set(mimeTypes);
 
   // src/ScrollHighlighter.svelte
-  function add_css2(target) {
+  function add_css4(target) {
     append_styles(target, "svelte-ausv8u", ".hint.svelte-ausv8u.svelte-ausv8u{background-color:rgb(222 222 222 / 80%);z-index:-1;pointer-events:none}.scroll-container.svelte-ausv8u.svelte-ausv8u{position:fixed;height:100%;width:12px;top:0;right:0;z-index:1000}.scroll-container.svelte-ausv8u span.svelte-ausv8u{position:absolute;right:0;width:33%;cursor:pointer;transition:width 200ms}.scroll-container.svelte-ausv8u:hover span.svelte-ausv8u{width:100%}");
   }
   function get_each_context2(ctx, list, i) {
@@ -14062,7 +14586,7 @@
     child_ctx[16] = i;
     return child_ctx;
   }
-  function create_if_block2(ctx) {
+  function create_if_block4(ctx) {
     let div;
     let t;
     let span;
@@ -14161,9 +14685,9 @@
       }
     };
   }
-  function create_fragment2(ctx) {
+  function create_fragment4(ctx) {
     let if_block_anchor;
-    let if_block = ctx[3].sh && create_if_block2(ctx);
+    let if_block = ctx[3].sh && create_if_block4(ctx);
     return {
       c() {
         if (if_block)
@@ -14180,7 +14704,7 @@
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
-            if_block = create_if_block2(ctx2);
+            if_block = create_if_block4(ctx2);
             if_block.c();
             if_block.m(if_block_anchor.parentNode, if_block_anchor);
           }
@@ -14209,7 +14733,7 @@
     }
     return { top: _y, left: _x };
   }
-  function instance2($$self, $$props, $$invalidate) {
+  function instance4($$self, $$props, $$invalidate) {
     let $appState;
     let $settings;
     component_subscribe($$self, appState, ($$value) => $$invalidate(2, $appState = $$value));
@@ -14281,17 +14805,17 @@
   var ScrollHighlighter = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance2, create_fragment2, safe_not_equal, {}, add_css2);
+      init(this, options, instance4, create_fragment4, safe_not_equal, {}, add_css4);
     }
   };
   var ScrollHighlighter_default = ScrollHighlighter;
 
   // src/SettingsButton.svelte
   init_esbuild_inject();
-  function add_css3(target) {
+  function add_css5(target) {
     append_styles(target, "svelte-55kf6x", ".glow.svelte-55kf6x{text-shadow:0 0 4px red}.clickable.svelte-55kf6x{cursor:pointer}.clickable.svelte-55kf6x:hover{text-shadow:0 0 4px palevioletred}");
   }
-  function create_fragment3(ctx) {
+  function create_fragment5(ctx) {
     let span;
     let mounted;
     let dispose;
@@ -14324,7 +14848,7 @@
       }
     };
   }
-  function instance3($$self, $$props, $$invalidate) {
+  function instance5($$self, $$props, $$invalidate) {
     "use strict";
     let visible = false;
     function opensettings() {
@@ -14337,7 +14861,7 @@
   var SettingsButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance3, create_fragment3, safe_not_equal, {}, add_css3);
+      init(this, options, instance5, create_fragment5, safe_not_equal, {}, add_css5);
     }
   };
   var SettingsButton_default = SettingsButton;
@@ -14347,10 +14871,10 @@
 
   // src/Embedding.svelte
   init_esbuild_inject();
-  function add_css4(target) {
+  function add_css6(target) {
     append_styles(target, "svelte-yvh28x", ".place.svelte-yvh28x.svelte-yvh28x{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-yvh28x>img.svelte-yvh28x{filter:brightness(0.5) blur(10px)}.progress.svelte-yvh28x.svelte-yvh28x{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-yvh28x.svelte-yvh28x{display:none;position:fixed;pointer-events:none}.visible.svelte-yvh28x.svelte-yvh28x{display:block;z-index:9}.contract.svelte-yvh28x img.svelte-yvh28x,.contract.svelte-yvh28x video.svelte-yvh28x{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-yvh28x:not(.contract) video.svelte-yvh28x,.place.svelte-yvh28x:not(.contract) img.svelte-yvh28x,.hoverer.svelte-yvh28x>video.svelte-yvh28x,.hoverer.svelte-yvh28x>img.svelte-yvh28x{max-width:100vw;max-height:100vh}");
   }
-  function create_if_block3(ctx) {
+  function create_if_block5(ctx) {
     let div0;
     let t0;
     let t1;
@@ -14745,9 +15269,9 @@
       }
     };
   }
-  function create_fragment4(ctx) {
+  function create_fragment6(ctx) {
     let if_block_anchor;
-    let if_block = (!ctx[18].eye || ctx[15]) && create_if_block3(ctx);
+    let if_block = (!ctx[18].eye || ctx[15]) && create_if_block5(ctx);
     return {
       c() {
         if (if_block)
@@ -14764,7 +15288,7 @@
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
-            if_block = create_if_block3(ctx2);
+            if_block = create_if_block5(ctx2);
             if_block.c();
             if_block.m(if_block_anchor.parentNode, if_block_anchor);
           }
@@ -14788,7 +15312,7 @@
   }
   var click_handler = (e) => e.preventDefault();
   var auxclick_handler = (e) => e.preventDefault();
-  function instance4($$self, $$props, $$invalidate) {
+  function instance6($$self, $$props, $$invalidate) {
     let $settings;
     let $appState;
     component_subscribe($$self, settings, ($$value) => $$invalidate(18, $settings = $$value));
@@ -15084,14 +15608,14 @@
   var Embedding = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance4, create_fragment4, safe_not_equal, {
+      init(this, options, instance6, create_fragment6, safe_not_equal, {
         dispatch: 23,
         file: 0,
         isNotChrome: 24,
         id: 25,
         isContracted: 26,
         bepis: 1
-      }, add_css4, [-1, -1]);
+      }, add_css6, [-1, -1]);
     }
     get dispatch() {
       return this.$$.ctx[23];
@@ -15176,7 +15700,7 @@
       }
     };
   }
-  function create_fragment5(ctx) {
+  function create_fragment7(ctx) {
     let each_1_anchor;
     let current;
     let each_value = ctx[0];
@@ -15246,7 +15770,7 @@
       }
     };
   }
-  function instance5($$self, $$props, $$invalidate) {
+  function instance7($$self, $$props, $$invalidate) {
     const dispatch = createEventDispatcher();
     let { files } = $$props;
     let { id = "" } = $$props;
@@ -15272,7 +15796,7 @@
   var Embeddings = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance5, create_fragment5, safe_not_equal, { dispatch: 3, files: 0, id: 1, bepis: 4 });
+      init(this, options, instance7, create_fragment7, safe_not_equal, { dispatch: 3, files: 0, id: 1, bepis: 4 });
     }
     get dispatch() {
       return this.$$.ctx[3];
@@ -15299,7 +15823,7 @@
 
   // src/EyeButton.svelte
   init_esbuild_inject();
-  function add_css5(target) {
+  function add_css7(target) {
     append_styles(target, "svelte-64lw6s", ".clickable.svelte-64lw6s{cursor:pointer;margin-left:5px}.clickable.svelte-64lw6s:hover{text-shadow:0 0 4px palevioletred}");
   }
   function get_each_context4(ctx, list, i) {
@@ -15398,7 +15922,7 @@
       }
     };
   }
-  function create_if_block4(ctx) {
+  function create_if_block6(ctx) {
     let a;
     let mounted;
     let dispose;
@@ -15439,7 +15963,7 @@
     }
     let if_block0 = ctx[11].source && create_if_block_22(ctx);
     let if_block1 = ctx[11].page && create_if_block_12(ctx);
-    let if_block2 = ctx[6] && ctx[2] && create_if_block4(ctx);
+    let if_block2 = ctx[6] && ctx[2] && create_if_block6(ctx);
     return {
       c() {
         span = element("span");
@@ -15506,7 +16030,7 @@
           if (if_block2) {
             if_block2.p(ctx, dirty);
           } else {
-            if_block2 = create_if_block4(ctx);
+            if_block2 = create_if_block6(ctx);
             if_block2.c();
             if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
           }
@@ -15537,7 +16061,7 @@
       }
     };
   }
-  function create_fragment6(ctx) {
+  function create_fragment8(ctx) {
     let t;
     let each_1_anchor;
     let if_block = ctx[4].eye && create_if_block_32(ctx);
@@ -15610,7 +16134,7 @@
       }
     };
   }
-  function instance6($$self, $$props, $$invalidate) {
+  function instance8($$self, $$props, $$invalidate) {
     let $settings;
     component_subscribe($$self, settings, ($$value) => $$invalidate(4, $settings = $$value));
     let { id = "" } = $$props;
@@ -15667,7 +16191,7 @@
   var EyeButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance6, create_fragment6, safe_not_equal, { id: 8, files: 0, inst: 1 }, add_css5);
+      init(this, options, instance8, create_fragment8, safe_not_equal, { id: 8, files: 0, inst: 1 }, add_css7);
     }
     get id() {
       return this.$$.ctx[8];

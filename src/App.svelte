@@ -1,7 +1,19 @@
 <script lang="ts">
   import { hasContext, onDestroy } from 'svelte'
+import Dialog from './Dialog.svelte';
 
   import { settings } from './stores'
+  import Tag from './Tag.svelte'
+import type { Booru } from './thirdeye';
+
+  let newbooru: Partial<Omit<Booru, 'quirks'> & {view: string}> = {};
+  let dial: Dialog;
+
+  function appendBooru() {
+    $settings.rsources = [...$settings.rsources, newbooru as any];
+    dial.toggle();
+    newbooru = {}
+  }
 
   let visible = false
   let penisEvent = () => {
@@ -11,39 +23,23 @@
   document.addEventListener('penis', penisEvent)
   console.log('app loaded')
 
-  let sources = [
-    'gelbooru.com',
-    'yande.re',
-    'capi-v2.sankakucomplex.com',
-    'api.rule34.xxx',
-    'danbooru.donmai.us',
-    'lolibooru.moe',
-    'booru.allthefallen.moe'
-  ]
-
-  let selectobj: HTMLSelectElement
-  let selectobj2: HTMLSelectElement
-
-  function toggleSelection() {
-    for (let i = 0; i < selectobj.selectedOptions.length; ++i) {
-      let item = selectobj.selectedOptions.item(i)
-      if (!item) continue
-      if ($settings.sources.includes(item.value))
-        $settings.sources = $settings.sources.filter(
-          (e: string) => e != item!.value,
-        )
-      else $settings.sources = [...$settings.sources, item.value]
-    }
+  function removeTag(t: string) {
+    $settings.blacklist = $settings.blacklist.filter((e: any) => e != t)
   }
 
-  function removeSelection() {
-    let s = new Set<string>();
-    for (let i = 0; i < selectobj2.selectedOptions.length; ++i) {
-      let obj = selectobj2.selectedOptions.item(i)
-      if (!obj) continue
-      s.add(obj.value)
-      $settings.blacklist = $settings.blacklist.filter((e: any) => !s.has(e))
-    }
+  function removeBooru(t: string) {
+    const idx = $settings.rsources.findIndex(e => e.domain == t)
+    const rep = prompt("You DO know what you're doing, right? (type 'y')")
+    if (!rep || rep != 'y') return
+    if (idx >= 0) $settings.rsources.splice(idx, 1)
+    $settings.rsources = $settings.rsources
+  }
+
+  function toggleBooru(t: string) {
+    const elem = $settings.rsources.find(e => e.domain == t)
+    if (elem)
+      elem.disabled = !elem.disabled;
+    $settings.rsources = $settings.rsources
   }
 
   onDestroy(() => {
@@ -94,7 +90,9 @@
     <label>
       <input type="checkbox" bind:checked={$settings.ep} />
       <!-- svelte-ignore a11y-missing-attribute -->
-      Turn off embedded file preloading<a title="You might still want to enable 'preload external files'">?</a>
+      Turn off embedded file preloading<a
+        title="You might still want to enable 'preload external files'">?</a
+      >
     </label>
     <label>
       <input type="checkbox" bind:checked={$settings.te} />
@@ -102,26 +100,71 @@
     </label>
     {#if !$settings.te}
       <h3>Booru sources</h3>
-      <select multiple bind:this={selectobj} size={sources.length}>
-        {#each sources as source, i}
-          <option
-            class="sourcedi"
-            class:sourceen={$settings.sources.includes(source)}
-            value={source}>{source}</option
-          >
+      <div class="tagcont">
+        {#each $settings.rsources as source, i}
+          <Tag
+            tag={source.name}
+            on:remove={() => removeBooru(source.domain)}
+            on:toggle={() => toggleBooru(source.domain)}
+            toggleable={true}
+            toggled={!$settings.rsources.find(e => e.domain == source.domain)
+              ?.disabled}
+          />
         {/each}
-      </select>
-      <button on:click={toggleSelection}>Toggle sources</button>
+      </div>
+      <button
+        on:click={ev => {
+          dial.setPos([ev.clientX, ev.clientY])
+          dial.toggle()
+        }}>Add a source</button
+      >
+      <Dialog bind:this={dial}>
+        <div class="form">
+          <label>
+            Name
+            <input
+              type="text"
+              placeholder="Gelbooru"
+              bind:value={newbooru.name}
+            />
+          </label>
+          <label>
+            Domain
+            <input
+              type="text"
+              placeholder="gelbooru.com"
+              bind:value={newbooru.domain}
+            />
+          </label>
+          <label>
+            API Endpoint
+            <input
+              type="text"
+              placeholder="/post.json?tags=md5:"
+              bind:value={newbooru.endpoint}
+            />
+          </label>
+          <label>
+            Post page prefix (for sources)
+            <input
+              type="text"
+              placeholder="https://yande.re/post/show/"
+              bind:value={newbooru.view}
+            />
+          </label>
+          <button on:click={appendBooru}>Add</button>
+        </div>
+      </Dialog>
+
       <hr />
       <h3>Blacklisted tags</h3>
-      <select multiple bind:this={selectobj2} size={sources.length}>
-        {#each $settings.blacklist as source, i}
-          <option value={source}>{source}</option>
+      <div class="tagcont">
+        {#each $settings.blacklist as tag, i}
+          <Tag {tag} on:toggle={() => removeTag(tag)} />
         {/each}
-      </select>
-      <button on:click={removeSelection}>Remove</button>
+      </div>
       <input
-      placeholder="Press enter after typing your tag"
+        placeholder="Press enter after typing your tag"
         on:keydown={ev => {
           if (ev.key == 'Enter') {
             $settings.blacklist = [
@@ -137,20 +180,19 @@
 </div>
 
 <style scoped>
+  .tagcont {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
   select {
     font-size: 1.2em;
   }
 
   .enabled {
     display: block;
-  }
-
-  .sourcedi {
-    border-right: 10px solid lightcoral;
-  }
-
-  .sourceen {
-    border-right: 10px solid lightgreen;
   }
 
   .disabled {
@@ -169,6 +211,22 @@
   h1 {
     text-align: center;
   }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: absolute;
+    padding: 15px;
+    border: 1px solid white;
+    background-color: inherit;
+    border-radius: 10px;
+  }
+
+  .form > label {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
   .backpanel {
     position: absolute;
@@ -181,5 +239,7 @@
     background-color: rgba(0, 0, 0, 0.2);
     pointer-events: all;
     backdrop-filter: blur(9px);
+    max-height: 80vh;
+    min-width: 321px;
   }
 </style>
