@@ -22,6 +22,11 @@
     border-right: 3px dashed goldenrod !important;
 }
 
+#delform .postContainer>div.hasmultiple {
+    border-right: 3px dashed cornflowerblue !important;
+}
+
+
 .hasext.catalog-post {
     border: 3px dashed goldenrod !important;
 }
@@ -48,6 +53,10 @@ div.hasemb .catalog-host img {
 
 div.hasext .catalog-host img {
     border: 1px solid goldenrod;
+}
+
+div.hasmultiple .catalog-host img {
+    border: 1px solid cornflowerblue;
 }
 
 .catalog-host img {

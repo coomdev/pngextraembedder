@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.107
+// @version      0.108
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11004,6 +11004,7 @@
     prev: false,
     sh: false,
     ep: false,
+    ho: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
     rsources: [
       {
@@ -11060,7 +11061,7 @@
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n";
 
   // src/png.ts
   init_esbuild_inject();
@@ -11868,15 +11869,51 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[31] = list[i];
-    child_ctx[33] = i;
+    child_ctx[32] = list[i];
+    child_ctx[34] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[34] = list[i];
-    child_ctx[33] = i;
+    child_ctx[35] = list[i];
+    child_ctx[34] = i;
     return child_ctx;
+  }
+  function create_if_block_1(ctx) {
+    let label;
+    let input;
+    let t;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        label = element("label");
+        input = element("input");
+        t = text("\n        Hide original content when hidden content is visible.");
+        attr(input, "type", "checkbox");
+      },
+      m(target, anchor) {
+        insert(target, label, anchor);
+        append(label, input);
+        input.checked = ctx[3].ho;
+        append(label, t);
+        if (!mounted) {
+          dispose = listen(input, "change", ctx[13]);
+          mounted = true;
+        }
+      },
+      p(ctx2, dirty) {
+        if (dirty[0] & 8) {
+          input.checked = ctx2[3].ho;
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(label);
+        mounted = false;
+        dispose();
+      }
+    };
   }
   function create_if_block3(ctx) {
     let h30;
@@ -11910,7 +11947,7 @@
       $$scope: { ctx }
     };
     dialog = new Dialog_default({ props: dialog_props });
-    ctx[27](dialog);
+    ctx[28](dialog);
     let each_value = ctx[3].blacklist;
     let each_blocks = [];
     for (let i = 0; i < each_value.length; i += 1) {
@@ -11975,8 +12012,8 @@
         current = true;
         if (!mounted) {
           dispose = [
-            listen(button, "click", ctx[22]),
-            listen(input, "keydown", ctx[29])
+            listen(button, "click", ctx[23]),
+            listen(input, "keydown", ctx[30])
           ];
           mounted = true;
         }
@@ -12004,7 +12041,7 @@
           check_outros();
         }
         const dialog_changes = {};
-        if (dirty[0] & 1 | dirty[1] & 32) {
+        if (dirty[0] & 1 | dirty[1] & 64) {
           dialog_changes.$$scope = { dirty, ctx: ctx2 };
         }
         dialog.$set(dialog_changes);
@@ -12068,7 +12105,7 @@
           detach(button);
         if (detaching)
           detach(t4);
-        ctx[27](null);
+        ctx[28](null);
         destroy_component(dialog, detaching);
         if (detaching)
           detach(t5);
@@ -12096,17 +12133,17 @@
     let tag;
     let current;
     function func(...args) {
-      return ctx[19](ctx[34], ...args);
+      return ctx[20](ctx[35], ...args);
     }
     function remove_handler() {
-      return ctx[20](ctx[34]);
+      return ctx[21](ctx[35]);
     }
     function toggle_handler() {
-      return ctx[21](ctx[34]);
+      return ctx[22](ctx[35]);
     }
     tag = new Tag_default({
       props: {
-        tag: ctx[34].name,
+        tag: ctx[35].name,
         toggleable: true,
         toggled: !ctx[3].rsources.find(func)?.disabled
       }
@@ -12125,7 +12162,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[34].name;
+          tag_changes.tag = ctx[35].name;
         if (dirty[0] & 8)
           tag_changes.toggled = !ctx[3].rsources.find(func)?.disabled;
         tag.$set(tag_changes);
@@ -12226,10 +12263,10 @@
         append(div, button);
         if (!mounted) {
           dispose = [
-            listen(input0, "input", ctx[23]),
-            listen(input1, "input", ctx[24]),
-            listen(input2, "input", ctx[25]),
-            listen(input3, "input", ctx[26]),
+            listen(input0, "input", ctx[24]),
+            listen(input1, "input", ctx[25]),
+            listen(input2, "input", ctx[26]),
+            listen(input3, "input", ctx[27]),
             listen(button, "click", ctx[4])
           ];
           mounted = true;
@@ -12261,9 +12298,9 @@
     let tag;
     let current;
     function toggle_handler_1() {
-      return ctx[28](ctx[31]);
+      return ctx[29](ctx[32]);
     }
-    tag = new Tag_default({ props: { tag: ctx[31] } });
+    tag = new Tag_default({ props: { tag: ctx[32] } });
     tag.$on("toggle", toggle_handler_1);
     return {
       c() {
@@ -12277,7 +12314,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[31];
+          tag_changes.tag = ctx[32];
         tag.$set(tag_changes);
       },
       i(local) {
@@ -12322,35 +12359,37 @@
     let input4;
     let t11;
     let t12;
+    let t13;
     let label5;
     let input5;
-    let t13;
     let t14;
+    let t15;
     let label6;
     let input6;
-    let t15;
     let t16;
+    let t17;
     let label7;
     let input7;
-    let t17;
     let t18;
+    let t19;
     let label8;
     let input8;
-    let t19;
     let t20;
+    let t21;
     let label9;
     let input9;
-    let t21;
+    let t22;
     let a;
-    let t23;
+    let t24;
     let label10;
     let input10;
-    let t24;
     let t25;
+    let t26;
     let current;
     let mounted;
     let dispose;
-    let if_block = !ctx[3].te && create_if_block3(ctx);
+    let if_block0 = ctx[3].eye && create_if_block_1(ctx);
+    let if_block1 = !ctx[3].te && create_if_block3(ctx);
     return {
       c() {
         div1 = element("div");
@@ -12380,34 +12419,37 @@
         input4 = element("input");
         t11 = text("\n      Hide embedded content behind an eye.");
         t12 = space();
+        if (if_block0)
+          if_block0.c();
+        t13 = space();
         label5 = element("label");
         input5 = element("input");
-        t13 = text("\n      Preload external files.");
-        t14 = space();
+        t14 = text("\n      Preload external files.");
+        t15 = space();
         label6 = element("label");
         input6 = element("input");
-        t15 = text("\n      Preload external files when they are in view.");
-        t16 = space();
+        t16 = text("\n      Preload external files when they are in view.");
+        t17 = space();
         label7 = element("label");
         input7 = element("input");
-        t17 = text("\n      Control audio on videos with mouse wheel.");
-        t18 = space();
+        t18 = text("\n      Control audio on videos with mouse wheel.");
+        t19 = space();
         label8 = element("label");
         input8 = element("input");
-        t19 = text("\n      Show Minimap");
-        t20 = space();
+        t20 = text("\n      Show Minimap");
+        t21 = space();
         label9 = element("label");
         input9 = element("input");
-        t21 = text("\n      \n      Turn off embedded file preloading");
+        t22 = text("\n      \n      Turn off embedded file preloading");
         a = element("a");
         a.textContent = "?";
-        t23 = space();
+        t24 = space();
         label10 = element("label");
         input10 = element("input");
-        t24 = text("\n      Turn off third-eye.");
-        t25 = space();
-        if (if_block)
-          if_block.c();
+        t25 = text("\n      Turn off third-eye.");
+        t26 = space();
+        if (if_block1)
+          if_block1.c();
         attr(h1, "class", "svelte-1ag7hmv");
         attr(hr, "class", "svelte-1ag7hmv");
         attr(input0, "type", "checkbox");
@@ -12459,39 +12501,42 @@
         input4.checked = ctx[3].eye;
         append(label4, t11);
         append(div0, t12);
+        if (if_block0)
+          if_block0.m(div0, null);
+        append(div0, t13);
         append(div0, label5);
         append(label5, input5);
         input5.checked = ctx[3].pre;
-        append(label5, t13);
-        append(div0, t14);
+        append(label5, t14);
+        append(div0, t15);
         append(div0, label6);
         append(label6, input6);
         input6.checked = ctx[3].prev;
-        append(label6, t15);
-        append(div0, t16);
+        append(label6, t16);
+        append(div0, t17);
         append(div0, label7);
         append(label7, input7);
         input7.checked = ctx[3].ca;
-        append(label7, t17);
-        append(div0, t18);
+        append(label7, t18);
+        append(div0, t19);
         append(div0, label8);
         append(label8, input8);
         input8.checked = ctx[3].sh;
-        append(label8, t19);
-        append(div0, t20);
+        append(label8, t20);
+        append(div0, t21);
         append(div0, label9);
         append(label9, input9);
         input9.checked = ctx[3].ep;
-        append(label9, t21);
+        append(label9, t22);
         append(label9, a);
-        append(div0, t23);
+        append(div0, t24);
         append(div0, label10);
         append(label10, input10);
         input10.checked = ctx[3].te;
-        append(label10, t24);
-        append(div0, t25);
-        if (if_block)
-          if_block.m(div0, null);
+        append(label10, t25);
+        append(div0, t26);
+        if (if_block1)
+          if_block1.m(div0, null);
         current = true;
         if (!mounted) {
           dispose = [
@@ -12500,12 +12545,12 @@
             listen(input2, "change", ctx[10]),
             listen(input3, "change", ctx[11]),
             listen(input4, "change", ctx[12]),
-            listen(input5, "change", ctx[13]),
-            listen(input6, "change", ctx[14]),
-            listen(input7, "change", ctx[15]),
-            listen(input8, "change", ctx[16]),
-            listen(input9, "change", ctx[17]),
-            listen(input10, "change", ctx[18])
+            listen(input5, "change", ctx[14]),
+            listen(input6, "change", ctx[15]),
+            listen(input7, "change", ctx[16]),
+            listen(input8, "change", ctx[17]),
+            listen(input9, "change", ctx[18]),
+            listen(input10, "change", ctx[19])
           ];
           mounted = true;
         }
@@ -12526,6 +12571,18 @@
         if (dirty[0] & 8) {
           input4.checked = ctx2[3].eye;
         }
+        if (ctx2[3].eye) {
+          if (if_block0) {
+            if_block0.p(ctx2, dirty);
+          } else {
+            if_block0 = create_if_block_1(ctx2);
+            if_block0.c();
+            if_block0.m(div0, t13);
+          }
+        } else if (if_block0) {
+          if_block0.d(1);
+          if_block0 = null;
+        }
         if (dirty[0] & 8) {
           input5.checked = ctx2[3].pre;
         }
@@ -12545,21 +12602,21 @@
           input10.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
-          if (if_block) {
-            if_block.p(ctx2, dirty);
+          if (if_block1) {
+            if_block1.p(ctx2, dirty);
             if (dirty[0] & 8) {
-              transition_in(if_block, 1);
+              transition_in(if_block1, 1);
             }
           } else {
-            if_block = create_if_block3(ctx2);
-            if_block.c();
-            transition_in(if_block, 1);
-            if_block.m(div0, null);
+            if_block1 = create_if_block3(ctx2);
+            if_block1.c();
+            transition_in(if_block1, 1);
+            if_block1.m(div0, null);
           }
-        } else if (if_block) {
+        } else if (if_block1) {
           group_outros();
-          transition_out(if_block, 1, 1, () => {
-            if_block = null;
+          transition_out(if_block1, 1, 1, () => {
+            if_block1 = null;
           });
           check_outros();
         }
@@ -12573,18 +12630,20 @@
       i(local) {
         if (current)
           return;
-        transition_in(if_block);
+        transition_in(if_block1);
         current = true;
       },
       o(local) {
-        transition_out(if_block);
+        transition_out(if_block1);
         current = false;
       },
       d(detaching) {
         if (detaching)
           detach(div1);
-        if (if_block)
-          if_block.d();
+        if (if_block0)
+          if_block0.d();
+        if (if_block1)
+          if_block1.d();
         mounted = false;
         run_all(dispose);
       }
@@ -12646,6 +12705,10 @@
     }
     function input4_change_handler() {
       $settings.eye = this.checked;
+      settings.set($settings);
+    }
+    function input_change_handler() {
+      $settings.ho = this.checked;
       settings.set($settings);
     }
     function input5_change_handler() {
@@ -12722,6 +12785,7 @@
       input2_change_handler,
       input3_change_handler,
       input4_change_handler,
+      input_change_handler,
       input5_change_handler,
       input6_change_handler,
       input7_change_handler,
@@ -14896,7 +14960,7 @@
     let if_block2 = ctx[2] && create_if_block_4(ctx);
     let if_block3 = ctx[16] && create_if_block_3(ctx);
     let if_block4 = ctx[3] && create_if_block_2(ctx);
-    let if_block5 = ctx[2] && create_if_block_1(ctx);
+    let if_block5 = ctx[2] && create_if_block_12(ctx);
     return {
       c() {
         div0 = element("div");
@@ -15027,7 +15091,7 @@
           if (if_block5) {
             if_block5.p(ctx2, dirty);
           } else {
-            if_block5 = create_if_block_1(ctx2);
+            if_block5 = create_if_block_12(ctx2);
             if_block5.c();
             if_block5.m(div1, null);
           }
@@ -15245,7 +15309,7 @@
       }
     };
   }
-  function create_if_block_1(ctx) {
+  function create_if_block_12(ctx) {
     let video;
     let video_loop_value;
     let video_src_value;
@@ -15903,7 +15967,7 @@
       }
     };
   }
-  function create_if_block_12(ctx) {
+  function create_if_block_13(ctx) {
     let a;
     let t_value = ctx[11].page.title + "";
     let t;
@@ -15973,7 +16037,7 @@
       return ctx[9](ctx[11]);
     }
     let if_block0 = ctx[11].source && create_if_block_22(ctx);
-    let if_block1 = ctx[11].page && create_if_block_12(ctx);
+    let if_block1 = ctx[11].page && create_if_block_13(ctx);
     let if_block2 = ctx[6] && ctx[2] && create_if_block6(ctx);
     return {
       c() {
@@ -16029,7 +16093,7 @@
           if (if_block1) {
             if_block1.p(ctx, dirty);
           } else {
-            if_block1 = create_if_block_12(ctx);
+            if_block1 = create_if_block_13(ctx);
             if_block1.c();
             if_block1.m(t2.parentNode, t2);
           }
@@ -16349,7 +16413,13 @@
       ...cappState,
       isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
-    await Promise.all(posts.map((e) => processPost(e)));
+    const n = 8;
+    const range = ~~(posts.length / n) + 1;
+    await Promise.all([...new Array(n)].map(async (e, i) => {
+      const postsslice = posts.slice(i * range, (i + 1) * range);
+      for (const post of postsslice)
+        await processPost(post);
+    }));
   };
   var getSelectedFile = () => {
     return new Promise((res) => {
@@ -16400,11 +16470,9 @@
       input.onchange = async (ev) => {
         if (input.files) {
           try {
-            const proc = processors.find((e3) => e3.match(file.name));
+            const proc = processors.filter((e3) => e3.inject).find((e3) => e3.match(file.name));
             if (!proc)
               throw new Error("Container filetype not supported");
-            if (!proc.inject)
-              return;
             const buff = await proc.inject(file, input.files[0]);
             document.dispatchEvent(new CustomEvent("QRSetFile", {
               detail: { file: new Blob([buff], { type }), name: file.name }
@@ -16441,6 +16509,8 @@
       replyBox?.classList.add("hasext");
     else
       replyBox?.classList.add("hasembed");
+    if (ress.length > 1)
+      replyBox?.classList.add("hasmultiple");
     if (!cappState.foundPosts.includes(replyBox))
       cappState.foundPosts.push(replyBox);
     appState.set(cappState);

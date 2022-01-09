@@ -184,7 +184,14 @@ const startup = async () => {
         ...cappState,
         isCatalog: !!document.querySelector('.catalog-small') || !!location.pathname.match(/\/catalog$/),
     });
-    await Promise.all(posts.map(e => processPost(e as any)));
+    const n = 8;
+    const range = ~~(posts.length / n) + 1;
+    await Promise.all([...new Array(n)].map(async (e, i) => {
+        const postsslice = posts.slice(i * range, (i + 1) * range);
+        for (const post of postsslice)
+            await processPost(post as any);
+    }));
+    //await Promise.all(posts.map(e => processPost(e as any)));
 };
 
 const getSelectedFile = () => {
@@ -252,12 +259,10 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
         input.onchange = (async ev => {
             if (input.files) {
                 try {
-                    const proc = processors.find(e => e.match(file.name));
+                    const proc = processors.filter(e => e.inject).find(e => e.match(file.name));
                     if (!proc)
                         throw new Error("Container filetype not supported");
-                    if (!proc.inject)
-                        return;
-                    const buff = await proc.inject(file, input.files[0]);
+                    const buff = await proc.inject!(file, input.files[0]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
                         //detail: { file: new Blob([buff]), name: file.name, type: file.type }
                         detail: { file: new Blob([buff], { type }), name: file.name }
@@ -298,6 +303,8 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
         replyBox?.classList.add('hasext');
     else
         replyBox?.classList.add('hasembed');
+    if (ress.length > 1)
+        replyBox?.classList.add('hasmultiple');
 
     if (!cappState.foundPosts.includes(replyBox as HTMLElement))
         cappState.foundPosts.push(replyBox as HTMLElement);
