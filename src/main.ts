@@ -161,7 +161,7 @@ const startup = async () => {
     });
 
     document.querySelectorAll('.board').forEach(e => {
-        //        mo.observe(e!, { childList: true, subtree: true });
+        mo.observe(e!, { childList: true, subtree: true });
     });
     const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
 
@@ -188,20 +188,12 @@ const startup = async () => {
     //      await processPost(posts[i] as any);
 
     const n = 7;
-    const range = ~~(posts.length / n);
+    const range = ~~(posts.length / n) + 1;
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
-        console.log(i * range, (i + 1) * range, posts.length);
         const postsslice = posts.slice(i * range, (i + 1) * range);
-        let k = i * range;
         for (const post of postsslice) {
-            if (i == 6)
-                console.log('before Thread' + i, k, post);
             await processPost(post as any);
-            ++k;
-            if (i == 6)
-                console.log('after Thread' + i, k, post);
         }
-        console.log('Thread' + i, k, 'Completed', postsslice.slice(-1)[0]);
     }));
     //await Promise.all(posts.map(e => processPost(e as any)));
 };
