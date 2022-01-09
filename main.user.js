@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.105
+// @version      0.106
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11493,10 +11493,8 @@
     quirks: gelquirk(e.view)
   }));
   var black = /* @__PURE__ */ new Set();
-  var sources = /* @__PURE__ */ new Set();
   settings.subscribe((s) => {
     black = new Set(s.blacklist);
-    sources = new Set(s.rsources.map((e) => e.domain));
   });
   var cache = {};
   var findFileFrom = async (b, hex, abort) => {
@@ -11518,7 +11516,7 @@
     let result;
     let booru;
     for (const e of Object.values(boorus)) {
-      if (!sources.has(e.domain))
+      if (e.disabled)
         continue;
       result = await findFileFrom(e, fn.substring(0, 32));
       if (result.length) {
@@ -11546,7 +11544,7 @@
       return false;
     let result = void 0;
     for (const e of Object.values(boorus)) {
-      if (!sources.has(e.domain))
+      if (e.disabled)
         continue;
       result = await findFileFrom(e, fn.substring(0, 32));
       result = result.filter((e2) => e2.full_url || e2.preview_url);

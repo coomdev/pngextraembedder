@@ -3,6 +3,7 @@ import { GM_fetch } from "./requests";
 import { localLoad, settings } from "./stores";
 
 export type Booru = {
+    disabled?: boolean;
     name: string;
     domain: string;
     endpoint: string;
@@ -54,11 +55,9 @@ export let boorus: Booru[] =
         }));
 
 let black = new Set<string>();
-let sources = new Set<string>();
 
 settings.subscribe(s => {
     black = new Set(s.blacklist);
-    sources = new Set(s.rsources.map(e => e.domain));
 });
 
 const cache: any = {};
@@ -84,7 +83,7 @@ const extract = async (b: Buffer, fn?: string) => {
     let result!: BooruMatch[];
     let booru!: string;
     for (const e of Object.values(boorus)) {
-        if (!sources.has(e.domain))
+        if (e.disabled)
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
         if (result.length) {
@@ -118,7 +117,7 @@ const has_embed = async (b: Buffer, fn?: string) => {
 
     let result: BooruMatch[] | undefined = undefined;
     for (const e of Object.values(boorus)) {
-        if (!sources.has(e.domain))
+        if (e.disabled)
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
         result = result.filter(e => e.full_url || e.preview_url); // skips possible paywalls
