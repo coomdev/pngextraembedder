@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.98
+// @version      0.102
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -7704,8 +7704,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance6, Constructor) {
-        if (!(instance6 instanceof Constructor)) {
+      function _classCallCheck(instance7, Constructor) {
+        if (!(instance7 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -10694,13 +10694,46 @@
     }
   }
   var outroing = /* @__PURE__ */ new Set();
+  var outros;
+  function group_outros() {
+    outros = {
+      r: 0,
+      c: [],
+      p: outros
+    };
+  }
+  function check_outros() {
+    if (!outros.r) {
+      run_all(outros.c);
+    }
+    outros = outros.p;
+  }
   function transition_in(block, local) {
     if (block && block.i) {
       outroing.delete(block);
       block.i(local);
     }
   }
+  function transition_out(block, local, detach2, callback) {
+    if (block && block.o) {
+      if (outroing.has(block))
+        return;
+      outroing.add(block);
+      outros.c.push(() => {
+        outroing.delete(block);
+        if (callback) {
+          if (detach2)
+            block.d(1);
+          callback();
+        }
+      });
+      block.o(local);
+    }
+  }
   var globals = typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : window;
+  function create_component(block) {
+    block && block.c();
+  }
   function mount_component(component, target, anchor, customElement) {
     const { fragment, on_mount, on_destroy, after_update } = component.$$;
     fragment && fragment.m(target, anchor);
@@ -10734,7 +10767,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance6, create_fragment6, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance7, create_fragment7, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -10757,7 +10790,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance6 ? instance6(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance7 ? instance7(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -10770,7 +10803,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment6 ? create_fragment6($$.ctx) : false;
+    $$.fragment = create_fragment7 ? create_fragment7($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -10924,17 +10957,15 @@
   }));
   var appState = writable({
     isCatalog: false,
+    is4chanX: false,
     foundPosts: []
-  });
-  appState.subscribe((v) => {
-    console.log(v);
   });
   settings.subscribe((newVal) => {
     localSet("settings", newVal);
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n}\n";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n";
 
   // src/png.ts
   init_esbuild_inject();
@@ -11299,30 +11330,30 @@
       xmlhttprequest(gmopt);
     });
   }
-  function blobTo(to, blob) {
-    if (to == "arrayBuffer" && blob.arrayBuffer)
-      return blob.arrayBuffer();
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.onload = function(event) {
-        if (!event)
-          return;
-        if (to == "base64")
-          resolve(event.target.result);
-        else
-          resolve(event.target.result);
-      };
-      if (to == "arrayBuffer")
-        fileReader.readAsArrayBuffer(blob);
-      else if (to == "base64")
-        fileReader.readAsDataURL(blob);
-      else if (to == "text")
-        fileReader.readAsText(blob, "utf-8");
-      else
-        reject("unknown to");
-    });
-  }
   function GM_fetch(...[url, opt, lisn]) {
+    function blobTo(to, blob) {
+      if (to == "arrayBuffer" && blob.arrayBuffer)
+        return blob.arrayBuffer();
+      return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onload = function(event) {
+          if (!event)
+            return;
+          if (to == "base64")
+            resolve(event.target.result);
+          else
+            resolve(event.target.result);
+        };
+        if (to == "arrayBuffer")
+          fileReader.readAsArrayBuffer(blob);
+        else if (to == "base64")
+          fileReader.readAsDataURL(blob);
+        else if (to == "text")
+          fileReader.readAsText(blob, "utf-8");
+        else
+          reject("unknown to");
+      });
+    }
     return new Promise((resolve, reject) => {
       const gmopt = {
         url: url.toString(),
@@ -11426,6 +11457,19 @@
         preview_url: e.preview_url,
         tags: e.tags.split(" ")
       }))
+    },
+    {
+      name: "ATFbooru",
+      domain: "booru.allthefallen.moe",
+      endpoint: "/posts.json?tags=md5:",
+      quirks: (a) => a.map((e) => ({
+        source: e.source,
+        page: `https://booru.allthefallen.moe/posts/${e.id}`,
+        ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
+        full_url: e.file_url,
+        preview_url: e.preview_url,
+        tags: e.tag_string.split(" ")
+      }))
     }
   ];
   var black = /* @__PURE__ */ new Set();
@@ -11435,7 +11479,7 @@
     sources = new Set(s.sources);
   });
   var cache = {};
-  var findFileFrom = async (b, hex) => {
+  var findFileFrom = async (b, hex, abort) => {
     try {
       if (b.domain in cache && hex in cache[b.domain])
         return cache[b.domain][hex];
@@ -11495,7 +11539,7 @@
     skip: true,
     extract: extract4,
     has_embed: has_embed4,
-    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
+    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
   };
 
   // src/App.svelte
@@ -14298,6 +14342,9 @@
   };
   var SettingsButton_default = SettingsButton;
 
+  // src/Embeddings.svelte
+  init_esbuild_inject();
+
   // src/Embedding.svelte
   init_esbuild_inject();
   function add_css4(target) {
@@ -15075,10 +15122,190 @@
   };
   var Embedding_default = Embedding;
 
+  // src/Embeddings.svelte
+  function get_each_context3(ctx, list, i) {
+    const child_ctx = ctx.slice();
+    child_ctx[6] = list[i];
+    child_ctx[7] = list;
+    child_ctx[8] = i;
+    return child_ctx;
+  }
+  function create_each_block3(ctx) {
+    let embedding;
+    let i = ctx[8];
+    let current;
+    const assign_embedding = () => ctx[5](embedding, i);
+    const unassign_embedding = () => ctx[5](null, i);
+    let embedding_props = { id: ctx[1], file: ctx[6] };
+    embedding = new Embedding_default({ props: embedding_props });
+    assign_embedding();
+    return {
+      c() {
+        create_component(embedding.$$.fragment);
+      },
+      m(target, anchor) {
+        mount_component(embedding, target, anchor);
+        current = true;
+      },
+      p(ctx2, dirty) {
+        if (i !== ctx2[8]) {
+          unassign_embedding();
+          i = ctx2[8];
+          assign_embedding();
+        }
+        const embedding_changes = {};
+        if (dirty & 2)
+          embedding_changes.id = ctx2[1];
+        if (dirty & 1)
+          embedding_changes.file = ctx2[6];
+        embedding.$set(embedding_changes);
+      },
+      i(local) {
+        if (current)
+          return;
+        transition_in(embedding.$$.fragment, local);
+        current = true;
+      },
+      o(local) {
+        transition_out(embedding.$$.fragment, local);
+        current = false;
+      },
+      d(detaching) {
+        unassign_embedding();
+        destroy_component(embedding, detaching);
+      }
+    };
+  }
+  function create_fragment5(ctx) {
+    let each_1_anchor;
+    let current;
+    let each_value = ctx[0];
+    let each_blocks = [];
+    for (let i = 0; i < each_value.length; i += 1) {
+      each_blocks[i] = create_each_block3(get_each_context3(ctx, each_value, i));
+    }
+    const out = (i) => transition_out(each_blocks[i], 1, 1, () => {
+      each_blocks[i] = null;
+    });
+    return {
+      c() {
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].c();
+        }
+        each_1_anchor = empty();
+      },
+      m(target, anchor) {
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].m(target, anchor);
+        }
+        insert(target, each_1_anchor, anchor);
+        current = true;
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & 7) {
+          each_value = ctx2[0];
+          let i;
+          for (i = 0; i < each_value.length; i += 1) {
+            const child_ctx = get_each_context3(ctx2, each_value, i);
+            if (each_blocks[i]) {
+              each_blocks[i].p(child_ctx, dirty);
+              transition_in(each_blocks[i], 1);
+            } else {
+              each_blocks[i] = create_each_block3(child_ctx);
+              each_blocks[i].c();
+              transition_in(each_blocks[i], 1);
+              each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+            }
+          }
+          group_outros();
+          for (i = each_value.length; i < each_blocks.length; i += 1) {
+            out(i);
+          }
+          check_outros();
+        }
+      },
+      i(local) {
+        if (current)
+          return;
+        for (let i = 0; i < each_value.length; i += 1) {
+          transition_in(each_blocks[i]);
+        }
+        current = true;
+      },
+      o(local) {
+        each_blocks = each_blocks.filter(Boolean);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          transition_out(each_blocks[i]);
+        }
+        current = false;
+      },
+      d(detaching) {
+        destroy_each(each_blocks, detaching);
+        if (detaching)
+          detach(each_1_anchor);
+      }
+    };
+  }
+  function instance5($$self, $$props, $$invalidate) {
+    const dispatch = createEventDispatcher();
+    let { files } = $$props;
+    let { id = "" } = $$props;
+    let children2 = {};
+    async function bepis(ev) {
+      for (let child of Object.values(children2))
+        child.bepis(ev);
+    }
+    function embedding_binding($$value, i) {
+      binding_callbacks[$$value ? "unshift" : "push"](() => {
+        children2[i] = $$value;
+        $$invalidate(2, children2);
+      });
+    }
+    $$self.$$set = ($$props2) => {
+      if ("files" in $$props2)
+        $$invalidate(0, files = $$props2.files);
+      if ("id" in $$props2)
+        $$invalidate(1, id = $$props2.id);
+    };
+    return [files, id, children2, dispatch, bepis, embedding_binding];
+  }
+  var Embeddings = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance5, create_fragment5, safe_not_equal, { dispatch: 3, files: 0, id: 1, bepis: 4 });
+    }
+    get dispatch() {
+      return this.$$.ctx[3];
+    }
+    get files() {
+      return this.$$.ctx[0];
+    }
+    set files(files) {
+      this.$$set({ files });
+      flush();
+    }
+    get id() {
+      return this.$$.ctx[1];
+    }
+    set id(id) {
+      this.$$set({ id });
+      flush();
+    }
+    get bepis() {
+      return this.$$.ctx[4];
+    }
+  };
+  var Embeddings_default = Embeddings;
+
   // src/EyeButton.svelte
   init_esbuild_inject();
   function add_css5(target) {
     append_styles(target, "svelte-64lw6s", ".clickable.svelte-64lw6s{cursor:pointer;margin-left:5px}.clickable.svelte-64lw6s:hover{text-shadow:0 0 4px palevioletred}");
+  }
+  function get_each_context4(ctx, list, i) {
+    const child_ctx = ctx.slice();
+    child_ctx[11] = list[i];
+    return child_ctx;
   }
   function create_if_block_32(ctx) {
     let span;
@@ -15122,7 +15349,7 @@
       c() {
         a = element("a");
         t = text("Source");
-        attr(a, "href", a_href_value = ctx[0].source);
+        attr(a, "href", a_href_value = ctx[11].source);
         attr(a, "target", "_blank");
         attr(a, "class", "clickable svelte-64lw6s");
       },
@@ -15131,7 +15358,7 @@
         append(a, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[0].source)) {
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[11].source)) {
           attr(a, "href", a_href_value);
         }
       },
@@ -15143,14 +15370,14 @@
   }
   function create_if_block_12(ctx) {
     let a;
-    let t_value = ctx[0].page.title + "";
+    let t_value = ctx[11].page.title + "";
     let t;
     let a_href_value;
     return {
       c() {
         a = element("a");
         t = text(t_value);
-        attr(a, "href", a_href_value = ctx[0].page.url);
+        attr(a, "href", a_href_value = ctx[11].page.url);
         attr(a, "target", "_blank");
         attr(a, "class", "clickable svelte-64lw6s");
       },
@@ -15159,9 +15386,9 @@
         append(a, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 1 && t_value !== (t_value = ctx2[0].page.title + ""))
+        if (dirty & 1 && t_value !== (t_value = ctx2[11].page.title + ""))
           set_data(t, t_value);
-        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[0].page.url)) {
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[11].page.url)) {
           attr(a, "href", a_href_value);
         }
       },
@@ -15185,7 +15412,7 @@
       m(target, anchor) {
         insert(target, a, anchor);
         if (!mounted) {
-          dispose = listen(a, "click", ctx[9]);
+          dispose = listen(a, "click", ctx[10]);
           mounted = true;
         }
       },
@@ -15198,80 +15425,76 @@
       }
     };
   }
-  function create_fragment5(ctx) {
-    let t0;
+  function create_each_block4(ctx) {
     let span;
     let span_title_value;
+    let t0;
     let t1;
     let t2;
-    let t3;
-    let if_block3_anchor;
+    let if_block2_anchor;
     let mounted;
     let dispose;
-    let if_block0 = ctx[4].eye && create_if_block_32(ctx);
-    let if_block1 = ctx[0].source && create_if_block_22(ctx);
-    let if_block2 = ctx[0].page && create_if_block_12(ctx);
-    let if_block3 = ctx[6] && ctx[2] && create_if_block4(ctx);
+    function click_handler2() {
+      return ctx[9](ctx[11]);
+    }
+    let if_block0 = ctx[11].source && create_if_block_22(ctx);
+    let if_block1 = ctx[11].page && create_if_block_12(ctx);
+    let if_block2 = ctx[6] && ctx[2] && create_if_block4(ctx);
     return {
       c() {
+        span = element("span");
+        t0 = space();
         if (if_block0)
           if_block0.c();
-        t0 = space();
-        span = element("span");
         t1 = space();
         if (if_block1)
           if_block1.c();
         t2 = space();
         if (if_block2)
           if_block2.c();
-        t3 = space();
-        if (if_block3)
-          if_block3.c();
-        if_block3_anchor = empty();
-        attr(span, "title", span_title_value = ctx[0].filename);
+        if_block2_anchor = empty();
+        attr(span, "title", span_title_value = ctx[11].filename);
         attr(span, "class", "fa fa-download clickable svelte-64lw6s");
       },
       m(target, anchor) {
+        insert(target, span, anchor);
+        insert(target, t0, anchor);
         if (if_block0)
           if_block0.m(target, anchor);
-        insert(target, t0, anchor);
-        insert(target, span, anchor);
         insert(target, t1, anchor);
         if (if_block1)
           if_block1.m(target, anchor);
         insert(target, t2, anchor);
         if (if_block2)
           if_block2.m(target, anchor);
-        insert(target, t3, anchor);
-        if (if_block3)
-          if_block3.m(target, anchor);
-        insert(target, if_block3_anchor, anchor);
+        insert(target, if_block2_anchor, anchor);
         if (!mounted) {
-          dispose = listen(span, "click", ctx[7]);
+          dispose = listen(span, "click", click_handler2);
           mounted = true;
         }
       },
-      p(ctx2, [dirty]) {
-        if (ctx2[4].eye) {
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
+        if (dirty & 1 && span_title_value !== (span_title_value = ctx[11].filename)) {
+          attr(span, "title", span_title_value);
+        }
+        if (ctx[11].source) {
           if (if_block0) {
-            if_block0.p(ctx2, dirty);
+            if_block0.p(ctx, dirty);
           } else {
-            if_block0 = create_if_block_32(ctx2);
+            if_block0 = create_if_block_22(ctx);
             if_block0.c();
-            if_block0.m(t0.parentNode, t0);
+            if_block0.m(t1.parentNode, t1);
           }
         } else if (if_block0) {
           if_block0.d(1);
           if_block0 = null;
         }
-        if (dirty & 1 && span_title_value !== (span_title_value = ctx2[0].filename)) {
-          attr(span, "title", span_title_value);
-        }
-        if (ctx2[0].source) {
+        if (ctx[11].page) {
           if (if_block1) {
-            if_block1.p(ctx2, dirty);
+            if_block1.p(ctx, dirty);
           } else {
-            if_block1 = create_if_block_22(ctx2);
+            if_block1 = create_if_block_12(ctx);
             if_block1.c();
             if_block1.m(t2.parentNode, t2);
           }
@@ -15279,40 +15502,26 @@
           if_block1.d(1);
           if_block1 = null;
         }
-        if (ctx2[0].page) {
+        if (ctx[6] && ctx[2]) {
           if (if_block2) {
-            if_block2.p(ctx2, dirty);
+            if_block2.p(ctx, dirty);
           } else {
-            if_block2 = create_if_block_12(ctx2);
+            if_block2 = create_if_block4(ctx);
             if_block2.c();
-            if_block2.m(t3.parentNode, t3);
+            if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
           }
         } else if (if_block2) {
           if_block2.d(1);
           if_block2 = null;
         }
-        if (ctx2[6] && ctx2[2]) {
-          if (if_block3) {
-            if_block3.p(ctx2, dirty);
-          } else {
-            if_block3 = create_if_block4(ctx2);
-            if_block3.c();
-            if_block3.m(if_block3_anchor.parentNode, if_block3_anchor);
-          }
-        } else if (if_block3) {
-          if_block3.d(1);
-          if_block3 = null;
-        }
       },
-      i: noop,
-      o: noop,
       d(detaching) {
-        if (if_block0)
-          if_block0.d(detaching);
-        if (detaching)
-          detach(t0);
         if (detaching)
           detach(span);
+        if (detaching)
+          detach(t0);
+        if (if_block0)
+          if_block0.d(detaching);
         if (detaching)
           detach(t1);
         if (if_block1)
@@ -15322,21 +15531,90 @@
         if (if_block2)
           if_block2.d(detaching);
         if (detaching)
-          detach(t3);
-        if (if_block3)
-          if_block3.d(detaching);
-        if (detaching)
-          detach(if_block3_anchor);
+          detach(if_block2_anchor);
         mounted = false;
         dispose();
       }
     };
   }
-  function instance5($$self, $$props, $$invalidate) {
+  function create_fragment6(ctx) {
+    let t;
+    let each_1_anchor;
+    let if_block = ctx[4].eye && create_if_block_32(ctx);
+    let each_value = ctx[0];
+    let each_blocks = [];
+    for (let i = 0; i < each_value.length; i += 1) {
+      each_blocks[i] = create_each_block4(get_each_context4(ctx, each_value, i));
+    }
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        t = space();
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].c();
+        }
+        each_1_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, t, anchor);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].m(target, anchor);
+        }
+        insert(target, each_1_anchor, anchor);
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[4].eye) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block_32(ctx2);
+            if_block.c();
+            if_block.m(t.parentNode, t);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+        if (dirty & 199) {
+          each_value = ctx2[0];
+          let i;
+          for (i = 0; i < each_value.length; i += 1) {
+            const child_ctx = get_each_context4(ctx2, each_value, i);
+            if (each_blocks[i]) {
+              each_blocks[i].p(child_ctx, dirty);
+            } else {
+              each_blocks[i] = create_each_block4(child_ctx);
+              each_blocks[i].c();
+              each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+            }
+          }
+          for (; i < each_blocks.length; i += 1) {
+            each_blocks[i].d(1);
+          }
+          each_blocks.length = each_value.length;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(t);
+        destroy_each(each_blocks, detaching);
+        if (detaching)
+          detach(each_1_anchor);
+      }
+    };
+  }
+  function instance6($$self, $$props, $$invalidate) {
     let $settings;
     component_subscribe($$self, settings, ($$value) => $$invalidate(4, $settings = $$value));
     let { id = "" } = $$props;
-    let { file } = $$props;
+    let { files } = $$props;
     let { inst } = $$props;
     let isVideo = false;
     inst.$on("fileinfo", (info) => {
@@ -15348,7 +15626,7 @@
       document.dispatchEvent(new CustomEvent("reveal", { detail: { id } }));
     }
     const isNotChrome = !navigator.userAgent.includes("Chrome/");
-    async function downloadFile() {
+    async function downloadFile(file) {
       const a = document.createElement("a");
       document.body.appendChild(a);
       a.style.display = "none";
@@ -15360,19 +15638,20 @@
       a.click();
       window.URL.revokeObjectURL(url);
     }
-    const click_handler2 = (ev) => {
+    const click_handler2 = (file) => downloadFile(file);
+    const click_handler_1 = (ev) => {
       inst.bepis(ev);
     };
     $$self.$$set = ($$props2) => {
       if ("id" in $$props2)
         $$invalidate(8, id = $$props2.id);
-      if ("file" in $$props2)
-        $$invalidate(0, file = $$props2.file);
+      if ("files" in $$props2)
+        $$invalidate(0, files = $$props2.files);
       if ("inst" in $$props2)
         $$invalidate(1, inst = $$props2.inst);
     };
     return [
-      file,
+      files,
       inst,
       isVideo,
       visible,
@@ -15381,13 +15660,14 @@
       isNotChrome,
       downloadFile,
       id,
-      click_handler2
+      click_handler2,
+      click_handler_1
     ];
   }
   var EyeButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance5, create_fragment5, safe_not_equal, { id: 8, file: 0, inst: 1 }, add_css5);
+      init(this, options, instance6, create_fragment6, safe_not_equal, { id: 8, files: 0, inst: 1 }, add_css5);
     }
     get id() {
       return this.$$.ctx[8];
@@ -15396,11 +15676,11 @@
       this.$$set({ id });
       flush();
     }
-    get file() {
+    get files() {
       return this.$$.ctx[0];
     }
-    set file(file) {
-      this.$$set({ file });
+    set files(files) {
+      this.$$set({ files });
       flush();
     }
     get inst() {
@@ -15454,37 +15734,36 @@
     }
   }
   var processImage = async (src, fn, hex) => {
-    const proc = processors.find((e) => e.match(fn));
-    if (!proc)
-      return;
-    if (proc.skip) {
-      const md5 = import_buffer4.Buffer.from(hex, "base64");
-      if (await proc.has_embed(md5, fn) === true)
-        return [await proc.extract(md5, fn), true];
-      return;
-    }
-    const iter = streamRemote(src);
-    if (!iter)
-      return;
-    let cumul = import_buffer4.Buffer.alloc(0);
-    let found;
-    let chunk = { done: true };
-    do {
-      const { value, done } = await iter.next(found === false);
-      if (done) {
-        chunk = { done: true };
-      } else {
-        chunk = { done: false, value };
+    return Promise.all(processors.filter((e) => e.match(fn)).map(async (proc) => {
+      if (proc.skip) {
+        const md5 = import_buffer4.Buffer.from(hex, "base64");
+        if (await proc.has_embed(md5, fn) === true)
+          return [await proc.extract(md5, fn), true];
+        return;
       }
-      if (!done)
-        cumul = import_buffer4.Buffer.concat([cumul, value]);
-      found = await proc.has_embed(cumul);
-    } while (found !== false && !chunk.done);
-    await iter.next(false);
-    if (found === false) {
-      return;
-    }
-    return [await proc.extract(cumul), false];
+      const iter = streamRemote(src);
+      if (!iter)
+        return;
+      let cumul = import_buffer4.Buffer.alloc(0);
+      let found;
+      let chunk = { done: true };
+      do {
+        const { value, done } = await iter.next(found === false);
+        if (done) {
+          chunk = { done: true };
+        } else {
+          chunk = { done: false, value };
+        }
+        if (!done)
+          cumul = import_buffer4.Buffer.concat([cumul, value]);
+        found = await proc.has_embed(cumul);
+      } while (found !== false && !chunk.done);
+      await iter.next(false);
+      if (found === false) {
+        return;
+      }
+      return [await proc.extract(cumul), false];
+    }));
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var processPost = async (post) => {
@@ -15492,83 +15771,16 @@
     const origlink = post.querySelector('.file-info > a[target*="_blank"]');
     if (!thumb || !origlink)
       return;
-    const res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "", post.querySelector("[data-md5]")?.getAttribute("data-md5") || "");
-    if (!res2)
+    let res2 = await processImage(origlink.href, (origlink.querySelector(".fnfull") || origlink).textContent || "", post.querySelector("[data-md5]")?.getAttribute("data-md5") || "");
+    res2 = res2?.filter((e) => e);
+    if (!res2 || res2.length == 0)
       return;
-    const [res, external] = res2;
-    const replyBox = post.querySelector(".post");
-    if (external)
-      replyBox?.classList.add("hasext");
-    else
-      replyBox?.classList.add("hasembed");
-    if (!cappState.foundPosts.includes(replyBox))
-      cappState.foundPosts.push(replyBox);
-    appState.set(cappState);
-    const isCatalog = replyBox?.classList.contains("catalog-post");
-    if (!isCatalog) {
-      const ft = post.querySelector("div.file");
-      const info = post.querySelector("span.file-info");
-      const filehost = ft.querySelector(".filehost");
-      const eyehost = info.querySelector(".eyehost");
-      const imgcont = filehost || document.createElement("div");
-      const eyecont = eyehost || document.createElement("span");
-      if (!filehost) {
-        ft.append(imgcont);
-        imgcont.classList.add("fileThumb");
-        imgcont.classList.add("filehost");
-      } else {
-        imgcont.innerHTML = "";
-      }
-      if (!eyehost) {
-        info.append(eyecont);
-        eyecont.classList.add("eyehost");
-      } else {
-        eyecont.innerHTML = "";
-      }
-      const id = ~~(Math.random() * 2e7);
-      const emb = new Embedding_default({
-        target: imgcont,
-        props: {
-          file: res,
-          id: "" + id
-        }
-      });
-      new EyeButton_default({
-        target: eyecont,
-        props: {
-          file: res,
-          inst: emb,
-          id: "" + id
-        }
-      });
-    } else {
-      const opFile = post.querySelector(".catalog-link");
-      const ahem = opFile?.querySelector(".catalog-host");
-      const imgcont = ahem || document.createElement("div");
-      imgcont.className = "catalog-host";
-      if (ahem) {
-        imgcont.innerHTML = "";
-      }
-      const emb = new Embedding_default({
-        target: imgcont,
-        props: {
-          file: res
-        }
-      });
-      if (!ahem)
-        opFile?.append(imgcont);
-    }
-    post.setAttribute("data-processed", "true");
+    processAttachments(post, res2?.filter((e) => e));
   };
   var startup = async () => {
+    if (typeof window["FCX"] != "undefined")
+      appState.set({ ...cappState, is4chanX: true });
     await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));
-    document.addEventListener("ThreadUpdate", async (e) => {
-      const newPosts = e.detail.newPosts;
-      for (const post of newPosts) {
-        const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
-        processPost(postContainer);
-      }
-    });
     const mo = new MutationObserver((reco) => {
       for (const rec of reco)
         if (rec.type == "childList")
@@ -15600,7 +15812,7 @@
     document.body.append(scrollHost);
     appState.set({
       ...cappState,
-      isCatalog: !!document.querySelector(".catalog-small")
+      isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
     await Promise.all(posts.map((e) => processPost(e)));
   };
@@ -15611,15 +15823,38 @@
     });
   };
   document.addEventListener("4chanXInitFinished", startup);
+  document.addEventListener("ThreadUpdate", async (e) => {
+    const newPosts = e.detail.newPosts;
+    for (const post of newPosts) {
+      const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
+      processPost(postContainer);
+    }
+  });
+  if (cappState.is4chanX) {
+    const qr = window["QR"];
+    const show = qr.show.bind(qr);
+    qr.show = (...args) => {
+      show(...args);
+      document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+        detail: document.getElementById("quickReply")
+      }));
+    };
+  }
   document.addEventListener("QRDialogCreation", (e) => {
-    const target = e.target;
-    const bts = target.querySelector("#qr-filename-container");
+    const a = document.createElement("a");
     const i = document.createElement("i");
     i.className = "fa fa-magnet";
-    const a = document.createElement("a");
     a.appendChild(i);
     a.title = "Embed File (Select a file before...)";
-    bts?.appendChild(a);
+    let target;
+    if (cappState.is4chanX) {
+      i.innerText = "\u{1F9F2}";
+      target = e.detail;
+      target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
+    } else {
+      target = e.target;
+      target.querySelector("#qr-filename-container")?.appendChild(a);
+    }
     a.onclick = async (e2) => {
       const file = await getSelectedFile();
       if (!file)
@@ -15660,10 +15895,76 @@
       };
       input.click();
     };
-  }, { once: true });
+  }, { once: !cappState.is4chanX });
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
+  function processAttachments(post, ress) {
+    const replyBox = post.querySelector(".post");
+    const external = ress[0][1];
+    if (external)
+      replyBox?.classList.add("hasext");
+    else
+      replyBox?.classList.add("hasembed");
+    if (!cappState.foundPosts.includes(replyBox))
+      cappState.foundPosts.push(replyBox);
+    appState.set(cappState);
+    const isCatalog = replyBox?.classList.contains("catalog-post");
+    if (!isCatalog) {
+      const ft = post.querySelector("div.file");
+      const info = post.querySelector("span.file-info");
+      const filehost = ft.querySelector(".filehost");
+      const eyehost = info.querySelector(".eyehost");
+      const imgcont = filehost || document.createElement("div");
+      const eyecont = eyehost || document.createElement("span");
+      if (!filehost) {
+        ft.append(imgcont);
+        imgcont.classList.add("fileThumb");
+        imgcont.classList.add("filehost");
+      } else {
+        imgcont.innerHTML = "";
+      }
+      if (!eyehost) {
+        info.append(eyecont);
+        eyecont.classList.add("eyehost");
+      } else {
+        eyecont.innerHTML = "";
+      }
+      const id = ~~(Math.random() * 2e7);
+      const emb = new Embeddings_default({
+        target: imgcont,
+        props: {
+          files: ress.map((e) => e[0]),
+          id: "" + id
+        }
+      });
+      new EyeButton_default({
+        target: eyecont,
+        props: {
+          files: ress.map((e) => e[0]),
+          inst: emb,
+          id: "" + id
+        }
+      });
+    } else {
+      const opFile = post.querySelector(".catalog-link");
+      const ahem = opFile?.querySelector(".catalog-host");
+      const imgcont = ahem || document.createElement("div");
+      imgcont.className = "catalog-host";
+      if (ahem) {
+        imgcont.innerHTML = "";
+      }
+      const emb = new Embeddings_default({
+        target: imgcont,
+        props: {
+          files: ress.map((e) => e[0])
+        }
+      });
+      if (!ahem)
+        opFile?.append(imgcont);
+    }
+    post.setAttribute("data-processed", "true");
+  }
 })();
 /*!
  * The buffer module from node.js, for the browser.

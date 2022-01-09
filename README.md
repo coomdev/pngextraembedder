@@ -28,11 +28,34 @@ You need to select a png/webm/gif file to upload first, as you would normally (t
 
 ![qr](screen.png)
 
-Formats
-======
 
-PNG
----
+# TroubleShooting
+
+## "It doesn't work"
+Hang yourself
+
+## "I am using [BROWSER] and [USERSCRIPT MANAGER] and when I do [X]..."
+
+That's better. Officially, all developpment is made and tested on latest Chromium with VM. I'm willing to provide support and help for FF and other Chromium-based browsers as long as you use ViolentMonkey and provide as much information as you can: console logs, screenshots, versions...
+
+## It's slow
+
+The slowest machine I have available is an 8GB 2011 Sandy Bridge i5 with a 1660Ti, the only way I can tell something is slow is if you post a performance profile for me to study. (DevTools > Performance > Reload and Start Profiler > Save Profiler).
+
+There are parts where slowness is unavoidable, for example if you have a slow internet connection and enabled preloading (wtf are you doing?).
+
+Even without preloading enabled, PEE still makes many requests at the start of a page as it fetches a small initial chunk of png/webm/gif files to know if something is embedded in there, only progressing further when something is detected.
+
+## Why is it so big
+
+The file-type detection package is huge as it detect many packages types, but also depends on node constructs that are also huge themselves. There's also a webm parser that's relatively big that's used for embedding/extracting files in/from webms. There's also the svelte UI that compiles down to simple javascript.
+
+# Technical details
+
+## Formats
+
+### PNG
+
 This works by appending the file in the last IDAT chunk.
 Metadata information is stored in a tEXt chunk, placed near the header so that a parser looking for that embedded information can bail out without having to parse the whole file.
 
@@ -78,5 +101,4 @@ The format used by Zip anon won't be supported because:
 Bugs
 ====
 
-- fails to find files in new posts after a thread update
 - more to come
