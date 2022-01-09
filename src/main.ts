@@ -142,7 +142,7 @@ const startup = async () => {
     if (typeof (window as any)['FCX'] != "undefined")
         appState.set({ ...cappState, is4chanX: true });
 
-    await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
+    //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     // keep this to handle posts getting inlined
     const mo = new MutationObserver(reco => {
@@ -161,7 +161,7 @@ const startup = async () => {
     });
 
     document.querySelectorAll('.board').forEach(e => {
-        mo.observe(e!, { childList: true, subtree: true });
+        //        mo.observe(e!, { childList: true, subtree: true });
     });
     const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
 
@@ -184,12 +184,24 @@ const startup = async () => {
         ...cappState,
         isCatalog: !!document.querySelector('.catalog-small') || !!location.pathname.match(/\/catalog$/),
     });
-    const n = 8;
-    const range = ~~(posts.length / n) + 1;
-    await Promise.all([...new Array(n)].map(async (e, i) => {
+    //    for (let i = 159; i < 160 ;++i)
+    //      await processPost(posts[i] as any);
+
+    const n = 7;
+    const range = ~~(posts.length / n);
+    await Promise.all([...new Array(n + 1)].map(async (e, i) => {
+        console.log(i * range, (i + 1) * range, posts.length);
         const postsslice = posts.slice(i * range, (i + 1) * range);
-        for (const post of postsslice)
+        let k = i * range;
+        for (const post of postsslice) {
+            if (i == 6)
+                console.log('before Thread' + i, k, post);
             await processPost(post as any);
+            ++k;
+            if (i == 6)
+                console.log('after Thread' + i, k, post);
+        }
+        console.log('Thread' + i, k, 'Completed', postsslice.slice(-1)[0]);
     }));
     //await Promise.all(posts.map(e => processPost(e as any)));
 };

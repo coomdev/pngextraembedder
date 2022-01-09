@@ -71,6 +71,12 @@ import type { Booru } from './thirdeye';
       <input type="checkbox" bind:checked={$settings.eye} />
       Hide embedded content behind an eye.
     </label>
+    {#if $settings.eye}
+      <label>
+        <input type="checkbox" bind:checked={$settings.ho} />
+        Hide original content when hidden content is visible.
+      </label>
+    {/if}
     <label>
       <input type="checkbox" bind:checked={$settings.pre} />
       Preload external files.

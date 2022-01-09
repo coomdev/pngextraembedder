@@ -33,7 +33,7 @@ function firstThatFor<T>(promises: Promise<T>[], pred: (v: T) => boolean) {
 const gelquirk: (s: string) => tran = prefix => (a =>
     (a.post || a).map((e: any) => ({
         full_url: e.file_url,
-        preview_url: e.preview_url,
+        preview_url: e.preview_url || e.preview_url,
         source: e.source,
 
         ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf('.') + 1),

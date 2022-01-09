@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.108
+// @version      0.109
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11483,7 +11483,7 @@
   // src/thirdeye.ts
   var gelquirk = (prefix) => (a) => (a.post || a).map((e) => ({
     full_url: e.file_url,
-    preview_url: e.preview_url,
+    preview_url: e.preview_url || e.preview_url,
     source: e.source,
     ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
     page: `${prefix}${e.id}`,
@@ -16379,7 +16379,6 @@
   var startup = async () => {
     if (typeof window["FCX"] != "undefined")
       appState.set({ ...cappState, is4chanX: true });
-    await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));
     const mo = new MutationObserver((reco) => {
       for (const rec of reco)
         if (rec.type == "childList")
@@ -16394,7 +16393,6 @@
           });
     });
     document.querySelectorAll(".board").forEach((e) => {
-      mo.observe(e, { childList: true, subtree: true });
     });
     const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
     const scts = document.getElementById("shortcuts");
@@ -16413,12 +16411,21 @@
       ...cappState,
       isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
-    const n = 8;
-    const range = ~~(posts.length / n) + 1;
-    await Promise.all([...new Array(n)].map(async (e, i) => {
+    const n = 7;
+    const range = ~~(posts.length / n);
+    await Promise.all([...new Array(n + 1)].map(async (e, i) => {
+      console.log(i * range, (i + 1) * range, posts.length);
       const postsslice = posts.slice(i * range, (i + 1) * range);
-      for (const post of postsslice)
+      let k = i * range;
+      for (const post of postsslice) {
+        if (i == 6)
+          console.log("before Thread" + i, k, post);
         await processPost(post);
+        ++k;
+        if (i == 6)
+          console.log("after Thread" + i, k, post);
+      }
+      console.log("Thread" + i, k, "Completed", postsslice.slice(-1)[0]);
     }));
   };
   var getSelectedFile = () => {

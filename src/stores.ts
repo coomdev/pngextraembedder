@@ -22,6 +22,7 @@ export const settings = writable(localLoad('settingsv2', {
     prev: false,
     sh: false,
     ep: false,
+    ho: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],
     rsources: [{
         name: 'Gelbooru',
