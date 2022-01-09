@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { Booru } from "./thirdeye";
 
-const localLoad = <T>(key: string, def: T) =>
+export const localLoad = <T>(key: string, def: T) =>
     ('__pee__' + key) in localStorage
         ? JSON.parse(localStorage.getItem('__pee__' + key)!) as T
         : def;

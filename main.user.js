@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.103
+// @version      0.105
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11488,7 +11488,10 @@
       quirks: gelquirk(e.view)
     }));
   });
-  var boorus = [];
+  var boorus = localLoad("settingsv2", { rsources: [] }).rsources.map((e) => ({
+    ...e,
+    quirks: gelquirk(e.view)
+  }));
   var black = /* @__PURE__ */ new Set();
   var sources = /* @__PURE__ */ new Set();
   settings.subscribe((s) => {
@@ -16233,7 +16236,7 @@
   appState.subscribe((v) => {
     cappState = v;
   });
-  async function* streamRemote(url, chunkSize = 16 * 1024, fetchRestOnNonCanceled = true) {
+  async function* streamRemote(url, chunkSize = 72 * 1024, fetchRestOnNonCanceled = true) {
     const headers = await GM_head(url);
     const h = headerStringToObject(headers);
     const size = +h["content-length"];
@@ -16282,7 +16285,7 @@
           cumul = import_buffer4.Buffer.concat([cumul, value]);
         found = await proc.has_embed(cumul);
       } while (found !== false && !chunk.done);
-      await iter.next(false);
+      await iter.next(true);
       if (found === false) {
         return;
       }

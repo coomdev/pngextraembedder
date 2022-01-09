@@ -47,7 +47,7 @@ async function* streamRemote(url: string, chunkSize = 72 * 1024, fetchRestOnNonC
     let ptr = 0;
     let fetchSize = chunkSize;
     while (ptr != size) {
-        console.log('doing a fetch of ', url, ptr, ptr + fetchSize - 1);
+        //console.log('doing a fetch of ', url, ptr, ptr + fetchSize - 1);
         const res = await GM_fetch(url, { headers: { range: `bytes=${ptr}-${ptr + fetchSize - 1}` } }) as any as Tampermonkey.Response<any>;
         const obj = headerStringToObject(res.responseHeaders);
         if (!('content-length' in obj)) {
@@ -59,7 +59,7 @@ async function* streamRemote(url: string, chunkSize = 72 * 1024, fetchRestOnNonC
             fetchSize = size;
         const val = Buffer.from(await (res as any).arrayBuffer());
         const e = (yield val) as boolean;
-        console.log('yeieledd, a', e);
+        //console.log('yeieledd, a', e);
         if (e) {
             break;
         }
@@ -111,11 +111,10 @@ const processImage = async (src: string, fn: string, hex: string): Promise<([Emb
             if (!done)
                 cumul = Buffer.concat([cumul, value!]);
             found = await proc.has_embed(cumul);
-            console.log(`on ${src} ${found}...`);
         } while (found !== false && !chunk.done);
         await iter.next(true);
         if (found === false) {
-            console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
+            //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
             return;
         }
         return [await proc.extract(cumul), false] as [EmbeddedFile, boolean];

@@ -1,6 +1,6 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { GM_fetch } from "./requests";
-import { settings } from "./stores";
+import { localLoad, settings } from "./stores";
 
 export type Booru = {
     name: string;
@@ -43,10 +43,15 @@ const gelquirk: (s: string) => tran = prefix => (a =>
 settings.subscribe(s => {
     boorus = s.rsources.map(e => ({
         ...e,
-        quirks: gelquirk(e.view)   
+        quirks: gelquirk(e.view)
     }));
 });
-export let boorus: Booru[] = [];
+export let boorus: Booru[] =
+    localLoad('settingsv2', { rsources: [] as (Omit<Booru, 'quirks'> & { view: string, disabled?: boolean })[] })
+        .rsources.map(e => ({
+            ...e,
+            quirks: gelquirk(e.view)
+        }));
 
 let black = new Set<string>();
 let sources = new Set<string>();
