@@ -1,14 +1,15 @@
 <script lang="ts">
 import { fileTypeFromBuffer } from 'file-type';
 import type Embedding from './Embedding.svelte';
+import type Embeddings from './Embeddings.svelte';
 
 import type { EmbeddedFile } from './main';
 
   import { settings } from './stores'
 
   export let id = ''
-  export let file: EmbeddedFile;
-  export let inst: Embedding;
+  export let files: EmbeddedFile[];
+  export let inst: Embedding | Embeddings;
 
   let isVideo = false
 
@@ -23,7 +24,7 @@ import type { EmbeddedFile } from './main';
   }
   const isNotChrome = !navigator.userAgent.includes("Chrome/");
 
-  async function downloadFile() {
+  async function downloadFile(file: EmbeddedFile) {
     const a = document.createElement("a") as HTMLAnchorElement;
     document.body.appendChild(a);
     a.style.display = 'none';
@@ -45,9 +46,10 @@ import type { EmbeddedFile } from './main';
     class="fa clickable"
   />
 {/if}
+{#each files as file}
 <span
   title={file.filename}
-  on:click={downloadFile}
+  on:click={() => downloadFile(file)}
   class="fa fa-download clickable"
 />
 {#if file.source}
@@ -75,6 +77,7 @@ import type { EmbeddedFile } from './main';
     >[PEE contract]</a
   >
 {/if}
+{/each}
 
 <style scoped>
   .clickable {

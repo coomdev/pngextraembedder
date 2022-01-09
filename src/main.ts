@@ -12,7 +12,8 @@ import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 import App from "./App.svelte";
 import ScrollHighlighter from "./ScrollHighlighter.svelte";
 import SettingsButton from './SettingsButton.svelte';
-import Embedding from './Embedding.svelte';
+//import Embedding from './Embedding.svelte';
+import Embeddings from './Embeddings.svelte';
 import EyeButton from './EyeButton.svelte';
 
 export interface ImageProcessor {
@@ -82,41 +83,40 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string, hex: string): Promise<[EmbeddedFile, boolean] | undefined> => {
-    const proc = processors.find(e => e.match(fn));
-    if (!proc)
-        return;
-    if (proc.skip) {
-        // skip file downloading, file is referenced from the filename
-        // basically does things like filtering out blacklisted tags
-        const md5 = Buffer.from(hex, 'base64');
-        if (await proc.has_embed(md5, fn) === true)
-            return [await proc.extract(md5, fn), true];
-        return;
-    }
-    const iter = streamRemote(src);
-    if (!iter)
-        return;
-    let cumul = Buffer.alloc(0);
-    let found: boolean | undefined;
-    let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
-    do {
-        const { value, done } = await iter.next(found === false);
-        if (done) {
-            chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
-        } else {
-            chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
+const processImage = async (src: string, fn: string, hex: string): Promise<([EmbeddedFile, boolean] | undefined)[]> => {
+    return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
+        if (proc.skip) {
+            // skip file downloading, file is referenced from the filename
+            // basically does things like filtering out blacklisted tags
+            const md5 = Buffer.from(hex, 'base64');
+            if (await proc.has_embed(md5, fn) === true)
+                return [await proc.extract(md5, fn), true] as [EmbeddedFile, boolean];
+            return;
         }
-        if (!done)
-            cumul = Buffer.concat([cumul, value!]);
-        found = await proc.has_embed(cumul);
-    } while (found !== false && !chunk.done);
-    await iter.next(false);
-    if (found === false) {
-        //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
-        return;
-    }
-    return [await proc.extract(cumul), false];
+        const iter = streamRemote(src);
+        if (!iter)
+            return;
+        let cumul = Buffer.alloc(0);
+        let found: boolean | undefined;
+        let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
+        do {
+            const { value, done } = await iter.next(found === false);
+            if (done) {
+                chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
+            } else {
+                chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
+            }
+            if (!done)
+                cumul = Buffer.concat([cumul, value!]);
+            found = await proc.has_embed(cumul);
+        } while (found !== false && !chunk.done);
+        await iter.next(false);
+        if (found === false) {
+            //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
+            return;
+        }
+        return [await proc.extract(cumul), false] as [EmbeddedFile, boolean];
+    }));
 };
 
 const textToElement = <T = HTMLElement>(s: string) =>
@@ -127,81 +127,13 @@ const processPost = async (post: HTMLDivElement) => {
     const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
     if (!thumb || !origlink)
         return;
-    const res2 = await processImage(origlink.href,
+    let res2 = await processImage(origlink.href,
         (origlink.querySelector('.fnfull') || origlink).textContent || '',
         post.querySelector("[data-md5]")?.getAttribute('data-md5') || '');
-    if (!res2)
+    res2 = res2?.filter(e => e);
+    if (!res2 || res2.length == 0)
         return;
-    const [res, external] = res2;
-    const replyBox = post.querySelector('.post');
-    if (external)
-        replyBox?.classList.add('hasext');
-    else
-        replyBox?.classList.add('hasembed');
-
-    if (!cappState.foundPosts.includes(replyBox as HTMLElement))
-        cappState.foundPosts.push(replyBox as HTMLElement);
-    appState.set(cappState);
-
-    const isCatalog = replyBox?.classList.contains('catalog-post');
-    // add buttons
-    if (!isCatalog) {
-        const ft = post.querySelector('div.file') as HTMLDivElement;
-        const info = post.querySelector("span.file-info") as HTMLSpanElement;
-
-        const filehost: HTMLElement | null = ft.querySelector('.filehost');
-        const eyehost: HTMLElement | null = info.querySelector('.eyehost');
-        const imgcont = filehost || document.createElement('div');
-        const eyecont = eyehost || document.createElement('span');
-
-        if (!filehost) {
-            ft.append(imgcont);
-            imgcont.classList.add("fileThumb");
-            imgcont.classList.add("filehost");
-        } else {
-            imgcont.innerHTML = '';
-        }
-        if (!eyehost) {
-            info.append(eyecont);
-            eyecont.classList.add("eyehost");
-        } else {
-            eyecont.innerHTML = '';
-        }
-        const id = ~~(Math.random() * 20000000);
-        const emb = new Embedding({
-            target: imgcont,
-            props: {
-                file: res,
-                id: '' + id
-            }
-        });
-        new EyeButton({
-            target: eyecont,
-            props: {
-                file: res,
-                inst: emb,
-                id: '' + id
-            }
-        });
-    } else {
-        const opFile = post.querySelector('.catalog-link');
-        const ahem = opFile?.querySelector('.catalog-host');
-        const imgcont = ahem || document.createElement('div');
-        imgcont.className = "catalog-host";
-        if (ahem) {
-            imgcont.innerHTML = '';
-        }
-        const emb = new Embedding({
-            target: imgcont,
-            props: {
-                file: res
-            }
-        });
-        if (!ahem)
-            opFile?.append(imgcont);
-    }
-
-    post.setAttribute('data-processed', "true");
+    processAttachments(post, res2?.filter(e => e) as [EmbeddedFile, boolean][]);
 };
 
 const startup = async () => {
@@ -261,7 +193,7 @@ const getSelectedFile = () => {
 };
 
 //if (cappState!.is4chanX)
-    document.addEventListener('4chanXInitFinished', startup);
+document.addEventListener('4chanXInitFinished', startup);
 /*else {
     document.addEventListener("QRGetFile", (e) => {
         const qr = document.getElementById('qrFile') as HTMLInputElement | null;
@@ -357,6 +289,78 @@ customStyles.appendChild(document.createTextNode(globalCss));
 
 document.documentElement.insertBefore(customStyles, null);
 
+function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][]) {
+    const replyBox = post.querySelector('.post');
+    const external = ress[0][1];
+    if (external)
+        replyBox?.classList.add('hasext');
+    else
+        replyBox?.classList.add('hasembed');
+
+    if (!cappState.foundPosts.includes(replyBox as HTMLElement))
+        cappState.foundPosts.push(replyBox as HTMLElement);
+    appState.set(cappState);
+
+    const isCatalog = replyBox?.classList.contains('catalog-post');
+    // add buttons
+    if (!isCatalog) {
+        const ft = post.querySelector('div.file') as HTMLDivElement;
+        const info = post.querySelector("span.file-info") as HTMLSpanElement;
+
+        const filehost: HTMLElement | null = ft.querySelector('.filehost');
+        const eyehost: HTMLElement | null = info.querySelector('.eyehost');
+        const imgcont = filehost || document.createElement('div');
+        const eyecont = eyehost || document.createElement('span');
+
+        if (!filehost) {
+            ft.append(imgcont);
+            imgcont.classList.add("fileThumb");
+            imgcont.classList.add("filehost");
+        } else {
+            imgcont.innerHTML = '';
+        }
+        if (!eyehost) {
+            info.append(eyecont);
+            eyecont.classList.add("eyehost");
+        } else {
+            eyecont.innerHTML = '';
+        }
+        const id = ~~(Math.random() * 20000000);
+        const emb = new Embeddings({
+            target: imgcont,
+            props: {
+                files: ress.map(e => e[0]),
+                id: '' + id
+            }
+        });
+        new EyeButton({
+            target: eyecont,
+            props: {
+                files: ress.map(e => e[0]),
+                inst: emb,
+                id: '' + id
+            }
+        });
+    } else {
+        const opFile = post.querySelector('.catalog-link');
+        const ahem = opFile?.querySelector('.catalog-host');
+        const imgcont = ahem || document.createElement('div');
+        imgcont.className = "catalog-host";
+        if (ahem) {
+            imgcont.innerHTML = '';
+        }
+        const emb = new Embeddings({
+            target: imgcont,
+            props: {
+                files: ress.map(e => e[0])
+            }
+        });
+        if (!ahem)
+            opFile?.append(imgcont);
+    }
+
+    post.setAttribute('data-processed', "true");
+}
 //if ((window as any)['pagemode']) {
 //    onload = () => {
 //        console.log("loaded");

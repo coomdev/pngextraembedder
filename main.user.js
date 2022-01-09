@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.100
+// @version      0.98
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10924,7 +10924,6 @@
   }));
   var appState = writable({
     isCatalog: false,
-    is4chanX: false,
     foundPosts: []
   });
   appState.subscribe((v) => {
@@ -11300,30 +11299,30 @@
       xmlhttprequest(gmopt);
     });
   }
-  function GM_fetch(...[url, opt, lisn]) {
-    function blobTo(to, blob) {
-      if (to == "arrayBuffer" && blob.arrayBuffer)
-        return blob.arrayBuffer();
-      return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onload = function(event) {
-          if (!event)
-            return;
-          if (to == "base64")
-            resolve(event.target.result);
-          else
-            resolve(event.target.result);
-        };
-        if (to == "arrayBuffer")
-          fileReader.readAsArrayBuffer(blob);
-        else if (to == "base64")
-          fileReader.readAsDataURL(blob);
-        else if (to == "text")
-          fileReader.readAsText(blob, "utf-8");
+  function blobTo(to, blob) {
+    if (to == "arrayBuffer" && blob.arrayBuffer)
+      return blob.arrayBuffer();
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.onload = function(event) {
+        if (!event)
+          return;
+        if (to == "base64")
+          resolve(event.target.result);
         else
-          reject("unknown to");
-      });
-    }
+          resolve(event.target.result);
+      };
+      if (to == "arrayBuffer")
+        fileReader.readAsArrayBuffer(blob);
+      else if (to == "base64")
+        fileReader.readAsDataURL(blob);
+      else if (to == "text")
+        fileReader.readAsText(blob, "utf-8");
+      else
+        reject("unknown to");
+    });
+  }
+  function GM_fetch(...[url, opt, lisn]) {
     return new Promise((resolve, reject) => {
       const gmopt = {
         url: url.toString(),
@@ -11427,19 +11426,6 @@
         preview_url: e.preview_url,
         tags: e.tags.split(" ")
       }))
-    },
-    {
-      name: "ATFbooru",
-      domain: "booru.allthefallen.moe",
-      endpoint: "/posts.json?tags=md5:",
-      quirks: (a) => a.map((e) => ({
-        source: e.source,
-        page: `https://booru.allthefallen.moe/posts/${e.id}`,
-        ext: e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
-        full_url: e.file_url,
-        preview_url: e.preview_url,
-        tags: e.tag_string.split(" ")
-      }))
     }
   ];
   var black = /* @__PURE__ */ new Set();
@@ -11449,7 +11435,7 @@
     sources = new Set(s.sources);
   });
   var cache = {};
-  var findFileFrom = async (b, hex, abort) => {
+  var findFileFrom = async (b, hex) => {
     try {
       if (b.domain in cache && hex in cache[b.domain])
         return cache[b.domain][hex];
@@ -11509,7 +11495,7 @@
     skip: true,
     extract: extract4,
     has_embed: has_embed4,
-    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
+    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?$/)
   };
 
   // src/App.svelte
@@ -15575,9 +15561,14 @@
     post.setAttribute("data-processed", "true");
   };
   var startup = async () => {
-    if (typeof window["FCX"] != "undefined")
-      appState.set({ ...cappState, is4chanX: true });
     await Promise.all([...document.querySelectorAll(".postContainer")].filter((e) => e.textContent?.includes("191 KB")).map((e) => processPost(e)));
+    document.addEventListener("ThreadUpdate", async (e) => {
+      const newPosts = e.detail.newPosts;
+      for (const post of newPosts) {
+        const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
+        processPost(postContainer);
+      }
+    });
     const mo = new MutationObserver((reco) => {
       for (const rec of reco)
         if (rec.type == "childList")
@@ -15609,7 +15600,7 @@
     document.body.append(scrollHost);
     appState.set({
       ...cappState,
-      isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
+      isCatalog: !!document.querySelector(".catalog-small")
     });
     await Promise.all(posts.map((e) => processPost(e)));
   };
@@ -15620,38 +15611,15 @@
     });
   };
   document.addEventListener("4chanXInitFinished", startup);
-  document.addEventListener("ThreadUpdate", async (e) => {
-    const newPosts = e.detail.newPosts;
-    for (const post of newPosts) {
-      const postContainer = document.getElementById("pc" + post.substring(post.indexOf(".") + 1));
-      processPost(postContainer);
-    }
-  });
-  if (cappState.is4chanX) {
-    const qr = window["QR"];
-    const show = qr.show.bind(qr);
-    qr.show = (...args) => {
-      show(...args);
-      document.dispatchEvent(new CustomEvent("QRDialogCreation", {
-        detail: document.getElementById("quickReply")
-      }));
-    };
-  }
   document.addEventListener("QRDialogCreation", (e) => {
-    const a = document.createElement("a");
+    const target = e.target;
+    const bts = target.querySelector("#qr-filename-container");
     const i = document.createElement("i");
     i.className = "fa fa-magnet";
+    const a = document.createElement("a");
     a.appendChild(i);
     a.title = "Embed File (Select a file before...)";
-    let target;
-    if (cappState.is4chanX) {
-      i.innerText = "\u{1F9F2}";
-      target = e.detail;
-      target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
-    } else {
-      target = e.target;
-      target.querySelector("#qr-filename-container")?.appendChild(a);
-    }
+    bts?.appendChild(a);
     a.onclick = async (e2) => {
       const file = await getSelectedFile();
       if (!file)
@@ -15692,7 +15660,7 @@
       };
       input.click();
     };
-  }, { once: !cappState.is4chanX });
+  }, { once: true });
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);

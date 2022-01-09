@@ -247,11 +247,9 @@
   <div
     class:contract={contracted}
     class="place"
-
     on:click={e => e.preventDefault()}
     on:auxclick={e => e.preventDefault()}
     on:mousedown={bepis}
-
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
     on:mousemove={hoverUpdate}
@@ -260,11 +258,7 @@
   >
     {#if isImage}
       <!-- svelte-ignore a11y-missing-attribute -->
-        <img
-          bind:this={imgElem}
-          alt={file.filename}
-          src={furl || url}
-        />
+      <img bind:this={imgElem} alt={file.filename} src={furl || url} />
     {/if}
     {#if isAudio}
       <audio
@@ -279,7 +273,7 @@
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
       <!-- svelte-ignore a11y-missing-attribute -->
-        <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
+      <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
   </div>

@@ -61,4 +61,6 @@ div.hasext .catalog-host img {
 
 .fileThumb.filehost {
     margin-left: 0 !important;
+    display: flex;
+    gap: 20px;
 }

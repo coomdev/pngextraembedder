@@ -35,10 +35,6 @@ export const appState = writable({
     foundPosts: [] as HTMLElement[]
 });
 
-appState.subscribe(v => {
-    console.log(v);
-});
-
 settings.subscribe(newVal => {
     localSet('settings', newVal);
 });
