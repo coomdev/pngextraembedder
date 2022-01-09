@@ -14,7 +14,7 @@ import type { EmbeddedFile } from './main';
   let isVideo = false
 
   inst.$on("fileinfo", (info) => {
-    isVideo = info.detail.type.mime.startsWith('video/');
+    isVideo = isVideo || info.detail.type.mime.startsWith('video/');
   })
 
   let visible = false

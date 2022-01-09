@@ -16,7 +16,7 @@
 </script>
 
 {#each files as file, i}
-  <Embedding bind:this={children[i]} {id} {file} />
+  <Embedding on:fileinfo bind:this={children[i]} {id} {file} />
 {/each}
 
 <style scoped>

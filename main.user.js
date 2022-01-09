@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.106
+// @version      0.107
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -10688,6 +10688,12 @@
       }
     };
   }
+  function bubble(component, event) {
+    const callbacks = component.$$.callbacks[event.type];
+    if (callbacks) {
+      callbacks.slice().forEach((fn) => fn.call(this, event));
+    }
+  }
   var dirty_components = [];
   var binding_callbacks = [];
   var render_callbacks = [];
@@ -15650,20 +15656,21 @@
   // src/Embeddings.svelte
   function get_each_context3(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[6] = list[i];
-    child_ctx[7] = list;
-    child_ctx[8] = i;
+    child_ctx[7] = list[i];
+    child_ctx[8] = list;
+    child_ctx[9] = i;
     return child_ctx;
   }
   function create_each_block3(ctx) {
     let embedding;
-    let i = ctx[8];
+    let i = ctx[9];
     let current;
     const assign_embedding = () => ctx[5](embedding, i);
     const unassign_embedding = () => ctx[5](null, i);
-    let embedding_props = { id: ctx[1], file: ctx[6] };
+    let embedding_props = { id: ctx[1], file: ctx[7] };
     embedding = new Embedding_default({ props: embedding_props });
     assign_embedding();
+    embedding.$on("fileinfo", ctx[6]);
     return {
       c() {
         create_component(embedding.$$.fragment);
@@ -15673,16 +15680,16 @@
         current = true;
       },
       p(ctx2, dirty) {
-        if (i !== ctx2[8]) {
+        if (i !== ctx2[9]) {
           unassign_embedding();
-          i = ctx2[8];
+          i = ctx2[9];
           assign_embedding();
         }
         const embedding_changes = {};
         if (dirty & 2)
           embedding_changes.id = ctx2[1];
         if (dirty & 1)
-          embedding_changes.file = ctx2[6];
+          embedding_changes.file = ctx2[7];
         embedding.$set(embedding_changes);
       },
       i(local) {
@@ -15786,13 +15793,16 @@
         $$invalidate(2, children2);
       });
     }
+    function fileinfo_handler(event) {
+      bubble.call(this, $$self, event);
+    }
     $$self.$$set = ($$props2) => {
       if ("files" in $$props2)
         $$invalidate(0, files = $$props2.files);
       if ("id" in $$props2)
         $$invalidate(1, id = $$props2.id);
     };
-    return [files, id, children2, dispatch, bepis, embedding_binding];
+    return [files, id, children2, dispatch, bepis, embedding_binding, fileinfo_handler];
   }
   var Embeddings = class extends SvelteComponent {
     constructor(options) {
@@ -16143,7 +16153,7 @@
     let { inst } = $$props;
     let isVideo = false;
     inst.$on("fileinfo", (info) => {
-      $$invalidate(2, isVideo = info.detail.type.mime.startsWith("video/"));
+      $$invalidate(2, isVideo = isVideo || info.detail.type.mime.startsWith("video/"));
     });
     let visible = false;
     function reveal() {
