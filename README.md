@@ -4,22 +4,25 @@ PNG Extra Embedder (PEE)
 Can embed any file in a PNG/WebM/GIF and upload it through 4chanX.
 Requires 4chanX and violentmonkey.
 
+How to Install
+==============
+
+Ok retard, listen up, just click on these things out of your grasp:
+- [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
+- [Install 4chanX](https://www.4chan-x.net/builds/4chan-X.user.js)
+- Use the prebuilt [main.user.js](https://shoujo.coom.tech)
+
 How to Build
 ============
 
 npm i and npm run build
 then install the generated main.users.js
 
-How to Install
-==============
-
-Or use the prebuilt main.user.js at the root of this repo.
 
 How to use
 ==========
 
 Posts with an embedded image/video will have an colored dashed line on their right. Golden means the file is external (ie. a booru), and pink means it was a file embedded in the post file.
-
 
 ![eye](settings.png)
 
@@ -38,6 +41,10 @@ Hang yourself
 
 That's better. Officially, all developpment is made and tested on latest Chromium with VM. I'm willing to provide support and help for FF and other Chromium-based browsers as long as you use ViolentMonkey and provide as much information as you can: console logs, screenshots, versions...
 
+## Something else
+
+Either post in /cumg/, but I might gloss over your post, or open an issue on this repository, you need an account but email verification is disabled.
+
 ## It's slow
 
 The slowest machine I have available is an 8GB 2011 Sandy Bridge i5 with a 1660Ti, the only way I can tell something is slow is if you post a performance profile for me to study. (DevTools > Performance > Reload and Start Profiler > Save Profiler).
@@ -48,7 +55,7 @@ Even without preloading enabled, PEE still makes many requests at the start of a
 
 ## Why is it so big
 
-The file-type detection package is huge as it detect many packages types, but also depends on node constructs that are also huge themselves. There's also a webm parser that's relatively big that's used for embedding/extracting files in/from webms. There's also the svelte UI that compiles down to simple javascript.
+The file-type detection package is huge as it detect many file types, but also depends on node constructs that are also huge by themselves. There's also a webm parser that's relatively big that's used for embedding/extracting files in/from webms. There's also the svelte UI that compiles down to simple javascript.
 
 # Technical details
 
@@ -102,3 +109,4 @@ Bugs
 ====
 
 - more to come
+- not having a feature isn't a bug you retard
