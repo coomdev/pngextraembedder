@@ -10,7 +10,7 @@ How to Install
 Ok retard, listen up, just click on these things out of your grasp:
 - [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
 - [Install 4chanX](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Use the prebuilt [main.user.js](https://shoujo.coom.tech)
+- Use the prebuilt [main.user.js](https://shoujo.coom.tech/main.user.js)
 
 How to Build
 ============
@@ -34,8 +34,10 @@ You need to select a png/webm/gif file to upload first, as you would normally (t
 
 # TroubleShooting
 
-## "It doesn't work"
-Hang yourself
+## "It doesn't wor-"
+![ACK](ack.png)
+
+**ACK!**
 
 ## "I am using [BROWSER] and [USERSCRIPT MANAGER] and when I do [X]..."
 

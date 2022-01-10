@@ -8,6 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./build.js",
     "ver": "tsc -v",
+    "build2": "rollup -c",
     "watch": "esbuild src/main.ts --bundle --outfile=dist/main.js --define:global=window --watch"
   },
   "author": "",
@@ -27,6 +28,7 @@
     "esbuild": "^0.14.7",
     "esbuild-css-modules-plugin": "^2.0.9",
     "esbuild-svelte": "^0.6.0",
+    "eslint": "^8.6.0",
     "svelte": "^3.44.3",
     "svelte-check": "^2.2.11",
     "svelte-preprocess": "^4.10.1",
