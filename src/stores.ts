@@ -22,6 +22,8 @@ export const settings = writable(localLoad('settingsv2', {
     prev: false,
     sh: false,
     ep: false,
+    expte: false,
+    conc: 8,
     ho: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],
     rsources: [{
@@ -66,7 +68,8 @@ export const settings = writable(localLoad('settingsv2', {
         domain: "booru.allthefallen.moe",
         endpoint: "/posts.json?tags=md5:",
         view: 'https://booru.allthefallen.moe/posts/'
-    }] as (Omit<Booru, 'quirks'> & {view: string, disabled?: boolean})[]
+    }] as (Omit<Booru, 'quirks'> & {view: string, disabled?: boolean})[],
+    ...localLoad('settingsv2', {}),
 }));
 
 export const appState = writable({

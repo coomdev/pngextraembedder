@@ -1,3 +1,5 @@
+import { localLoad, settings } from "./stores";
+
 const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
     GM_xmlhttpRequest :
     (typeof GM != "undefined" ?
@@ -77,3 +79,30 @@ export function GM_fetch(...[url, opt, lisn]: [...Parameters<typeof fetch>, Even
         xmlhttprequest(gmopt);
     });
 }
+
+const makePoolable = <T extends any[], U>(fun: (...args: T) => Promise<U>, getPoolSize: () => number) => {
+    const pool = [];
+    let pending = 0;
+    const poolFree: (() => void)[] = [];
+
+    return async (...args: T) => {
+        while (pending >= getPoolSize())
+            await new Promise<void>(_ => poolFree.push(_));
+        pending++;
+        const prom = fun(...args);
+        prom.then(() => {
+            pending--;
+            poolFree.forEach(_ => _());
+            poolFree.length = 0;
+        });
+        return prom;
+    };
+};
+
+let csettings: Parameters<typeof settings['set']>[0] = localLoad('settingsv2', {} as any);
+
+settings.subscribe(s => {
+    csettings = s;
+});
+
+const poolFetch = makePoolable(GM_fetch, () => csettings.conc);

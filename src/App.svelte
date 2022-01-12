@@ -1,10 +1,10 @@
 <script lang="ts">
   import { hasContext, onDestroy } from 'svelte'
-import Dialog from './Dialog.svelte';
+  import Dialog from './Dialog.svelte';
 
   import { settings } from './stores'
   import Tag from './Tag.svelte'
-import type { Booru } from './thirdeye';
+  import type { Booru } from './thirdeye';
 
   let newbooru: Partial<Omit<Booru, 'quirks'> & {view: string}> = {};
   let dial: Dialog;
@@ -65,7 +65,7 @@ import type { Booru } from './thirdeye';
     </label>
     <label>
       <input type="checkbox" bind:checked={$settings.dh} />
-      Turn off hover preview.
+      Disable hover preview.
     </label>
     <label>
       <input type="checkbox" bind:checked={$settings.eye} />
@@ -96,15 +96,22 @@ import type { Booru } from './thirdeye';
     <label>
       <input type="checkbox" bind:checked={$settings.ep} />
       <!-- svelte-ignore a11y-missing-attribute -->
-      Turn off embedded file preloading<a
+      Disable embedded file preloading<a
         title="You might still want to enable 'preload external files'">?</a
       >
     </label>
     <label>
       <input type="checkbox" bind:checked={$settings.te} />
-      Turn off third-eye.
+      Disable third-eye.
     </label>
     {#if !$settings.te}
+    <label>
+      <input type="checkbox" bind:checked={$settings.expte} />
+      <!-- svelte-ignore a11y-missing-attribute -->
+      Use Experimental Query API<a title="Can be up to 30% faster, reduces strain on boorus, may break">?</a
+      >
+    </label>
+
       <h3>Booru sources</h3>
       <div class="tagcont">
         {#each $settings.rsources as source, i}
@@ -191,10 +198,6 @@ import type { Booru } from './thirdeye';
     gap: 5px;
     margin-bottom: 10px;
     flex-wrap: wrap;
-  }
-
-  select {
-    font-size: 1.2em;
   }
 
   .enabled {

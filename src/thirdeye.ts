@@ -1,6 +1,7 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { GM_fetch } from "./requests";
 import { localLoad, settings } from "./stores";
+import { Buffer } from "buffer";
 
 export type Booru = {
     disabled?: boolean;
@@ -41,7 +42,9 @@ const gelquirk: (s: string) => tran = prefix => (a =>
         tags: (e.tag_string || e.tags || '').split(' ')
     } as BooruMatch)) || []);
 
+let experimentalApi = false;
 settings.subscribe(s => {
+    experimentalApi = s.expte;
     boorus = s.rsources.map(e => ({
         ...e,
         quirks: gelquirk(e.view)
@@ -60,10 +63,61 @@ settings.subscribe(s => {
     black = new Set(s.blacklist);
 });
 
+const bufferingTime = 2000;
+let expired: number | undefined = undefined;
+type ApiResult = { [md5 in string]: { [domain in string]: BooruMatch[] } };
+let reqQueue: [string, (a: ApiResult) => void][] = [];
+let unlockQueue = Promise.resolve();
+
+const queryCache: ApiResult = {};
+const processQueries = async () => {
+    console.log("======== FIRIN =======");
+    let unlock!: () => void;
+    unlockQueue = new Promise<void>(_ => unlock = _);
+    const md5 = reqQueue.map(e => e[0]).filter(e => !(e in queryCache));
+    expired = undefined;
+    if (md5.length > 0) {
+        const res = await fetch("https://shoujo.coom.tech/api", {
+            method: "POST",
+            body: JSON.stringify({ md5 }),
+            headers: {
+                'content-type': 'application/json'
+            }
+        });
+        const results: ApiResult = await res.json();
+        Object.entries(results).forEach(e => queryCache[e[0]] = e[1]);
+    }
+    reqQueue.forEach(e => e[1]({ [e[0]]: queryCache[e[0]] }));
+    reqQueue = [];
+    unlock();
+};
+
+const queueForProcessing = async (hex: string, cb: (a: ApiResult) => void) => {
+    console.log("putting", hex, 'in queue');
+    await unlockQueue;
+    console.log("put", hex, 'in queue');
+    reqQueue.push([hex, cb]);
+    if (!expired) {
+        expired = setTimeout(processQueries, bufferingTime);
+    }
+};
+
 const cache: any = {};
+
+const shoujoFind = async (hex: string): Promise<ApiResult> => {
+    return new Promise(res => {
+        queueForProcessing(hex, res);
+    });
+};
 
 const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
     try {
+        if (experimentalApi) {
+            const res = await shoujoFind(hex);
+            if (!res)
+                debugger;
+            return hex in res ? (res[hex][b.domain] || []) : [];
+        }
         if (b.domain in cache && hex in cache[b.domain])
             return cache[b.domain][hex] as BooruMatch[];
         const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
@@ -86,6 +140,7 @@ const extract = async (b: Buffer, fn?: string) => {
         if (e.disabled)
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
+        
         if (result.length) {
             booru = e.name;
             break;
