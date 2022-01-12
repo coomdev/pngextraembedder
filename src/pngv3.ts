@@ -2,7 +2,8 @@ import { buf } from "crc-32";
 import { Buffer } from "buffer";
 import type { ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
-import { decodeCoom3Payload } from "./utils";
+import { buildPeeFile, decodeCoom3Payload, fireNotification } from "./utils";
+import { GM_fetch } from "./requests";
 
 const CUM3 = Buffer.from("CUM\0" + "3");
 
@@ -74,10 +75,34 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
+function parseForm(data: object) {
+    const form = new FormData();
+
+    Object.entries(data)
+        .filter(([key, value]) => value !== null)
+        .map(([key, value]) => form.append(key, value));
+
+    return form;
+}
+
 const inject = async (container: File, injs: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
+
+    let total = 0;
+    fireNotification('info', `Uploading ${injs.length} files...`);
+    const links = await Promise.all(injs.map(async inj => {
+        const ret = (await GM_fetch("https://catbox.moe/user/api.php", {
+            method: 'POST',
+            body: parseForm({
+                reqtype: 'fileupload',
+                fileToUpload: await buildPeeFile(inj)
+            })
+        })).text();
+        fireNotification('info', `Uploaded files [${++total}/${injs.length}]`);
+        return ret;
+    }));
 
     let magic = false;
     for await (const [name, chunk, crc, offset] of decoder.chunks()) {
@@ -89,8 +114,7 @@ const inject = async (container: File, injs: File[]) => {
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
     }
-    const injb = Buffer.alloc(4);
-    // TODO
+    const injb = Buffer.from(links.join('\0'));
     await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
     await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
     return extract();

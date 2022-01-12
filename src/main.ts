@@ -3,6 +3,7 @@ import { appState, settings } from "./stores";
 import globalCss from './global.css';
 
 import png from "./png";
+import pngv3 from "./pngv3";
 import webm from "./webm";
 import gif from "./gif";
 import thirdeye from "./thirdeye";
@@ -16,6 +17,8 @@ import SettingsButton from './SettingsButton.svelte';
 //import Embedding from './Embedding.svelte';
 import Embeddings from './Embeddings.svelte';
 import EyeButton from './EyeButton.svelte';
+import { buildPeeFile, fireNotification } from "./utils";
+import { fileTypeFromBuffer } from "file-type";
 
 export interface ImageProcessor {
     skip?: true;
@@ -27,12 +30,12 @@ export interface ImageProcessor {
 
 export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
-    [thirdeye, pomf, png, webm, gif];
+    [thirdeye, pomf, png, pngv3, webm, gif];
 
 let cappState: Parameters<typeof appState['set']>[0];
 settings.subscribe(b => {
     csettings = b;
-    processors = [...(!csettings.te ? [thirdeye] : []), png, pomf, webm, gif
+    processors = [...(!csettings.te ? [thirdeye] : []), png, pngv3, pomf, webm, gif
     ];
 });
 
@@ -269,27 +272,15 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
                     const proc = processors.filter(e => e.inject).find(e => e.match(file.name));
                     if (!proc)
                         throw new Error("Container filetype not supported");
-                    const buff = await proc.inject!(file, [...input.files]);
+                    const buff = await proc.inject!(file, [...input.files].slice(0, 5));
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
                         //detail: { file: new Blob([buff]), name: file.name, type: file.type }
                         detail: { file: new Blob([buff], { type }), name: file.name }
                     }));
-                    document.dispatchEvent(new CustomEvent("CreateNotification", {
-                        detail: {
-                            type: 'success',
-                            content: `File${input.files.length > 1 ? 's' : ''} successfully embedded!`,
-                            lifetime: 3
-                        }
-                    }));
+                    fireNotification('success', `File${input.files.length > 1 ? 's' : ''} successfully embedded!`);
                 } catch (err) {
                     const e = err as Error;
-                    document.dispatchEvent(new CustomEvent("CreateNotification", {
-                        detail: {
-                            type: 'error',
-                            content: "Couldn't embed file: " + e.message,
-                            lifetime: 3
-                        }
-                    }));
+                    fireNotification('error', "Couldn't embed file: " + e.message);
                 }
             }
         });
@@ -377,36 +368,82 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
 
     post.setAttribute('data-processed', "true");
 }
-//if ((window as any)['pagemode']) {
-//    onload = () => {
-//        console.log("loaded");
-//        const resbuf = async (s: EmbeddedFile['data']) => Buffer.isBuffer(s) ? s : await s();
-//        const container = document.getElementById("container") as HTMLInputElement;
-//        const injection = document.getElementById("injection") as HTMLInputElement;
-//        container.onchange = injection.onchange = async () => {
-//            console.log('eval changed');
-//            if (container.files?.length && injection.files?.length) {
-//                const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-//                const dle = document.getElementById("dle") as HTMLAnchorElement;
-//                console.log(buf(new Uint8Array(await container.files[0].arrayBuffer())));
-//                console.log(buf(new Uint8Array(await injection.files[0].arrayBuffer())));
-//                const res = await gif.inject!(container.files[0], injection.files[0]);
-//                console.log('inj done', buf(res));
-//                const result = document.getElementById("result") as HTMLImageElement;
-//                const extracted = document.getElementById("extracted") as HTMLImageElement;
-//                const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
-//                result.src = URL.createObjectURL(res2);
-//                dlr.href = result.src;
-//                console.log('url created');
-//                const embedded = await gif.extract(res);
-//                console.log(buf(new Uint8Array(await resbuf(embedded.data))));
-//                if (!embedded) {
-//                    debugger;
-//                    return;
-//                }
-//                extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
-//                dle.href = extracted.src;
-//            }
-//        };
-//    };
-//}
+
+function parseForm(data: object) {
+    const form = new FormData();
+
+    Object.entries(data)
+        .filter(([key, value]) => value !== null)
+        .map(([key, value]) => form.append(key, value));
+
+    return form;
+}
+
+if ((window as any)['pagemode']) {
+    onload = () => {
+        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
+        const container = document.getElementById("container") as HTMLInputElement;
+        const injection = document.getElementById("injection") as HTMLInputElement;
+        container.onchange = async () => {
+            const ret = await fetch("https://catbox.moe/user/api.php", {
+                method: 'POST',
+                body: parseForm({
+                    reqtype: 'fileupload',
+                    fileToUpload: container.files![0]
+                })
+            });
+            console.log(ret);
+            console.log(await ret.text());
+        };
+    };
+}
+
+if ((window as any)['pagemode']) {
+    onload = () => {
+        const extraction = document.getElementById("extraction") as HTMLInputElement;
+       /* extraction.onchange = async () => {
+            const pee = await buildPeeFile(extraction.files![0]);
+            const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+            dlr.href = URL.createObjectURL(pee);
+        };*/
+        
+        document.addEventListener("CreateNotification", (e: any) => console.log(e.detail));
+        console.log("loaded");
+        //const resbuf = async (s: any) => ((Buffer.isBuffer(s) ? s : await s()));
+        const container = document.getElementById("container") as HTMLInputElement;
+        const injection = document.getElementById("injection") as HTMLInputElement;
+        injection.multiple = true;
+        extraction.onchange = async () => {
+            const embedded = await pngv3.extract(Buffer.from(await extraction.files![0].arrayBuffer()));
+            const d = document.createElement('div');
+            new Embeddings({
+                target: d,
+                props: {files: embedded}
+            });
+            document.body.append(d);
+            console.log(embedded);
+        };
+
+        container.onchange = injection.onchange = async () => {
+            console.log('eval changed');
+            if (container.files?.length && injection.files?.length) {
+                const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+                //const dle = document.getElementById("dle") as HTMLAnchorElement;
+                const res = await pngv3.inject!(container.files[0], [...injection.files]);
+                const result = document.getElementById("result") as HTMLImageElement;
+                //const extracted = document.getElementById("extracted") as HTMLImageElement;
+                const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
+                result.src = URL.createObjectURL(res2);
+                dlr.href = result.src;
+                console.log('url created');
+                //const embedded = await pngv3.extract(res);
+                //if (!embedded) {
+                //    debugger;
+                    return;
+                //}
+                //extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
+                //dle.href = extracted.src;
+            }
+        };
+    };
+}

@@ -33,7 +33,7 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
     });
 }
 
-export function GM_fetch(...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) {
+export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) => {
     function blobTo(to: string, blob: Blob) {
         if (to == "arrayBuffer" && blob.arrayBuffer)
             return blob.arrayBuffer();
@@ -81,7 +81,10 @@ export function GM_fetch(...[url, opt, lisn]: [...Parameters<typeof fetch>, Even
         };
         xmlhttprequest(gmopt);
     });
-}
+};
+
+if ((window as any)['pagemode'])
+    GM_fetch = fetch as any;
 
 const makePoolable = <T extends any[], U>(fun: (...args: T) => Promise<U>, getPoolSize: () => number) => {
     const pool = [];
