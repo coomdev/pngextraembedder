@@ -27,7 +27,7 @@ const extract = async (png: Buffer) => {
                 case 'tEXt':
                     buff = chunk;
                     if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
-                        return await decodeCoom3Payload(buff.slice(4, 4 + CUM3.length));
+                        return await decodeCoom3Payload(buff.slice(4 + CUM3.length));
                     }
                     break;
                 case 'IDAT':
