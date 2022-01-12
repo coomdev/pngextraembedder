@@ -4,7 +4,7 @@ import { PNGDecoder, PNGEncoder } from "./png";
 import { buildPeeFile, decodeCoom3Payload, fireNotification } from "./utils";
 import { GM_fetch } from "./requests";
 
-const CUM3 = Buffer.from("CUM\0" + "3");
+const CUM3 = Buffer.from("doo\0" + "m");
 
 const BufferReadStream = (b: Buffer) => {
     const ret = new ReadableStream<Buffer>({
@@ -99,7 +99,8 @@ const inject = async (container: File, injs: File[]) => {
         if (magic && name != "IDAT")
             break;
         if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", buildChunk("tEXt", Buffer.concat([CUM3, injb])), 0, 0]);
+            await encoder.insertchunk(["tEXt", buildChunk("tEXt",
+                Buffer.concat([CUM3, injb])), 0, 0]);
             magic = true;
         }
         await encoder.insertchunk([name, chunk, crc, offset]);

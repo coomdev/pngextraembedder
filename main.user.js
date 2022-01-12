@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.125
+// @version      0.126
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11392,7 +11392,7 @@
     return new Blob([ret]);
   };
   var decodeCoom3Payload = async (buff) => {
-    const pees = buff.toString().split("\0").slice(0, 5).filter((e) => e.startsWith("http"));
+    const pees = buff.toString().split(" ").slice(0, 5).filter((e) => e.startsWith("http"));
     return Promise.all(pees.map(async (pee) => {
       const headers = headerStringToObject(await GM_head(pee));
       const res = await GM_fetch(pee, {
@@ -11448,7 +11448,7 @@
   };
 
   // src/pngv3.ts
-  var CUM3 = import_buffer3.Buffer.from("CUM\x003");
+  var CUM3 = import_buffer3.Buffer.from("doo\0m");
   var BufferReadStream2 = (b) => {
     const ret = new ReadableStream({
       pull(cont) {

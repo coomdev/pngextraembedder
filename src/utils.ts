@@ -74,7 +74,7 @@ rest: [X bytes of thumbnail data])[file bytes]
 &4 => has thumbnail
 */
 export const decodeCoom3Payload = async (buff: Buffer) => {
-    const pees = buff.toString().split('\0').slice(0, 5).filter(e => e.startsWith("http"));
+    const pees = buff.toString().split(' ').slice(0, 5).filter(e => e.startsWith("http"));
     return Promise.all(pees.map(async pee => {
         const headers = headerStringToObject(await GM_head(pee));
         const res = await GM_fetch(pee, {
