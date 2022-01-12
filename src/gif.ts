@@ -85,7 +85,7 @@ const write_embedding = async (writer: WritableStreamDefaultWriter<Buffer>, inj:
     }
 };
 
-const inject = async (container: File, inj: File) => {
+const inject = async (container: File, [inj]: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const writer = writestream.getWriter();
 
@@ -136,6 +136,5 @@ const has_embed = (gif: Buffer) => {
 export default {
     extract,
     has_embed,
-    inject,
     match: fn => !!fn.match(/\.gif$/)
 } as ImageProcessor;

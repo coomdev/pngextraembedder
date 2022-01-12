@@ -144,7 +144,7 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
-const inject = async (container: File, inj: File) => {
+const inject = async (container: File, [inj]: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
@@ -201,6 +201,5 @@ const has_embed = async (png: Buffer) => {
 export default {
     extract,
     has_embed,
-    inject,
     match: fn => !!fn.match(/\.png$/)
 } as ImageProcessor;
