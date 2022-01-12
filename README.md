@@ -10,7 +10,7 @@ How to Install
 Ok retard, listen up, just click on these things out of your grasp:
 - [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
 - [Install 4chanX](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Use the prebuilt [main.user.js](https://shoujo.coom.tech/main.user.js)
+- Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
 
 How to Build
 ============
