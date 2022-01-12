@@ -74,51 +74,55 @@ rest: [X bytes of thumbnail data])[file bytes]
 &4 => has thumbnail
 */
 export const decodeCoom3Payload = async (buff: Buffer) => {
-    const pees = buff.toString().split(' ').slice(0, 5).filter(e => e.startsWith("http"));
-    return Promise.all(pees.map(async pee => {
-        const headers = headerStringToObject(await GM_head(pee));
-        const res = await GM_fetch(pee, {
-            headers: { ranges: 'bytes=0-2048' },
-            mode: 'cors',
-            referrerPolicy: 'no-referrer',
-        });
-        const size = +headers['content-size'] || 0;
-        const header = Buffer.from(await res.arrayBuffer());
-        let hptr = 0;
-        if (header.slice(0, 4).toString() == "PEE\0")
-            hptr += 4;
-        const flags = header[hptr];
-        const hasFn = !!(flags & 1);
-        const hasTags = !!(flags & 2);
-        const hasThumbnail = !!(flags & 4);
-        let [ptr, ptr2] = [hptr + 1, hptr + 1];
-        let fn = 'embedded';
-        let tags = [];
-        let thumb: EmbeddedFile['thumbnail'] = Buffer.from(thumbnail);
-        if (hasFn) {
-            while (header[ptr2] != 0)
-                ptr2++;
-            fn = header.slice(ptr, ptr2).toString();
-            ptr = ++ptr2;
+    const pees = buff.toString().split(' ').slice(0, 5).filter(e => e.startsWith("https://files.catbox.moe/"));
+    return (await Promise.all(pees.map(async pee => {
+        try {
+            const headers = headerStringToObject(await GM_head(pee));
+            const res = await GM_fetch(pee, {
+                headers: { ranges: 'bytes=0-2048', 'user-agent': '' },
+                mode: 'cors',
+                referrerPolicy: 'no-referrer',
+            });
+            const size = +headers['content-length'] || 0;
+            const header = Buffer.from(await res.arrayBuffer());
+            let hptr = 0;
+            if (header.slice(0, 4).toString() == "PEE\0")
+                hptr += 4;
+            const flags = header[hptr];
+            const hasFn = !!(flags & 1);
+            const hasTags = !!(flags & 2);
+            const hasThumbnail = !!(flags & 4);
+            let [ptr, ptr2] = [hptr + 1, hptr + 1];
+            let fn = 'embedded';
+            let tags = [];
+            let thumb: EmbeddedFile['thumbnail'] = Buffer.from(thumbnail);
+            if (hasFn) {
+                while (header[ptr2] != 0)
+                    ptr2++;
+                fn = header.slice(ptr, ptr2).toString();
+                ptr = ++ptr2;
+            }
+            if (hasTags) {
+                while (header[ptr2] != 0)
+                    ptr2++;
+                tags = header.slice(ptr, ptr2).toString().split(/\s+/);
+            }
+            let thumbsize = 0;
+            if (hasThumbnail) {
+                thumbsize = header.readInt32LE(ptr);
+                thumb = Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr + 4}-${ptr + 4 + thumbsize}` } })).arrayBuffer());
+            }
+            return {
+                filename: fn,
+                data: async (lsn) =>
+                    Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr + 4 + thumbsize}-${size - 1}` } }, lsn)).arrayBuffer()),
+                thumbnail: thumb,
+            } as EmbeddedFile;
+        } catch (e) {
+            // niggers trying to fuck with bad links
+            console.warn(e);
         }
-        if (hasTags) {
-            while (header[ptr2] != 0)
-                ptr2++;
-            tags = header.slice(ptr, ptr2).toString().split(/\s+/);
-        }
-        let thumbsize = 0;
-        if (hasThumbnail) {
-            thumbsize = header.readInt32LE(ptr);
-            console.log("Thumbnail size of ", thumbsize);
-            thumb = Buffer.from(await (await GM_fetch(pee, { headers: { range: `bytes=${ptr + 4}-${ptr + 4 + thumbsize}` } })).arrayBuffer());
-        }
-        return {
-            filename: fn,
-            data: async (lsn) =>
-                Buffer.from(await (await GM_fetch(pee, { headers: { range: `bytes=${ptr + 4 + thumbsize}-${size - 1}` } }, lsn)).arrayBuffer()),
-            thumbnail: thumb,
-        } as EmbeddedFile;
-    }));
+    }))).map(e => e);
 };
 
 export const fireNotification = (level: 'success' | 'error' | 'info' | 'warning', text: string, lifetime = 3) => {

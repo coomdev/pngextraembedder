@@ -76,7 +76,10 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
                 resolve(resp as any);
             },
             ontimeout: () => reject("fetch timeout"),
-            onerror: () => reject("fetch error"),
+            onerror: (...args) => {
+                debugger;
+                reject("fetch error");
+            },
             onabort: () => reject("fetch abort")
         };
         xmlhttprequest(gmopt);
