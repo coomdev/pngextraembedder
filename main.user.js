@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.116
+// @version      0.117
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11699,7 +11699,7 @@
     let cachedFile;
     const prev = result[0].preview_url;
     const full = result[0].full_url;
-    return {
+    return [{
       source: result[0].source,
       page: { title: booru, url: result[0].page },
       filename: fn.substring(0, 33) + result[0].ext,
@@ -11709,7 +11709,7 @@
           cachedFile = await (await GM_fetch(full || prev, void 0, lsn)).arrayBuffer();
         return cachedFile;
       }
-    };
+    }];
   };
   var has_embed4 = async (b, fn) => {
     if (import_buffer4.Buffer.from(fn, "hex").equals(b))
@@ -16642,7 +16642,7 @@
     res2 = res2?.filter((e) => e);
     if (!res2 || res2.length == 0)
       return;
-    processAttachments(post, res2?.filter((e) => e).flatMap((e) => e[0].map((k) => [k, e[1]])));
+    processAttachments(post, res2?.flatMap((e) => e[0].map((k) => [k, e[1]])));
   };
   var startup = async () => {
     if (typeof window["FCX"] != "undefined")
@@ -16681,6 +16681,7 @@
       isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
     const n = 7;
+    console.log(posts);
     const range = ~~(posts.length / n) + 1;
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
       const postsslice = posts.slice(i * range, (i + 1) * range);

@@ -136,7 +136,7 @@ const processPost = async (post: HTMLDivElement) => {
     res2 = res2?.filter(e => e);
     if (!res2 || res2.length == 0)
         return;
-    processAttachments(post, res2?.filter(e => e).flatMap(e => e![0].map(k => [k, e![1]] as [EmbeddedFile, boolean])));
+    processAttachments(post, res2?.flatMap(e => e![0].map(k => [k, e![1]] as [EmbeddedFile, boolean])));
 };
 
 const startup = async () => {
@@ -189,6 +189,7 @@ const startup = async () => {
     //      await processPost(posts[i] as any);
 
     const n = 7;
+    console.log(posts);
     const range = ~~(posts.length / n) + 1;
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
         const postsslice = posts.slice(i * range, (i + 1) * range);

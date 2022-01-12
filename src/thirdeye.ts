@@ -148,7 +148,7 @@ const extract = async (b: Buffer, fn?: string) => {
     let cachedFile: ArrayBuffer;
     const prev = result[0].preview_url;
     const full = result[0].full_url;
-    return {
+    return [{
         source: result[0].source,
         page: { title: booru, url: result[0].page },
         filename: fn!.substring(0, 33) + result[0].ext,
@@ -158,7 +158,7 @@ const extract = async (b: Buffer, fn?: string) => {
                 cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer()); // prefer full
             return cachedFile;
         }
-    } as EmbeddedFile;
+    } as EmbeddedFile];
 };
 
 const has_embed = async (b: Buffer, fn?: string) => {
