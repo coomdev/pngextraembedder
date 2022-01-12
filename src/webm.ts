@@ -3,7 +3,7 @@ import * as ebml from "ts-ebml";
 import type { ImageProcessor } from "./main";
 
 // unused, but will in case 4chan does file sig checks
-//const password = Buffer.from("NOA");
+const password = Buffer.from("NOA");
 
 const xor = (a: Buffer, p: Buffer) => {
     let n = 0;
@@ -142,5 +142,6 @@ const has_embed = (webm: Buffer) => {
 export default {
     extract,
     has_embed,
+    inject,
     match: fn => !!fn.match(/\.webm$/)
 } as ImageProcessor;
