@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.115
+// @version      0.116
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11181,7 +11181,7 @@
         const fnsize = data.readUInt32LE(0);
         const fn = data.slice(4, 4 + fnsize).toString();
         data = data.slice(4 + fnsize);
-        return { filename: fn, data };
+        return [{ filename: fn, data }];
       }
     } catch (e) {
       console.error(e);
@@ -11191,7 +11191,7 @@
   };
   var buildChunk = (tag, data) => {
     const ret = import_buffer.Buffer.alloc(data.byteLength + 4);
-    ret.write(tag.substr(0, 4), 0);
+    ret.write(tag.slice(0, 4), 0);
     data.copy(ret, 4);
     return ret;
   };
@@ -11345,7 +11345,7 @@
       return;
     const chk = chunks[embed2 + 1];
     if (chk.type == "b" && chk.name == "TagBinary")
-      return { filename: "string", data: chk.data };
+      return [{ filename: "string", data: chk.data }];
   };
   var inject2 = async (container, inj) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
   var has_embed2 = (webm) => {
@@ -11407,7 +11407,7 @@
           ptr += sec.data.byteLength;
           end = sec.end;
         } while (sec.appname == "COOMTECH" && gif[end] == "!".charCodeAt(0));
-        return { data: ret, filename: "embedded" };
+        return [{ data: ret, filename: "embedded" }];
       }
       end = sec.end;
     }
@@ -11629,7 +11629,6 @@
   var unlockQueue = Promise.resolve();
   var queryCache = {};
   var processQueries = async () => {
-    console.log("======== FIRIN =======");
     let unlock;
     unlockQueue = new Promise((_) => unlock = _);
     const md5 = reqQueue.map((e) => e[0]).filter((e) => !(e in queryCache));
@@ -11747,7 +11746,7 @@
   ];
   var getExt = (fn) => {
     const isDum = fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
-    const isB64 = fn.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
+    const isB64 = fn.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn.match(/\[.*=(.*)\]/);
     let ext;
     if (isDum) {
@@ -11770,7 +11769,7 @@
       } catch {
       }
     }
-    return {
+    return [{
       filename: ext,
       data: async (lsn) => {
         try {
@@ -11779,7 +11778,7 @@
         }
       },
       thumbnail: hasembed_default
-    };
+    }];
   };
   var has_embed5 = async (b, fn) => {
     const ext = getExt(fn);
@@ -11798,13 +11797,7 @@
     skip: true,
     extract: extract5,
     has_embed: has_embed5,
-    match: (fn) => {
-      const base = fn.split(".").slice(0, -1).join(".");
-      const isDum = !!fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
-      const isB64 = !!fn.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
-      const isExt = !!fn.match(/\[.*=.*\]/);
-      return isB64 || isExt || isDum;
-    }
+    match: (fn) => !!getExt(fn)
   };
 
   // src/App.svelte
@@ -15847,6 +15840,8 @@
       if (!contracted)
         return;
       const [sw, sh] = [visualViewport.width, visualViewport.height];
+      if (dims[0] == 0 && dims[1] == 0)
+        recompute();
       let width = dims[0];
       let height = dims[1] + 25;
       let { clientX, clientY } = ev || lastev;
@@ -16647,7 +16642,7 @@
     res2 = res2?.filter((e) => e);
     if (!res2 || res2.length == 0)
       return;
-    processAttachments(post, res2?.filter((e) => e));
+    processAttachments(post, res2?.filter((e) => e).flatMap((e) => e[0].map((k) => [k, e[1]])));
   };
   var startup = async () => {
     if (typeof window["FCX"] != "undefined")

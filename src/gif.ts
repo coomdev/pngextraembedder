@@ -43,7 +43,7 @@ const extractBuff = (gif: Buffer) => {
                 ptr += sec.data.byteLength;
                 end = sec.end;
             } while (sec.appname == "COOMTECH" && gif[end] == '!'.charCodeAt(0));
-            return { data: ret, filename: 'embedded' } as EmbeddedFile;
+            return [{ data: ret, filename: 'embedded' }] as EmbeddedFile[];
         }
         end = sec.end;
     }

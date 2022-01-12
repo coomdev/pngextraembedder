@@ -71,7 +71,6 @@ let unlockQueue = Promise.resolve();
 
 const queryCache: ApiResult = {};
 const processQueries = async () => {
-    console.log("======== FIRIN =======");
     let unlock!: () => void;
     unlockQueue = new Promise<void>(_ => unlock = _);
     const md5 = reqQueue.map(e => e[0]).filter(e => !(e in queryCache));

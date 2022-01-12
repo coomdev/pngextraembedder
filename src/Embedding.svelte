@@ -211,6 +211,8 @@
     if (!contracted) return
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
+    if (dims[0] == 0 && dims[1] == 0)
+        recompute();
     let width = dims[0]
     let height = dims[1] + 25
     let { clientX, clientY } = (ev || lastev!)

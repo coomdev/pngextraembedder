@@ -11,7 +11,7 @@ const sources = [
 
 const getExt = (fn: string) => {
     const isDum = fn!.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
-    const isB64 = fn!.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
+    const isB64 = fn!.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn!.match(/\[.*=(.*)\]/);
     let ext;
     if (isDum) {
@@ -37,8 +37,8 @@ const extract = async (b: Buffer, fn?: string) => {
             // 404
         }
     }
-    
-    return {
+
+    return [{
         filename: ext,
         data: async (lsn) => {
             try {
@@ -48,7 +48,7 @@ const extract = async (b: Buffer, fn?: string) => {
             }
         },
         thumbnail
-    } as EmbeddedFile;
+    } as EmbeddedFile];
 };
 
 const has_embed = async (b: Buffer, fn?: string) => {
@@ -63,7 +63,7 @@ const has_embed = async (b: Buffer, fn?: string) => {
             // 404
         }
     }
-    
+
     return false;
 };
 
@@ -71,11 +71,5 @@ export default {
     skip: true,
     extract,
     has_embed,
-    match: fn => {
-        const base = fn.split('.').slice(0, -1).join('.');
-        const isDum = !!fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
-        const isB64 = !!fn.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
-        const isExt = !!fn.match(/\[.*=.*\]/);
-        return isB64 || isExt || isDum;
-    }
+    match: fn => !!getExt(fn)
 } as ImageProcessor;

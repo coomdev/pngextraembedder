@@ -120,7 +120,7 @@ const extract = (webm: Buffer) => {
         return;
     const chk = chunks[embed + 1];
     if (chk.type == "b" && chk.name == "TagBinary")
-        return { filename: 'string', data: chk.data };
+        return [{ filename: 'string', data: chk.data }];
 };
 
 const inject = async (container: File, inj: File): Promise<Buffer> =>

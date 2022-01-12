@@ -21,7 +21,7 @@ export interface ImageProcessor {
     skip?: true;
     match(fn: string): boolean;
     has_embed(b: Buffer, fn?: string): boolean | Promise<boolean>;
-    extract(b: Buffer, fn?: string): EmbeddedFile | Promise<EmbeddedFile>;
+    extract(b: Buffer, fn?: string): EmbeddedFile[] | Promise<EmbeddedFile[]>;
     inject?(b: File, c: File): Buffer | Promise<Buffer>;
 }
 
@@ -86,14 +86,14 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string, hex: string): Promise<([EmbeddedFile, boolean] | undefined)[]> => {
+const processImage = async (src: string, fn: string, hex: string): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
     return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
         if (proc.skip) {
             // skip file downloading, file is referenced from the filename
             // basically does things like filtering out blacklisted tags
             const md5 = Buffer.from(hex, 'base64');
             if (await proc.has_embed(md5, fn) === true)
-                return [await proc.extract(md5, fn), true] as [EmbeddedFile, boolean];
+                return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
             return;
         }
         const iter = streamRemote(src);
@@ -118,7 +118,7 @@ const processImage = async (src: string, fn: string, hex: string): Promise<([Emb
             //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
             return;
         }
-        return [await proc.extract(cumul), false] as [EmbeddedFile, boolean];
+        return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
     }));
 };
 
@@ -136,7 +136,7 @@ const processPost = async (post: HTMLDivElement) => {
     res2 = res2?.filter(e => e);
     if (!res2 || res2.length == 0)
         return;
-    processAttachments(post, res2?.filter(e => e) as [EmbeddedFile, boolean][]);
+    processAttachments(post, res2?.filter(e => e).flatMap(e => e![0].map(k => [k, e![1]] as [EmbeddedFile, boolean])));
 };
 
 const startup = async () => {
