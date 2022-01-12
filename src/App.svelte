@@ -86,6 +86,10 @@
       Preload external files when they are in view.
     </label>
     <label>
+      <input type="checkbox" bind:checked={$settings.hotlink} />
+      Hotlink content.
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.ca} />
       Control audio on videos with mouse wheel.
     </label>

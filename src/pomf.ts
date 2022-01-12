@@ -2,12 +2,18 @@ import type { EmbeddedFile, ImageProcessor } from "./main";
 import { GM_fetch, GM_head } from "./requests";
 import type { Buffer } from "buffer";
 import thumbnail from "./assets/hasembed.png";
+import { settings } from "./stores";
 
 const sources = [
     { host: 'Catbox', prefix: 'https://files.catbox.moe/' },
     { host: 'Litter', prefix: 'https://litter.catbox.moe/' },
     { host: 'Pomf', prefix: 'https://a.pomf.cat/' },
 ];
+
+export let csettings: Parameters<typeof settings['set']>[0];
+settings.subscribe(b => {
+    csettings = b;
+});
 
 const getExt = (fn: string) => {
     const isDum = fn!.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
@@ -40,7 +46,7 @@ const extract = async (b: Buffer, fn?: string) => {
 
     return [{
         filename: ext,
-        data: async (lsn) => {
+        data: csettings.hotlink ? rsource! : async (lsn) => {
             try {
                 return (await GM_fetch(rsource, undefined, lsn)).arrayBuffer();
             } catch (e) {

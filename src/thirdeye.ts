@@ -3,6 +3,11 @@ import { GM_fetch } from "./requests";
 import { localLoad, settings } from "./stores";
 import { Buffer } from "buffer";
 
+export let csettings: Parameters<typeof settings['set']>[0];
+settings.subscribe(b => {
+    csettings = b;
+});
+
 export type Booru = {
     disabled?: boolean;
     name: string;
@@ -139,7 +144,7 @@ const extract = async (b: Buffer, fn?: string) => {
         if (e.disabled)
             continue;
         result = await findFileFrom(e, fn!.substring(0, 32));
-        
+
         if (result.length) {
             booru = e.name;
             break;
@@ -153,7 +158,7 @@ const extract = async (b: Buffer, fn?: string) => {
         page: { title: booru, url: result[0].page },
         filename: fn!.substring(0, 33) + result[0].ext,
         thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()), // prefer preview
-        data: async (lsn) => {
+        data: csettings.hotlink ? (full || prev) : async (lsn) => {
             if (!cachedFile)
                 cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer()); // prefer full
             return cachedFile;

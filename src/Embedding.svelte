@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { fileTypeFromBuffer } from 'file-type'
+  import { fileTypeFromBuffer, FileTypeResult } from 'file-type'
   import { settings, appState } from './stores'
   import { beforeUpdate, tick } from 'svelte'
-  import type {EmbeddedFile} from './main';
-	import { createEventDispatcher } from 'svelte';
+  import type { EmbeddedFile } from './main'
+  import { createEventDispatcher } from 'svelte'
+  import { GM_head, headerStringToObject } from '../dist/requests'
 
-  export const dispatch = createEventDispatcher();
+  export const dispatch = createEventDispatcher()
 
   export let file: EmbeddedFile
   let isVideo = false
@@ -13,9 +14,9 @@
   let isAudio = false
   let url = ''
   let settled = false
-  let contracted = true;
+  let contracted = true
   let hovering = false
-  let ftype = '';
+  let ftype = ''
 
   let place: HTMLDivElement
   let hoverElem: HTMLDivElement
@@ -23,102 +24,115 @@
   let videoElem: HTMLVideoElement
   let hoverVideo: HTMLVideoElement
   let dims: [number, number] = [0, 0]
-  let furl: string | undefined = undefined;
+  let furl: string | undefined = undefined
 
-  let visible = false;
-  export const isNotChrome = !navigator.userAgent.includes("Chrome/");
+  let visible = false
+  export const isNotChrome = !navigator.userAgent.includes('Chrome/')
 
-  export let id = ''; 
-  document.addEventListener("reveal", (e: any) => {
-    if (e.detail.id == id)
-      visible = !visible;
-  });
+  export let id = ''
+  document.addEventListener('reveal', (e: any) => {
+    if (e.detail.id == id) visible = !visible
+  })
 
   export function isContracted() {
-    return contracted;
+    return contracted
   }
 
   beforeUpdate(async () => {
     if (settled) return
     settled = true
-    
-    const thumb = file.thumbnail || file.data;
-    const type = await fileTypeFromBuffer(thumb);
-    url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
-    if (!type)
-      return;
-    ftype = type.mime;
+
+    const thumb = file.thumbnail || file.data
+    let type: FileTypeResult | undefined
+    if (typeof thumb != 'string') {
+      type = await fileTypeFromBuffer(thumb)
+      url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
+      if (!type) return
+    } else {
+      let head = headerStringToObject(await GM_head(thumb, undefined))
+      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() }
+    }
+    ftype = type.mime
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
-    dispatch("fileinfo", {type})
+    dispatch('fileinfo', { type })
 
     if (isImage) {
-      contracted = !$settings.xpi;
+      contracted = !$settings.xpi
     }
     if (isVideo) {
       contracted = !$settings.xpv && !$appState.isCatalog
     }
-    if ($appState.isCatalog)
-        contracted = true;
+    if ($appState.isCatalog) contracted = true
     if ($settings.pre) {
-      unzip(); // not awaiting on purpose
+      unzip() // not awaiting on purpose
     }
 
     if ($settings.prev) {
-      let obs = new IntersectionObserver((entries, obs) => {
-        for(const item of entries) {
-          if(!item.isIntersecting) continue
-          unzip();
-          obs.unobserve(place);
-        }
-      }, {root:null, rootMargin: '0px', threshold: 0.01});
-      obs.observe(place);
+      let obs = new IntersectionObserver(
+        (entries, obs) => {
+          for (const item of entries) {
+            if (!item.isIntersecting) continue
+            unzip()
+            obs.unobserve(place)
+          }
+        },
+        { root: null, rootMargin: '0px', threshold: 0.01 },
+      )
+      obs.observe(place)
     }
-  });
+  })
 
-  let unzipping = false;
+  let unzipping = false
   let progress = [0, 0]
   async function unzip() {
-    if (!file.thumbnail)
-      return;
-    if (unzipping)
-      return;
-    unzipping = true;
-    let lisn = new EventTarget();
-    lisn.addEventListener("progress", (e: any) => {
-      progress = e.detail
-    });
-    let full = await file.data(lisn);
-    const type = await fileTypeFromBuffer(full);
-    furl = URL.createObjectURL(new Blob([full], { type: type?.mime }));
-    unzipping = false;
-    if (!type)
-      return;
+    if (!file.thumbnail) return
+    if (unzipping) return
+
+    let type: FileTypeResult | undefined
+    if (typeof file.data != 'string') {
+      unzipping = true
+      let lisn = new EventTarget()
+      lisn.addEventListener('progress', (e: any) => {
+        progress = e.detail
+      })
+      let full = await file.data(lisn)
+      type = await fileTypeFromBuffer(full)
+      furl = URL.createObjectURL(new Blob([full], { type: type?.mime }))
+    } else {
+      url = file.data
+      furl = file.data
+      let head = headerStringToObject(await GM_head(file.data, undefined))
+      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() }
+    }
+    if (!type) return
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
-    dispatch("fileinfo", {type})
+    unzipping = false
+
+    dispatch('fileinfo', { type })
 
     if (hovering) {
       // reset hovering to recompute proper image coordinates
       setTimeout(() => {
-        recompute();
-        hoverUpdate();
-      }, 20);
+        recompute()
+        hoverUpdate()
+      }, 20)
     }
   }
 
   function hasAudio(video: any) {
     return (
       video.mozHasAudio ||
-      !!(video.webkitAudioDecodedByteCount) ||
+      !!video.webkitAudioDecodedByteCount ||
       !!(video.audioTracks && video.audioTracks.length)
     )
   }
 
   export async function bepis(ev: MouseEvent) {
-    if ($appState.isCatalog) return;
+    if ($appState.isCatalog) return
 
     if (ev.button == 0) {
       contracted = !contracted
@@ -131,7 +145,7 @@
         videoElem.controls = true
         // has to be delayed
         setTimeout(async () => {
-          videoElem.currentTime = hoverVideo.currentTime || 0;
+          videoElem.currentTime = hoverVideo.currentTime || 0
           await videoElem.play()
         }, 10)
       }
@@ -139,27 +153,33 @@
         // don't know how you managed to click before hovering but oh well
         unzip()
       }
-      ev.preventDefault();
-    } else if (ev.button == 1) { // middle click
-      let src = furl || url;
+      ev.preventDefault()
+    } else if (ev.button == 1) {
+      // middle click
+      let src = furl || url
       if (ev.altKey && file.source) {
-        src = file.source;
+        src = file.source
       }
       if (ev.shiftKey && file.page) {
-        src = file.page.url;
+        src = file.page.url
       }
-      ev.preventDefault();
+      ev.preventDefault()
       if (isNotChrome) {
-        window.open(src, '_blank');
-      } else
-        await GM.openInTab(src, {active: false, insert: true});
+        window.open(src, '_blank')
+      } else await GM.openInTab(src, { active: false, insert: true })
     }
   }
 
-  const getViewport = () => (typeof visualViewport != "undefined" ? () => [visualViewport.width, visualViewport.height] : () => [document.documentElement.clientWidth, document.documentElement.clientHeight])();
+  const getViewport = () =>
+    (typeof visualViewport != 'undefined'
+      ? () => [visualViewport.width, visualViewport.height]
+      : () => [
+          document.documentElement.clientWidth,
+          document.documentElement.clientHeight,
+        ])()
 
   function recompute() {
-    const [sw, sh] = getViewport();
+    const [sw, sh] = getViewport()
 
     let [iw, ih] = [0, 0]
     if (isImage) {
@@ -175,47 +195,46 @@
   }
 
   async function hoverStart(ev?: MouseEvent) {
-    if ($settings.dh)return;
+    if ($settings.dh) return
     if (file.thumbnail && !furl) {
-       unzip();
+      unzip()
     }
 
     if (!isImage && !isVideo) return
     if (!contracted) return
 
-    recompute();
+    recompute()
     hovering = true
 
-    if (isVideo){
+    if (isVideo) {
       try {
-          await hoverVideo.play()
-        } catch (e) {
-          // probably didn't interact with document error, mute the video and try again?
-          hoverVideo.muted = true;
-          hoverVideo.volume = 0;
-          await hoverVideo.play()
-        }
+        await hoverVideo.play()
+      } catch (e) {
+        // probably didn't interact with document error, mute the video and try again?
+        hoverVideo.muted = true
+        hoverVideo.volume = 0
+        await hoverVideo.play()
       }
     }
+  }
 
   function hoverStop(ev?: MouseEvent) {
-    if ($settings.dh) return;
+    if ($settings.dh) return
     hovering = false
     if (isVideo) hoverVideo.pause()
   }
 
-  let lastev: MouseEvent | undefined;
+  let lastev: MouseEvent | undefined
   function hoverUpdate(ev?: MouseEvent) {
-    lastev = lastev || ev;
-    if ($settings.dh) return;
+    lastev = lastev || ev
+    if ($settings.dh) return
     if (!contracted) return
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
-    if (dims[0] == 0 && dims[1] == 0)
-        recompute();
+    if (dims[0] == 0 && dims[1] == 0) recompute()
     let width = dims[0]
     let height = dims[1] + 25
-    let { clientX, clientY } = (ev || lastev!)
+    let { clientX, clientY } = ev || lastev!
     let top = Math.max(0, (clientY * (sh - height)) / sh)
     let threshold = sw / 2
     let marginX: number | string =
@@ -233,13 +252,12 @@
     if (!$settings.ca) return
     if (!isVideo) return
     if ($settings.dh && contracted) return
-    if (!hasAudio(videoElem))
-      return;
-    let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1);
-    vol = Math.max(0, Math.min(1, vol));
-    videoElem.volume = vol;
-    hoverVideo.volume = videoElem.volume;
-    hoverVideo.muted = vol < 0;
+    if (!hasAudio(videoElem)) return
+    let vol = videoElem.volume * (ev.deltaY > 0 ? 0.9 : 1.1)
+    vol = Math.max(0, Math.min(1, vol))
+    videoElem.volume = vol
+    hoverVideo.volume = videoElem.volume
+    hoverVideo.muted = vol < 0
     ev.preventDefault()
   }
 </script>
@@ -249,8 +267,8 @@
   <div
     class:contract={contracted}
     class="place"
-    on:click={e => e.preventDefault()}
-    on:auxclick={e => e.preventDefault()}
+    on:click={(e) => e.preventDefault()}
+    on:auxclick={(e) => e.preventDefault()}
     on:mousedown={bepis}
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
@@ -260,10 +278,16 @@
   >
     {#if isImage}
       <!-- svelte-ignore a11y-missing-attribute -->
-      <img bind:this={imgElem} alt={file.filename} src={furl || url} />
+      <img
+        referrerpolicy="no-referrer"
+        bind:this={imgElem}
+        alt={file.filename}
+        src={furl || url}
+      />
     {/if}
     {#if isAudio}
       <audio
+        referrerpolicy="no-referrer"
         controls
         src={furl || url}
         loop={$settings.loop}
@@ -275,7 +299,12 @@
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
       <!-- svelte-ignore a11y-missing-attribute -->
-      <video loop={$settings.loop} bind:this={videoElem} src={furl || url} />
+      <video
+        referrerpolicy="no-referrer"
+        loop={$settings.loop}
+        bind:this={videoElem}
+        src={furl || url}
+      />
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
   </div>
@@ -289,11 +318,16 @@
       >{/if}
 
     {#if isImage}
-      <img alt={file.filename} src={furl || url} />
+      <img referrerpolicy="no-referrer" alt={file.filename} src={furl || url} />
     {/if}
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
-      <video loop={$settings.loop} bind:this={hoverVideo} src={furl || url} />
+      <video
+        referrerpolicy="no-referrer"
+        loop={$settings.loop}
+        bind:this={hoverVideo}
+        src={furl || url}
+      />
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
   </div>

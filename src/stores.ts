@@ -23,6 +23,7 @@ export const settings = writable(localLoad('settingsv2', {
     sh: false,
     ep: false,
     expte: false,
+    hotlink: false,
     conc: 8,
     ho: false,
     blacklist: ['guro', 'scat', 'ryona', 'gore'],

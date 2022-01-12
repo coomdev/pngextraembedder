@@ -73,7 +73,7 @@ type EmbeddedFileWithPreview = {
     source?: string; // can be like a twitter post this was posted in originally
     thumbnail: Buffer;
     filename: string;
-    data: (lisn?: EventTarget) => Promise<Buffer>;
+    data: string | ((lisn?: EventTarget) => Promise<Buffer>);
 };
 
 type EmbeddedFileWithoutPreview = {
@@ -81,7 +81,7 @@ type EmbeddedFileWithoutPreview = {
     source: undefined;
     thumbnail: undefined;
     filename: string;
-    data: Buffer;
+    data: string | Buffer;
 };
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;

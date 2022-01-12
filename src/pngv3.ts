@@ -4,7 +4,6 @@ import type { ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
 import { decodeCoom3Payload } from "./utils";
 
-const CUM0 = Buffer.from("CUM\0" + "0");
 const CUM3 = Buffer.from("CUM\0" + "3");
 
 const BufferReadStream = (b: Buffer) => {
@@ -19,7 +18,6 @@ const BufferReadStream = (b: Buffer) => {
 
 const extract = async (png: Buffer) => {
     let magic = false;
-    let coom3 = false;
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
     try {
@@ -30,10 +28,7 @@ const extract = async (png: Buffer) => {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
                     buff = chunk;
-                    if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
-                        magic = true;
-                    if (buff.slice(4, 4 + CUM0.length).equals(CUM3)) {
-                        coom3 = true;
+                    if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
                         magic = true;
                     }
                     break;
@@ -52,14 +47,8 @@ const extract = async (png: Buffer) => {
             }
         }
         if (lastIDAT) {
-            let data = (lastIDAT as Buffer).slice(4);
-            if (coom3)
-                return decodeCoom3Payload(data);
-            const fnsize = data.readUInt32LE(0);
-            const fn = data.slice(4, 4 + fnsize).toString();
-            // Todo: xor the buffer to prevent scanning for file signatures (4chan embedded file detection)?
-            data = data.slice(4 + fnsize);
-            return [{ filename: fn, data }];
+            const data = (lastIDAT as Buffer).slice(4);
+            return await decodeCoom3Payload(data);
         }
     } catch (e) {
         console.error(e);
@@ -95,7 +84,7 @@ const inject = async (container: File, inj: File) => {
         if (magic && name != "IDAT")
             break;
         if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
+            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM3), 0, 0]);
             magic = true;
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
@@ -119,9 +108,7 @@ const has_embed = async (png: Buffer) => {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
                     buff = chunk;
-                    if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
-                        return true;
-                    if (buff.slice(4, 4 + CUM0.length).equals(CUM3))
+                    if (buff.slice(4, 4 + CUM3.length).equals(CUM3))
                         return true;
                     break;
                 case 'IDAT':
