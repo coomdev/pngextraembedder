@@ -3,5 +3,5 @@ declare module '*.css' {
 }
 
 declare module '*.png' {
-    export default Uint8Array;
+    export default new Uint8Array;
 }

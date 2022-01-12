@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.114
+// @version      0.115
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -43,6 +43,22 @@
   var __toESM = (module, isNodeMode) => {
     return __reExport(__markAsModule(__defProp(module != null ? __create(__getProtoOf(module)) : {}, "default", !isNodeMode && module && module.__esModule ? { get: () => module.default, enumerable: true } : { value: module, enumerable: true })), module);
   };
+  var __toBinary = /* @__PURE__ */ (() => {
+    var table = new Uint8Array(128);
+    for (var i = 0; i < 64; i++)
+      table[i < 26 ? i + 65 : i < 52 ? i + 71 : i < 62 ? i - 4 : i * 4 - 205] = i;
+    return (base64) => {
+      var n = base64.length, bytes = new Uint8Array((n - (base64[n - 1] == "=") - (base64[n - 2] == "=")) * 3 / 4 | 0);
+      for (var i2 = 0, j = 0; i2 < n; ) {
+        var c0 = table[base64.charCodeAt(i2++)], c1 = table[base64.charCodeAt(i2++)];
+        var c2 = table[base64.charCodeAt(i2++)], c3 = table[base64.charCodeAt(i2++)];
+        bytes[j++] = c0 << 2 | c1 >> 4;
+        bytes[j++] = c1 << 4 | c2 >> 2;
+        bytes[j++] = c2 << 6 | c3;
+      }
+      return bytes;
+    };
+  })();
 
   // node_modules/base64-js/index.js
   var require_base64_js = __commonJS({
@@ -11189,7 +11205,7 @@
     return [ret, () => b];
   };
   var inject = async (container, inj) => {
-    const [writestream, extract5] = BufferWriteStream();
+    const [writestream, extract6] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
     let magic2 = false;
@@ -11208,7 +11224,7 @@
     import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
     await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
     await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer.Buffer.from([])), 0, 0]);
-    return extract5();
+    return extract6();
   };
   var has_embed = async (png) => {
     const reader = BufferReadStream(png).getReader();
@@ -11429,7 +11445,7 @@
     }
   };
   var inject3 = async (container, inj) => {
-    const [writestream, extract5] = BufferWriteStream();
+    const [writestream, extract6] = BufferWriteStream();
     const writer = writestream.getWriter();
     const contbuff = import_buffer3.Buffer.from(await container.arrayBuffer());
     debugger;
@@ -11443,7 +11459,7 @@
     await writer.write(contbuff.slice(0, endo));
     await write_embedding(writer, import_buffer3.Buffer.from(await inj.arrayBuffer()));
     await writer.write(contbuff.slice(endo));
-    return extract5();
+    return extract6();
   };
   var has_embed3 = (gif) => {
     const field = gif.readUInt8(10);
@@ -11493,7 +11509,10 @@
         data: opt?.body?.toString(),
         method: "HEAD",
         onload: (resp) => {
-          resolve(resp.responseHeaders);
+          if (resp.status / 100 >= 4)
+            reject("response error");
+          else
+            resolve(resp.responseHeaders);
         },
         ontimeout: () => reject("fetch timeout"),
         onerror: () => reject("fetch error"),
@@ -11712,6 +11731,80 @@
     extract: extract4,
     has_embed: has_embed4,
     match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
+  };
+
+  // src/pomf.ts
+  init_esbuild_inject();
+
+  // src/assets/hasembed.png
+  var hasembed_default = __toBinary("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");
+
+  // src/pomf.ts
+  var sources = [
+    { host: "Catbox", prefix: "https://files.catbox.moe/" },
+    { host: "Litter", prefix: "https://litter.catbox.moe/" },
+    { host: "Pomf", prefix: "https://a.pomf.cat/" }
+  ];
+  var getExt = (fn) => {
+    const isDum = fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
+    const isB64 = fn.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
+    const isExt = fn.match(/\[.*=(.*)\]/);
+    let ext;
+    if (isDum) {
+      ext = isDum[0];
+    } else if (isB64) {
+      ext = atob(isB64[1]);
+    } else if (isExt) {
+      ext = isExt[1];
+    }
+    return ext;
+  };
+  var extract5 = async (b, fn) => {
+    const ext = getExt(fn);
+    let rsource;
+    for (const source of sources) {
+      try {
+        await GM_head(source.prefix + ext);
+        rsource = source.prefix + ext;
+        break;
+      } catch {
+      }
+    }
+    return {
+      filename: ext,
+      data: async (lsn) => {
+        try {
+          return (await GM_fetch(rsource, void 0, lsn)).arrayBuffer();
+        } catch (e) {
+        }
+      },
+      thumbnail: hasembed_default
+    };
+  };
+  var has_embed5 = async (b, fn) => {
+    const ext = getExt(fn);
+    if (!ext)
+      return false;
+    for (const source of sources) {
+      try {
+        const e = await GM_head(source.prefix + ext);
+        return true;
+      } catch {
+      }
+    }
+    return false;
+  };
+  var pomf_default = {
+    skip: true,
+    extract: extract5,
+    has_embed: has_embed5,
+    match: (fn) => {
+      const base = fn.split(".").slice(0, -1).join(".");
+      const isDum = !!fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
+      const isB64 = !!fn.match(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/);
+      const isExt = !!fn.match(/\[.*=.*\]/);
+      return isB64 || isExt || isDum;
+    }
   };
 
   // src/App.svelte
@@ -16473,13 +16566,14 @@
 
   // src/main.ts
   var csettings2;
-  var processors = [thirdeye_default, png_default, webm_default, gif_default];
+  var processors = [thirdeye_default, pomf_default, png_default, webm_default, gif_default];
   var cappState;
   settings.subscribe((b) => {
     csettings2 = b;
     processors = [
       ...!csettings2.te ? [thirdeye_default] : [],
       png_default,
+      pomf_default,
       webm_default,
       gif_default
     ];

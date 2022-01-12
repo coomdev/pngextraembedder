@@ -30,7 +30,8 @@ let rev = +res.stdout;
         })
       ],
       loader: {
-        '.css': 'text'
+        '.css': 'text',
+        '.png': 'binary'
       },
       metafile: true
     })

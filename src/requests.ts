@@ -20,7 +20,10 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
             data: opt?.body?.toString(),
             method: "HEAD",
             onload: (resp) => {
-                resolve(resp.responseHeaders);
+                if ((resp.status / 100) >= 4)
+                    reject("response error");
+                else
+                    resolve(resp.responseHeaders);
             },
             ontimeout: () => reject("fetch timeout"),
             onerror: () => reject("fetch error"),

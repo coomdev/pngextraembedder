@@ -6,6 +6,7 @@ import png from "./png";
 import webm from "./webm";
 import gif from "./gif";
 import thirdeye from "./thirdeye";
+import pomf from "./pomf";
 
 import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
@@ -26,12 +27,12 @@ export interface ImageProcessor {
 
 export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
-    [thirdeye, png, webm, gif];
+    [thirdeye, pomf, png, webm, gif];
 
 let cappState: Parameters<typeof appState['set']>[0];
 settings.subscribe(b => {
     csettings = b;
-    processors = [...(!csettings.te ? [thirdeye] : []), png, webm, gif
+    processors = [...(!csettings.te ? [thirdeye] : []), png, pomf, webm, gif
     ];
 });
 
