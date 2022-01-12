@@ -56,10 +56,10 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
         // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
         const gmopt: Tampermonkey.Request<any> = {
             url: url.toString(),
-            data: opt?.body?.toString(),
+            data: opt?.body as any,
             responseType: "blob",
             headers: opt?.headers as any,
-            method: "GET",
+            method: opt?.method as any || "GET",
             ...(lisn ? {
                 onprogress: (prog) => {
                     if (prog.loaded != prog.total && prog.total != 0)

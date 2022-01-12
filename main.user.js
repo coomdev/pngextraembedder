@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.122
+// @version      0.123
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11284,10 +11284,10 @@
     return new Promise((resolve, reject) => {
       const gmopt = {
         url: url.toString(),
-        data: opt?.body?.toString(),
+        data: opt?.body,
         responseType: "blob",
         headers: opt?.headers,
-        method: "GET",
+        method: opt?.method || "GET",
         ...lisn ? {
           onprogress: (prog) => {
             if (prog.loaded != prog.total && prog.total != 0)
@@ -11393,14 +11393,15 @@
     return new Blob([ret]);
   };
   var decodeCoom3Payload = async (buff) => {
-    const pees = buff.toString().split("\0").slice(0, 5);
+    const pees = buff.toString().split("\0").slice(0, 5).filter((e) => e.startsWith("http"));
     return Promise.all(pees.map(async (pee) => {
+      const headers = headerStringToObject(await GM_head(pee));
       const res = await GM_fetch(pee, {
         headers: { ranges: "bytes=0-2048" },
         mode: "cors",
         referrerPolicy: "no-referrer"
       });
-      const size = +(res.headers.get("content-size") || 0);
+      const size = +headers["content-size"] || 0;
       const header = import_buffer2.Buffer.from(await res.arrayBuffer());
       let hptr = 0;
       if (header.slice(0, 4).toString() == "PEE\0")
@@ -11522,14 +11523,14 @@
     let total = 0;
     fireNotification("info", `Uploading ${injs.length} files...`);
     const links = await Promise.all(injs.map(async (inj) => {
-      const ret = (await GM_fetch("https://catbox.moe/user/api.php", {
+      const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: parseForm({
           reqtype: "fileupload",
           fileToUpload: await buildPeeFile(inj)
         })
       })).text();
-      fireNotification("info", `Uploaded files [${++total}/${injs.length}]`);
+      fireNotification("info", `Uploaded files [${++total}/${injs.length}] ${ret}`);
       return ret;
     }));
     let magic2 = false;
@@ -15405,7 +15406,7 @@
   // dist/requests.js
   init_esbuild_inject();
   var xmlhttprequest2 = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : window["GM_xmlhttpRequest"];
-  var headerStringToObject3 = (s) => Object.fromEntries(s.split("\n").map((e) => {
+  var headerStringToObject2 = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
     return [name.toLowerCase(), rest.join(":").trim()];
   }));
@@ -15917,7 +15918,7 @@
         if (!type)
           return;
       } else {
-        let head = headerStringToObject3(await GM_head2(thumb, void 0));
+        let head = headerStringToObject2(await GM_head2(thumb, void 0));
         type = {
           ext: "",
           mime: head["content-type"].split(";")[0].trim()
@@ -15975,7 +15976,7 @@
       } else {
         $$invalidate(5, url = file.data);
         $$invalidate(14, furl = file.data);
-        let head = headerStringToObject3(await GM_head2(file.data, void 0));
+        let head = headerStringToObject2(await GM_head2(file.data, void 0));
         type = {
           ext: "",
           mime: head["content-type"].split(";")[0].trim()
@@ -16930,7 +16931,6 @@
       isCatalog: !!document.querySelector(".catalog-small") || !!location.pathname.match(/\/catalog$/)
     });
     const n = 7;
-    console.log(posts);
     const range = ~~(posts.length / n) + 1;
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
       const postsslice = posts.slice(i * range, (i + 1) * range);
@@ -17010,6 +17010,8 @@
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
   function processAttachments(post, ress) {
+    if (ress.length == 0)
+      return;
     const replyBox = post.querySelector(".post");
     const external = ress[0][1];
     if (external)
@@ -17076,62 +17078,6 @@
         opFile?.append(imgcont);
     }
     post.setAttribute("data-processed", "true");
-  }
-  function parseForm2(data) {
-    const form = new FormData();
-    Object.entries(data).filter(([key, value]) => value !== null).map(([key, value]) => form.append(key, value));
-    return form;
-  }
-  if (window["pagemode"]) {
-    onload = () => {
-      const resbuf = async (s) => typeof s != "string" && (import_buffer7.Buffer.isBuffer(s) ? s : await s());
-      const container = document.getElementById("container");
-      const injection = document.getElementById("injection");
-      container.onchange = async () => {
-        const ret = await fetch("https://catbox.moe/user/api.php", {
-          method: "POST",
-          body: parseForm2({
-            reqtype: "fileupload",
-            fileToUpload: container.files[0]
-          })
-        });
-        console.log(ret);
-        console.log(await ret.text());
-      };
-    };
-  }
-  if (window["pagemode"]) {
-    onload = () => {
-      const extraction = document.getElementById("extraction");
-      document.addEventListener("CreateNotification", (e) => console.log(e.detail));
-      console.log("loaded");
-      const container = document.getElementById("container");
-      const injection = document.getElementById("injection");
-      injection.multiple = true;
-      extraction.onchange = async () => {
-        const embedded = await pngv3_default.extract(import_buffer7.Buffer.from(await extraction.files[0].arrayBuffer()));
-        const d = document.createElement("div");
-        new Embeddings_default({
-          target: d,
-          props: { files: embedded }
-        });
-        document.body.append(d);
-        console.log(embedded);
-      };
-      container.onchange = injection.onchange = async () => {
-        console.log("eval changed");
-        if (container.files?.length && injection.files?.length) {
-          const dlr = document.getElementById("dlr");
-          const res = await pngv3_default.inject(container.files[0], [...injection.files]);
-          const result = document.getElementById("result");
-          const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
-          result.src = URL.createObjectURL(res2);
-          dlr.href = result.src;
-          console.log("url created");
-          return;
-        }
-      };
-    };
   }
 })();
 /*!

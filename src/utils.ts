@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { GM_fetch, headerStringToObject } from "./requests";
+import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 import thumbnail from "./assets/hasembed.png";
 import type { EmbeddedFile } from './main';
 
@@ -44,7 +44,7 @@ export const buildPeeFile = async (f: File) => {
     let thumbnail = Buffer.alloc(0);
     thumbnail = await generateThumbnail(f);
     const namebuf = Buffer.from(f.name);
-    const ret = Buffer.alloc(4 /* Magic */ + 
+    const ret = Buffer.alloc(4 /* Magic */ +
         1 /* Flags */ + namebuf.byteLength + 1 +
         (4 + thumbnail.byteLength) /* TSize + Thumbnail */ +
         f.size /*Teh file*/);
@@ -74,14 +74,15 @@ rest: [X bytes of thumbnail data])[file bytes]
 &4 => has thumbnail
 */
 export const decodeCoom3Payload = async (buff: Buffer) => {
-    const pees = buff.toString().split('\0').slice(0, 5);
+    const pees = buff.toString().split('\0').slice(0, 5).filter(e => e.startsWith("http"));
     return Promise.all(pees.map(async pee => {
+        const headers = headerStringToObject(await GM_head(pee));
         const res = await GM_fetch(pee, {
             headers: { ranges: 'bytes=0-2048' },
             mode: 'cors',
             referrerPolicy: 'no-referrer',
         });
-        const size = +(res.headers.get('content-size') || 0);
+        const size = +headers['content-size'] || 0;
         const header = Buffer.from(await res.arrayBuffer());
         let hptr = 0;
         if (header.slice(0, 4).toString() == "PEE\0")

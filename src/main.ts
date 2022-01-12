@@ -192,7 +192,7 @@ const startup = async () => {
     //      await processPost(posts[i] as any);
 
     const n = 7;
-    console.log(posts);
+    //console.log(posts);
     const range = ~~(posts.length / n) + 1;
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
         const postsslice = posts.slice(i * range, (i + 1) * range);
@@ -295,6 +295,8 @@ customStyles.appendChild(document.createTextNode(globalCss));
 document.documentElement.insertBefore(customStyles, null);
 
 function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][]) {
+    if (ress.length == 0)
+        return;
     const replyBox = post.querySelector('.post');
     const external = ress[0][1];
     if (external)
@@ -379,71 +381,70 @@ function parseForm(data: object) {
     return form;
 }
 
-if ((window as any)['pagemode']) {
-    onload = () => {
-        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
-        const container = document.getElementById("container") as HTMLInputElement;
-        const injection = document.getElementById("injection") as HTMLInputElement;
-        container.onchange = async () => {
-            const ret = await fetch("https://catbox.moe/user/api.php", {
-                method: 'POST',
-                body: parseForm({
-                    reqtype: 'fileupload',
-                    fileToUpload: container.files![0]
-                })
-            });
-            console.log(ret);
-            console.log(await ret.text());
-        };
-    };
-}
+// if ((window as any)['pagemode']) {
+//     onload = () => {
+//         const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
+//         const container = document.getElementById("container") as HTMLInputElement;
+//         const injection = document.getElementById("injection") as HTMLInputElement;
+//         container.onchange = async () => {
+//             const ret = await fetch("https://catbox.moe/user/api.php", {
+//                 method: 'POST',
+//                 body: parseForm({
+//                     reqtype: 'fileupload',
+//                     fileToUpload: container.files![0]
+//                 })
+//             });
+//             console.log(ret);
+//             console.log(await ret.text());
+//         };
+//     };
+// }
 
-if ((window as any)['pagemode']) {
-    onload = () => {
-        const extraction = document.getElementById("extraction") as HTMLInputElement;
-       /* extraction.onchange = async () => {
-            const pee = await buildPeeFile(extraction.files![0]);
-            const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-            dlr.href = URL.createObjectURL(pee);
-        };*/
-        
-        document.addEventListener("CreateNotification", (e: any) => console.log(e.detail));
-        console.log("loaded");
-        //const resbuf = async (s: any) => ((Buffer.isBuffer(s) ? s : await s()));
-        const container = document.getElementById("container") as HTMLInputElement;
-        const injection = document.getElementById("injection") as HTMLInputElement;
-        injection.multiple = true;
-        extraction.onchange = async () => {
-            const embedded = await pngv3.extract(Buffer.from(await extraction.files![0].arrayBuffer()));
-            const d = document.createElement('div');
-            new Embeddings({
-                target: d,
-                props: {files: embedded}
-            });
-            document.body.append(d);
-            console.log(embedded);
-        };
+// if ((window as any)['pagemode']) {
+//     onload = () => {
+//         const extraction = document.getElementById("extraction") as HTMLInputElement;
+//         /* extraction.onchange = async () => {
+//              const pee = await buildPeeFile(extraction.files![0]);
+//              const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+//              dlr.href = URL.createObjectURL(pee);
+//          };*/
 
-        container.onchange = injection.onchange = async () => {
-            console.log('eval changed');
-            if (container.files?.length && injection.files?.length) {
-                const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-                //const dle = document.getElementById("dle") as HTMLAnchorElement;
-                const res = await pngv3.inject!(container.files[0], [...injection.files]);
-                const result = document.getElementById("result") as HTMLImageElement;
-                //const extracted = document.getElementById("extracted") as HTMLImageElement;
-                const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
-                result.src = URL.createObjectURL(res2);
-                dlr.href = result.src;
-                console.log('url created');
-                //const embedded = await pngv3.extract(res);
-                //if (!embedded) {
-                //    debugger;
-                    return;
-                //}
-                //extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
-                //dle.href = extracted.src;
-            }
-        };
-    };
-}
+//         document.addEventListener("CreateNotification", (e: any) => console.log(e.detail));
+//         console.log("loaded");
+//         //const resbuf = async (s: any) => ((Buffer.isBuffer(s) ? s : await s()));
+//         const container = document.getElementById("container") as HTMLInputElement;
+//         const injection = document.getElementById("injection") as HTMLInputElement;
+//         injection.multiple = true;
+//         extraction.onchange = async () => {
+//             const embedded = await pngv3.extract(Buffer.from(await extraction.files![0].arrayBuffer()));
+//             const d = document.createElement('div');
+//             new Embeddings({
+//                 target: d,
+//                 props: { files: embedded }
+//             });
+//             document.body.append(d);
+//         };
+
+//         container.onchange = injection.onchange = async () => {
+//             console.log('eval changed');
+//             if (container.files?.length && injection.files?.length) {
+//                 const dlr = document.getElementById("dlr") as HTMLAnchorElement;
+//                 //const dle = document.getElementById("dle") as HTMLAnchorElement;
+//                 const res = await pngv3.inject!(container.files[0], [...injection.files]);
+//                 const result = document.getElementById("result") as HTMLImageElement;
+//                 //const extracted = document.getElementById("extracted") as HTMLImageElement;
+//                 const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
+//                 result.src = URL.createObjectURL(res2);
+//                 dlr.href = result.src;
+//                 console.log('url created');
+//                 //const embedded = await pngv3.extract(res);
+//                 //if (!embedded) {
+//                 //    debugger;
+//                 return;
+//                 //}
+//                 //extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
+//                 //dle.href = extracted.src;
+//             }
+//         };
+//     };
+// }

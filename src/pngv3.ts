@@ -93,14 +93,14 @@ const inject = async (container: File, injs: File[]) => {
     let total = 0;
     fireNotification('info', `Uploading ${injs.length} files...`);
     const links = await Promise.all(injs.map(async inj => {
-        const ret = (await GM_fetch("https://catbox.moe/user/api.php", {
+        const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
             method: 'POST',
             body: parseForm({
                 reqtype: 'fileupload',
                 fileToUpload: await buildPeeFile(inj)
             })
         })).text();
-        fireNotification('info', `Uploaded files [${++total}/${injs.length}]`);
+        fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));
 
