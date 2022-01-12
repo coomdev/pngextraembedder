@@ -74,7 +74,7 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
-const inject = async (container: File, inj: File) => {
+const inject = async (container: File, injs: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
@@ -89,10 +89,8 @@ const inject = async (container: File, inj: File) => {
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
     }
-    const injb = Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32LE(inj.name.length, 0);
-    injb.write(inj.name, 4);
-    Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
+    const injb = Buffer.alloc(4);
+    // TODO
     await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
     await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
     return extract();

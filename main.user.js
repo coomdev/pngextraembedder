@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.117
+// @version      0.120
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11021,6 +11021,7 @@
     sh: false,
     ep: false,
     expte: false,
+    hotlink: false,
     conc: 8,
     ho: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
@@ -11121,25 +11122,6 @@
     async dtor() {
     }
   };
-  var PNGEncoder = class {
-    constructor(bytes) {
-      this.writer = bytes.getWriter();
-      this.writer.write(import_buffer.Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-    }
-    async insertchunk(chunk) {
-      const b = import_buffer.Buffer.alloc(4);
-      b.writeInt32BE(chunk[1].length - 4, 0);
-      await this.writer.write(b);
-      const buff = chunk[1];
-      await this.writer.write(buff);
-      b.writeInt32BE((0, import_crc_32.buf)(buff), 0);
-      await this.writer.write(b);
-    }
-    async dtor() {
-      this.writer.releaseLock();
-      await this.writer.close();
-    }
-  };
   var CUM0 = import_buffer.Buffer.from("CUM\x000");
   var BufferReadStream = (b) => {
     const ret = new ReadableStream({
@@ -11189,43 +11171,6 @@
       reader.releaseLock();
     }
   };
-  var buildChunk = (tag, data) => {
-    const ret = import_buffer.Buffer.alloc(data.byteLength + 4);
-    ret.write(tag.slice(0, 4), 0);
-    data.copy(ret, 4);
-    return ret;
-  };
-  var BufferWriteStream = () => {
-    let b = import_buffer.Buffer.from([]);
-    const ret = new WritableStream({
-      write(chunk) {
-        b = import_buffer.Buffer.concat([b, chunk]);
-      }
-    });
-    return [ret, () => b];
-  };
-  var inject = async (container, inj) => {
-    const [writestream, extract6] = BufferWriteStream();
-    const encoder = new PNGEncoder(writestream);
-    const decoder = new PNGDecoder(container.stream().getReader());
-    let magic2 = false;
-    for await (const [name, chunk, crc, offset] of decoder.chunks()) {
-      if (magic2 && name != "IDAT")
-        break;
-      if (!magic2 && name == "IDAT") {
-        await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM0), 0, 0]);
-        magic2 = true;
-      }
-      await encoder.insertchunk([name, chunk, crc, offset]);
-    }
-    const injb = import_buffer.Buffer.alloc(4 + inj.name.length + inj.size);
-    injb.writeInt32LE(inj.name.length, 0);
-    injb.write(inj.name, 4);
-    import_buffer.Buffer.from(await inj.arrayBuffer()).copy(injb, 4 + inj.name.length);
-    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
-    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer.Buffer.from([])), 0, 0]);
-    return extract6();
-  };
   var has_embed = async (png) => {
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
@@ -11255,7 +11200,6 @@
   var png_default = {
     extract,
     has_embed,
-    inject,
     match: (fn) => !!fn.match(/\.png$/)
   };
 
@@ -11347,7 +11291,7 @@
     if (chk.type == "b" && chk.name == "TagBinary")
       return [{ filename: "string", data: chk.data }];
   };
-  var inject2 = async (container, inj) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
+  var inject = async (container, [inj]) => embed(import_buffer2.Buffer.from(await container.arrayBuffer()), import_buffer2.Buffer.from(await inj.arrayBuffer()));
   var has_embed2 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
@@ -11362,7 +11306,7 @@
   var webm_default = {
     extract: extract2,
     has_embed: has_embed2,
-    inject: inject2,
+    inject,
     match: (fn) => !!fn.match(/\.webm$/)
   };
 
@@ -11414,53 +11358,6 @@
     throw "Shouldn't happen";
   };
   var extract3 = extractBuff;
-  var write_data = async (writer, inj) => {
-    await writer.write(magic);
-    const byte = import_buffer3.Buffer.from([0]);
-    let size = inj.byteLength;
-    let ws;
-    let offset = 0;
-    while (size != 0) {
-      ws = size >= 255 ? 255 : size;
-      byte.writeUInt8(ws, 0);
-      await writer.write(byte);
-      await writer.write(inj.slice(offset, offset + ws));
-      size -= ws;
-      offset += ws;
-    }
-    byte.writeUInt8(0, 0);
-    await writer.write(byte);
-  };
-  var write_embedding = async (writer, inj) => {
-    const b = import_buffer3.Buffer.alloc(4);
-    b.writeInt32LE(inj.byteLength, 0);
-    await write_data(writer, b);
-    let size = inj.byteLength;
-    let offset = 0;
-    while (size != 0) {
-      const ws = size >= 3 << 13 ? 3 << 13 : size;
-      await write_data(writer, inj.slice(offset, offset + ws));
-      offset += ws;
-      size -= ws;
-    }
-  };
-  var inject3 = async (container, inj) => {
-    const [writestream, extract6] = BufferWriteStream();
-    const writer = writestream.getWriter();
-    const contbuff = import_buffer3.Buffer.from(await container.arrayBuffer());
-    debugger;
-    const field = contbuff.readUInt8(10);
-    const gcte = !!(field & 1 << 7);
-    let endo = 13;
-    if (gcte)
-      endo += 3 * (1 << (field & 7) + 1);
-    if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
-      endo += 19;
-    await writer.write(contbuff.slice(0, endo));
-    await write_embedding(writer, import_buffer3.Buffer.from(await inj.arrayBuffer()));
-    await writer.write(contbuff.slice(endo));
-    return extract6();
-  };
   var has_embed3 = (gif) => {
     const field = gif.readUInt8(10);
     const gcte = !!(field & 1 << 7);
@@ -11488,7 +11385,6 @@
   var gif_default = {
     extract: extract3,
     has_embed: has_embed3,
-    inject: inject3,
     match: (fn) => !!fn.match(/\.gif$/)
   };
 
@@ -11599,6 +11495,10 @@
 
   // src/thirdeye.ts
   var import_buffer4 = __toESM(require_buffer(), 1);
+  var csettings2;
+  settings.subscribe((b) => {
+    csettings2 = b;
+  });
   var gelquirk = (prefix) => (a) => (a.post || a).map((e) => ({
     full_url: e.file_url,
     preview_url: e.preview_url || e.preview_url,
@@ -11704,7 +11604,7 @@
       page: { title: booru, url: result[0].page },
       filename: fn.substring(0, 33) + result[0].ext,
       thumbnail: await (await GM_fetch(prev || full)).arrayBuffer(),
-      data: async (lsn) => {
+      data: csettings2.hotlink ? full || prev : async (lsn) => {
         if (!cachedFile)
           cachedFile = await (await GM_fetch(full || prev, void 0, lsn)).arrayBuffer();
         return cachedFile;
@@ -11744,6 +11644,10 @@
     { host: "Litter", prefix: "https://litter.catbox.moe/" },
     { host: "Pomf", prefix: "https://a.pomf.cat/" }
   ];
+  var csettings3;
+  settings.subscribe((b) => {
+    csettings3 = b;
+  });
   var getExt = (fn) => {
     const isDum = fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
     const isB64 = fn.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
@@ -11771,7 +11675,7 @@
     }
     return [{
       filename: ext,
-      data: async (lsn) => {
+      data: csettings3.hotlink ? rsource : async (lsn) => {
         try {
           return (await GM_fetch(rsource, void 0, lsn)).arrayBuffer();
         } catch (e) {
@@ -12102,14 +12006,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[33] = list[i];
-    child_ctx[35] = i;
+    child_ctx[34] = list[i];
+    child_ctx[36] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[36] = list[i];
-    child_ctx[35] = i;
+    child_ctx[37] = list[i];
+    child_ctx[36] = i;
     return child_ctx;
   }
   function create_if_block_1(ctx) {
@@ -12185,7 +12089,7 @@
       $$scope: { ctx }
     };
     dialog = new Dialog_default({ props: dialog_props });
-    ctx[29](dialog);
+    ctx[30](dialog);
     let each_value = ctx[3].blacklist;
     let each_blocks = [];
     for (let i = 0; i < each_value.length; i += 1) {
@@ -12264,9 +12168,9 @@
         current = true;
         if (!mounted) {
           dispose = [
-            listen(input0, "change", ctx[20]),
-            listen(button, "click", ctx[24]),
-            listen(input1, "keydown", ctx[31])
+            listen(input0, "change", ctx[21]),
+            listen(button, "click", ctx[25]),
+            listen(input1, "keydown", ctx[32])
           ];
           mounted = true;
         }
@@ -12297,7 +12201,7 @@
           check_outros();
         }
         const dialog_changes = {};
-        if (dirty[0] & 1 | dirty[1] & 128) {
+        if (dirty[0] & 1 | dirty[1] & 256) {
           dialog_changes.$$scope = { dirty, ctx: ctx2 };
         }
         dialog.$set(dialog_changes);
@@ -12365,7 +12269,7 @@
           detach(button);
         if (detaching)
           detach(t7);
-        ctx[29](null);
+        ctx[30](null);
         destroy_component(dialog, detaching);
         if (detaching)
           detach(t8);
@@ -12393,17 +12297,17 @@
     let tag;
     let current;
     function func(...args) {
-      return ctx[21](ctx[36], ...args);
+      return ctx[22](ctx[37], ...args);
     }
     function remove_handler() {
-      return ctx[22](ctx[36]);
+      return ctx[23](ctx[37]);
     }
     function toggle_handler() {
-      return ctx[23](ctx[36]);
+      return ctx[24](ctx[37]);
     }
     tag = new Tag_default({
       props: {
-        tag: ctx[36].name,
+        tag: ctx[37].name,
         toggleable: true,
         toggled: !ctx[3].rsources.find(func)?.disabled
       }
@@ -12422,7 +12326,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[36].name;
+          tag_changes.tag = ctx[37].name;
         if (dirty[0] & 8)
           tag_changes.toggled = !ctx[3].rsources.find(func)?.disabled;
         tag.$set(tag_changes);
@@ -12523,10 +12427,10 @@
         append(div, button);
         if (!mounted) {
           dispose = [
-            listen(input0, "input", ctx[25]),
-            listen(input1, "input", ctx[26]),
-            listen(input2, "input", ctx[27]),
-            listen(input3, "input", ctx[28]),
+            listen(input0, "input", ctx[26]),
+            listen(input1, "input", ctx[27]),
+            listen(input2, "input", ctx[28]),
+            listen(input3, "input", ctx[29]),
             listen(button, "click", ctx[4])
           ];
           mounted = true;
@@ -12558,9 +12462,9 @@
     let tag;
     let current;
     function toggle_handler_1() {
-      return ctx[30](ctx[33]);
+      return ctx[31](ctx[34]);
     }
-    tag = new Tag_default({ props: { tag: ctx[33] } });
+    tag = new Tag_default({ props: { tag: ctx[34] } });
     tag.$on("toggle", toggle_handler_1);
     return {
       c() {
@@ -12574,7 +12478,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[33];
+          tag_changes.tag = ctx[34];
         tag.$set(tag_changes);
       },
       i(local) {
@@ -12639,12 +12543,16 @@
     let label9;
     let input9;
     let t22;
-    let a;
-    let t24;
+    let t23;
     let label10;
     let input10;
-    let t25;
+    let t24;
+    let a;
     let t26;
+    let label11;
+    let input11;
+    let t27;
+    let t28;
     let current;
     let mounted;
     let dispose;
@@ -12692,22 +12600,26 @@
         t17 = space();
         label7 = element("label");
         input7 = element("input");
-        t18 = text("\n      Control audio on videos with mouse wheel.");
+        t18 = text("\n      Hotlink content.");
         t19 = space();
         label8 = element("label");
         input8 = element("input");
-        t20 = text("\n      Show Minimap");
+        t20 = text("\n      Control audio on videos with mouse wheel.");
         t21 = space();
         label9 = element("label");
         input9 = element("input");
-        t22 = text("\n      \n      Disable embedded file preloading");
-        a = element("a");
-        a.textContent = "?";
-        t24 = space();
+        t22 = text("\n      Show Minimap");
+        t23 = space();
         label10 = element("label");
         input10 = element("input");
-        t25 = text("\n      Disable third-eye.");
+        t24 = text("\n      \n      Disable embedded file preloading");
+        a = element("a");
+        a.textContent = "?";
         t26 = space();
+        label11 = element("label");
+        input11 = element("input");
+        t27 = text("\n      Disable third-eye.");
+        t28 = space();
         if (if_block1)
           if_block1.c();
         attr(h1, "class", "svelte-14cwalg");
@@ -12722,8 +12634,9 @@
         attr(input7, "type", "checkbox");
         attr(input8, "type", "checkbox");
         attr(input9, "type", "checkbox");
-        attr(a, "title", "You might still want to enable 'preload external files'");
         attr(input10, "type", "checkbox");
+        attr(a, "title", "You might still want to enable 'preload external files'");
+        attr(input11, "type", "checkbox");
         attr(div0, "class", "content svelte-14cwalg");
         attr(div1, "class", "backpanel svelte-14cwalg");
         toggle_class(div1, "enabled", ctx[2]);
@@ -12776,25 +12689,30 @@
         append(div0, t17);
         append(div0, label7);
         append(label7, input7);
-        input7.checked = ctx[3].ca;
+        input7.checked = ctx[3].hotlink;
         append(label7, t18);
         append(div0, t19);
         append(div0, label8);
         append(label8, input8);
-        input8.checked = ctx[3].sh;
+        input8.checked = ctx[3].ca;
         append(label8, t20);
         append(div0, t21);
         append(div0, label9);
         append(label9, input9);
-        input9.checked = ctx[3].ep;
+        input9.checked = ctx[3].sh;
         append(label9, t22);
-        append(label9, a);
-        append(div0, t24);
+        append(div0, t23);
         append(div0, label10);
         append(label10, input10);
-        input10.checked = ctx[3].te;
-        append(label10, t25);
+        input10.checked = ctx[3].ep;
+        append(label10, t24);
+        append(label10, a);
         append(div0, t26);
+        append(div0, label11);
+        append(label11, input11);
+        input11.checked = ctx[3].te;
+        append(label11, t27);
+        append(div0, t28);
         if (if_block1)
           if_block1.m(div0, null);
         current = true;
@@ -12810,7 +12728,8 @@
             listen(input7, "change", ctx[16]),
             listen(input8, "change", ctx[17]),
             listen(input9, "change", ctx[18]),
-            listen(input10, "change", ctx[19])
+            listen(input10, "change", ctx[19]),
+            listen(input11, "change", ctx[20])
           ];
           mounted = true;
         }
@@ -12850,16 +12769,19 @@
           input6.checked = ctx2[3].prev;
         }
         if (dirty[0] & 8) {
-          input7.checked = ctx2[3].ca;
+          input7.checked = ctx2[3].hotlink;
         }
         if (dirty[0] & 8) {
-          input8.checked = ctx2[3].sh;
+          input8.checked = ctx2[3].ca;
         }
         if (dirty[0] & 8) {
-          input9.checked = ctx2[3].ep;
+          input9.checked = ctx2[3].sh;
         }
         if (dirty[0] & 8) {
-          input10.checked = ctx2[3].te;
+          input10.checked = ctx2[3].ep;
+        }
+        if (dirty[0] & 8) {
+          input11.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block1) {
@@ -12980,18 +12902,22 @@
       settings.set($settings);
     }
     function input7_change_handler() {
-      $settings.ca = this.checked;
+      $settings.hotlink = this.checked;
       settings.set($settings);
     }
     function input8_change_handler() {
-      $settings.sh = this.checked;
+      $settings.ca = this.checked;
       settings.set($settings);
     }
     function input9_change_handler() {
-      $settings.ep = this.checked;
+      $settings.sh = this.checked;
       settings.set($settings);
     }
     function input10_change_handler() {
+      $settings.ep = this.checked;
+      settings.set($settings);
+    }
+    function input11_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -13056,6 +12982,7 @@
       input8_change_handler,
       input9_change_handler,
       input10_change_handler,
+      input11_change_handler,
       input0_change_handler_1,
       func,
       remove_handler,
@@ -15207,6 +15134,32 @@
 
   // src/Embedding.svelte
   init_esbuild_inject();
+
+  // dist/requests.js
+  init_esbuild_inject();
+  var xmlhttprequest2 = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : window["GM_xmlhttpRequest"];
+  var headerStringToObject2 = (s) => Object.fromEntries(s.split("\n").map((e) => {
+    const [name, ...rest] = e.split(":");
+    return [name.toLowerCase(), rest.join(":").trim()];
+  }));
+  function GM_head2(...[url, opt]) {
+    return new Promise((resolve, reject) => {
+      const gmopt = {
+        url: url.toString(),
+        data: opt?.body?.toString(),
+        method: "HEAD",
+        onload: (resp) => {
+          resolve(resp.responseHeaders);
+        },
+        ontimeout: () => reject("fetch timeout"),
+        onerror: () => reject("fetch error"),
+        onabort: () => reject("fetch abort")
+      };
+      xmlhttprequest2(gmopt);
+    });
+  }
+
+  // src/Embedding.svelte
   function add_css6(target) {
     append_styles(target, "svelte-yvh28x", ".place.svelte-yvh28x.svelte-yvh28x{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-yvh28x>img.svelte-yvh28x{filter:brightness(0.5) blur(10px)}.progress.svelte-yvh28x.svelte-yvh28x{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-yvh28x.svelte-yvh28x{display:none;position:fixed;pointer-events:none}.visible.svelte-yvh28x.svelte-yvh28x{display:block;z-index:9}.contract.svelte-yvh28x img.svelte-yvh28x,.contract.svelte-yvh28x video.svelte-yvh28x{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-yvh28x:not(.contract) video.svelte-yvh28x,.place.svelte-yvh28x:not(.contract) img.svelte-yvh28x,.hoverer.svelte-yvh28x>video.svelte-yvh28x,.hoverer.svelte-yvh28x>img.svelte-yvh28x{max-width:100vw;max-height:100vh}");
   }
@@ -15404,6 +15357,7 @@
     return {
       c() {
         img = element("img");
+        attr(img, "referrerpolicy", "no-referrer");
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
@@ -15442,6 +15396,7 @@
         if (!src_url_equal(source.src, source_src_value = ctx[14] || ctx[5]))
           attr(source, "src", source_src_value);
         attr(source, "type", ctx[8]);
+        attr(audio, "referrerpolicy", "no-referrer");
         audio.controls = true;
         if (!src_url_equal(audio.src, audio_src_value = ctx[14] || ctx[5]))
           attr(audio, "src", audio_src_value);
@@ -15482,6 +15437,7 @@
     return {
       c() {
         video = element("video");
+        attr(video, "referrerpolicy", "no-referrer");
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
@@ -15552,6 +15508,7 @@
     return {
       c() {
         img = element("img");
+        attr(img, "referrerpolicy", "no-referrer");
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[14] || ctx[5]))
           attr(img, "src", img_src_value);
@@ -15581,6 +15538,7 @@
     return {
       c() {
         video = element("video");
+        attr(video, "referrerpolicy", "no-referrer");
         video.loop = video_loop_value = ctx[18].loop;
         if (!src_url_equal(video.src, video_src_value = ctx[14] || ctx[5]))
           attr(video, "src", video_src_value);
@@ -15685,10 +15643,19 @@
         return;
       settled = true;
       const thumb = file.thumbnail || file.data;
-      const type = await fileTypeFromBuffer(thumb);
-      $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
-      if (!type)
-        return;
+      let type;
+      if (typeof thumb != "string") {
+        type = await fileTypeFromBuffer(thumb);
+        $$invalidate(5, url = URL.createObjectURL(new Blob([thumb], { type: type?.mime })));
+        if (!type)
+          return;
+      } else {
+        let head = headerStringToObject2(await GM_head2(thumb, void 0));
+        type = {
+          ext: "",
+          mime: head["content-type"].split(";")[0].trim()
+        };
+      }
       $$invalidate(8, ftype = type.mime);
       $$invalidate(2, isVideo = type.mime.startsWith("video/"));
       $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
@@ -15728,25 +15695,38 @@
         return;
       if (unzipping)
         return;
-      $$invalidate(16, unzipping = true);
-      let lisn = new EventTarget();
-      lisn.addEventListener("progress", (e) => {
-        $$invalidate(17, progress = e.detail);
-      });
-      let full = await file.data(lisn);
-      const type = await fileTypeFromBuffer(full);
-      $$invalidate(14, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
-      $$invalidate(16, unzipping = false);
+      let type;
+      if (typeof file.data != "string") {
+        $$invalidate(16, unzipping = true);
+        let lisn = new EventTarget();
+        lisn.addEventListener("progress", (e) => {
+          $$invalidate(17, progress = e.detail);
+        });
+        let full = await file.data(lisn);
+        type = await fileTypeFromBuffer(full);
+        $$invalidate(14, furl = URL.createObjectURL(new Blob([full], { type: type?.mime })));
+      } else {
+        $$invalidate(5, url = file.data);
+        $$invalidate(14, furl = file.data);
+        let head = headerStringToObject2(await GM_head2(file.data, void 0));
+        type = {
+          ext: "",
+          mime: head["content-type"].split(";")[0].trim()
+        };
+      }
       if (!type)
         return;
       $$invalidate(2, isVideo = type.mime.startsWith("video/"));
       $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(3, isImage = type.mime.startsWith("image/"));
+      $$invalidate(16, unzipping = false);
       dispatch("fileinfo", { type });
       if (hovering) {
-        setTimeout(() => {
-          recompute();
-          hoverUpdate();
+        setTimeout(async () => {
+          while (dims[0] == 0 && dims[1] == 0) {
+            hoverUpdate();
+            await new Promise((_) => setTimeout(_, 20));
+          }
         }, 20);
       }
     }
@@ -15839,6 +15819,7 @@
         return;
       if (!contracted)
         return;
+      recompute();
       const [sw, sh] = [visualViewport.width, visualViewport.height];
       if (dims[0] == 0 && dims[1] == 0)
         recompute();
@@ -16560,13 +16541,13 @@
   var EyeButton_default = EyeButton;
 
   // src/main.ts
-  var csettings2;
+  var csettings4;
   var processors = [thirdeye_default, pomf_default, png_default, webm_default, gif_default];
   var cappState;
   settings.subscribe((b) => {
-    csettings2 = b;
+    csettings4 = b;
     processors = [
-      ...!csettings2.te ? [thirdeye_default] : [],
+      ...!csettings4.te ? [thirdeye_default] : [],
       png_default,
       pomf_default,
       webm_default,
@@ -16736,20 +16717,21 @@
       const input = document.createElement("input");
       input.setAttribute("type", "file");
       const type = file.type;
+      input.multiple = true;
       input.onchange = async (ev) => {
         if (input.files) {
           try {
             const proc = processors.filter((e3) => e3.inject).find((e3) => e3.match(file.name));
             if (!proc)
               throw new Error("Container filetype not supported");
-            const buff = await proc.inject(file, input.files[0]);
+            const buff = await proc.inject(file, [...input.files]);
             document.dispatchEvent(new CustomEvent("QRSetFile", {
               detail: { file: new Blob([buff], { type }), name: file.name }
             }));
             document.dispatchEvent(new CustomEvent("CreateNotification", {
               detail: {
                 type: "success",
-                content: "File successfully embedded!",
+                content: `File${input.files.length > 1 ? "s" : ""} successfully embedded!`,
                 lifetime: 3
               }
             }));

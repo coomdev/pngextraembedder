@@ -116,9 +116,11 @@
 
     if (hovering) {
       // reset hovering to recompute proper image coordinates
-      setTimeout(() => {
-        recompute()
-        hoverUpdate()
+      setTimeout(async () => {
+        while (dims[0] == 0 && dims[1] == 0) {
+          hoverUpdate()
+          await new Promise(_ => setTimeout(_, 20));
+        }
       }, 20)
     }
   }
@@ -229,6 +231,7 @@
     lastev = lastev || ev
     if ($settings.dh) return
     if (!contracted) return
+    recompute(); // yeah I gave up
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
     if (dims[0] == 0 && dims[1] == 0) recompute()

@@ -123,7 +123,7 @@ const extract = (webm: Buffer) => {
         return [{ filename: 'string', data: chk.data }];
 };
 
-const inject = async (container: File, inj: File): Promise<Buffer> =>
+const inject = async (container: File, [inj]: File[]): Promise<Buffer> =>
     embed(Buffer.from(await container.arrayBuffer()), Buffer.from(await inj.arrayBuffer()));
 
 const has_embed = (webm: Buffer) => {

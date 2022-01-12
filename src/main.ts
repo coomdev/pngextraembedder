@@ -22,7 +22,7 @@ export interface ImageProcessor {
     match(fn: string): boolean;
     has_embed(b: Buffer, fn?: string): boolean | Promise<boolean>;
     extract(b: Buffer, fn?: string): EmbeddedFile[] | Promise<EmbeddedFile[]>;
-    inject?(b: File, c: File): Buffer | Promise<Buffer>;
+    inject?(b: File, c: File[]): Buffer | Promise<Buffer>;
 }
 
 export let csettings: Parameters<typeof settings['set']>[0];
@@ -262,13 +262,14 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
         const input = document.createElement('input') as HTMLInputElement;
         input.setAttribute("type", "file");
         const type = file.type;
+        input.multiple = true;
         input.onchange = (async ev => {
             if (input.files) {
                 try {
                     const proc = processors.filter(e => e.inject).find(e => e.match(file.name));
                     if (!proc)
                         throw new Error("Container filetype not supported");
-                    const buff = await proc.inject!(file, input.files[0]);
+                    const buff = await proc.inject!(file, [...input.files]);
                     document.dispatchEvent(new CustomEvent('QRSetFile', {
                         //detail: { file: new Blob([buff]), name: file.name, type: file.type }
                         detail: { file: new Blob([buff], { type }), name: file.name }
@@ -276,7 +277,7 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
                     document.dispatchEvent(new CustomEvent("CreateNotification", {
                         detail: {
                             type: 'success',
-                            content: 'File successfully embedded!',
+                            content: `File${input.files.length > 1 ? 's' : ''} successfully embedded!`,
                             lifetime: 3
                         }
                     }));
