@@ -1,4 +1,3 @@
-import { buf } from "crc-32";
 import { Buffer } from "buffer";
 import type { ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
@@ -18,11 +17,9 @@ const BufferReadStream = (b: Buffer) => {
 };
 
 const extract = async (png: Buffer) => {
-    let magic = false;
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
     try {
-        let lastIDAT: Buffer | null = null;
         for await (const [name, chunk, crc, offset] of sneed.chunks()) {
             let buff: Buffer;
             switch (name) {
@@ -30,26 +27,17 @@ const extract = async (png: Buffer) => {
                 case 'tEXt':
                     buff = chunk;
                     if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
-                        magic = true;
+                        return await decodeCoom3Payload(buff.slice(4, 4 + CUM3.length));
                     }
                     break;
                 case 'IDAT':
-                    if (magic) {
-                        lastIDAT = chunk;
-                        break;
-                    }
                 // eslint-disable-next-line no-fallthrough
                 case 'IEND':
-                    if (!magic)
-                        return; // Didn't find tExt Chunk;
+                    return;
                 // eslint-disable-next-line no-fallthrough
                 default:
                     break;
             }
-        }
-        if (lastIDAT) {
-            const data = (lastIDAT as Buffer).slice(4);
-            return await decodeCoom3Payload(data);
         }
     } catch (e) {
         console.error(e);
@@ -105,17 +93,17 @@ const inject = async (container: File, injs: File[]) => {
     }));
 
     let magic = false;
+    const injb = Buffer.from(links.join(' '));
+
     for await (const [name, chunk, crc, offset] of decoder.chunks()) {
         if (magic && name != "IDAT")
             break;
         if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", buildChunk("tEXt", CUM3), 0, 0]);
+            await encoder.insertchunk(["tEXt", buildChunk("tEXt", Buffer.concat([CUM3, injb])), 0, 0]);
             magic = true;
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
     }
-    const injb = Buffer.from(links.join('\0'));
-    await encoder.insertchunk(["IDAT", buildChunk("IDAT", injb), 0, 0]);
     await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
     return extract();
 };
