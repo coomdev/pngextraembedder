@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import { appState, settings } from "./stores";
 import globalCss from './global.css';
 
-import png from "./png";
 import pngv3 from "./pngv3";
 import webm from "./webm";
 import gif from "./gif";
@@ -30,12 +29,12 @@ export interface ImageProcessor {
 
 export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
-    [thirdeye, pomf, png, pngv3, webm, gif];
+    [thirdeye, pomf, pngv3, webm, gif];
 
 let cappState: Parameters<typeof appState['set']>[0];
 settings.subscribe(b => {
     csettings = b;
-    processors = [...(!csettings.te ? [thirdeye] : []), png, pngv3, pomf, webm, gif
+    processors = [...(!csettings.te ? [thirdeye] : []), pngv3, pomf, webm, gif
     ];
 });
 
@@ -203,8 +202,7 @@ const startup = async () => {
         ...cappState,
         isCatalog: !!document.querySelector('.catalog-small') || !!location.pathname.match(/\/catalog$/),
     });
-    //    for (let i = 159; i < 160 ;++i)
-    //      await processPost(posts[i] as any);
+    //await processPost(posts[0] as any);
 
     const n = 7;
     //console.log(posts);

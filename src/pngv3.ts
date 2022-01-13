@@ -25,7 +25,7 @@ const extract = async (png: Buffer) => {
             switch (name) {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
-                    buff = chunk;
+                    buff = await chunk();
                     if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
                         return await decodeCoom3Payload(buff.slice(4 + CUM3.length));
                     }
@@ -76,13 +76,15 @@ const inject = async (container: File, injs: File[]) => {
         if (magic && name != "IDAT")
             break;
         if (!magic && name == "IDAT") {
-            await encoder.insertchunk(["tEXt", buildChunk("tEXt",
-                Buffer.concat([CUM3, injb])), 0, 0]);
+            await encoder.insertchunk(["tEXt", async () => buildChunk("tEXt", Buffer.concat([CUM3, injb])), () => Promise.resolve(0), 0]);
             magic = true;
         }
         await encoder.insertchunk([name, chunk, crc, offset]);
     }
-    await encoder.insertchunk(["IEND", buildChunk("IEND", Buffer.from([])), 0, 0]);
+    await encoder.insertchunk(["IEND",
+        async () => Promise.resolve(buildChunk("IEND", Buffer.from([]))),
+        async () => Promise.resolve(0),
+        0]);
     return extract();
 };
 
@@ -95,7 +97,7 @@ const has_embed = async (png: Buffer) => {
             switch (name) {
                 // should exist at the beginning of file to signal decoders if the file indeed has an embedded chunk
                 case 'tEXt':
-                    buff = chunk;
+                    buff = await chunk();
                     if (buff.slice(4, 4 + CUM3.length).equals(CUM3))
                         return true;
                     break;

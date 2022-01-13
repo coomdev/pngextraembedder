@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.131
+// @version      0.132
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11084,6 +11084,10 @@
   // src/global.css
   var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n";
 
+  // src/pngv3.ts
+  init_esbuild_inject();
+  var import_buffer3 = __toESM(require_buffer(), 1);
+
   // src/png.ts
   init_esbuild_inject();
   var import_crc_32 = __toESM(require_crc32(), 1);
@@ -11112,9 +11116,19 @@
         const name = this.repr.slice(this.ptr + 4, this.ptr + 8).toString();
         this.ptr += 4;
         this.req += length + 4;
-        await this.catchup();
         const pos = this.ptr;
-        yield [name, this.repr.slice(pos, pos + length + 4), this.repr.readUInt32BE(this.ptr + length + 4), this.ptr];
+        yield [
+          name,
+          async () => {
+            await this.catchup();
+            return this.repr.slice(pos, pos + length + 4);
+          },
+          async () => {
+            await this.catchup();
+            return this.repr.readUInt32BE(this.ptr + length + 4);
+          },
+          this.ptr
+        ];
         this.ptr += length + 8;
         if (name == "IEND")
           break;
@@ -11133,62 +11147,13 @@
       b.writeInt32BE(chunk[1].length - 4, 0);
       await this.writer.write(b);
       const buff = chunk[1];
-      await this.writer.write(buff);
-      b.writeInt32BE((0, import_crc_32.buf)(buff), 0);
+      await this.writer.write(await buff());
+      b.writeInt32BE((0, import_crc_32.buf)(await buff()), 0);
       await this.writer.write(b);
     }
     async dtor() {
       this.writer.releaseLock();
       await this.writer.close();
-    }
-  };
-  var CUM0 = import_buffer.Buffer.from("CUM\x000");
-  var BufferReadStream = (b) => {
-    const ret = new ReadableStream({
-      pull(cont) {
-        cont.enqueue(b);
-        cont.close();
-      }
-    });
-    return ret;
-  };
-  var extract = async (png) => {
-    let magic2 = false;
-    const reader = BufferReadStream(png).getReader();
-    const sneed = new PNGDecoder(reader);
-    try {
-      let lastIDAT = null;
-      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
-        let buff;
-        switch (name) {
-          case "tEXt":
-            buff = chunk;
-            if (buff.slice(4, 4 + CUM0.length).equals(CUM0))
-              magic2 = true;
-            break;
-          case "IDAT":
-            if (magic2) {
-              lastIDAT = chunk;
-              break;
-            }
-          case "IEND":
-            if (!magic2)
-              return;
-          default:
-            break;
-        }
-      }
-      if (lastIDAT) {
-        let data = lastIDAT.slice(4);
-        const fnsize = data.readUInt32LE(0);
-        const fn = data.slice(4, 4 + fnsize).toString();
-        data = data.slice(4 + fnsize);
-        return [{ filename: fn, data }];
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      reader.releaseLock();
     }
   };
   var BufferWriteStream = () => {
@@ -11200,41 +11165,6 @@
     });
     return [ret, () => b];
   };
-  var has_embed = async (png) => {
-    const reader = BufferReadStream(png).getReader();
-    const sneed = new PNGDecoder(reader);
-    try {
-      for await (const [name, chunk, crc, offset] of sneed.chunks()) {
-        let buff;
-        switch (name) {
-          case "tEXt":
-            buff = chunk;
-            if (buff.slice(4, 4 + CUM0.length).equals(CUM0)) {
-              return true;
-            }
-            break;
-          case "IDAT":
-          case "IEND":
-            return false;
-          default:
-            break;
-        }
-      }
-    } catch (e) {
-      return;
-    } finally {
-      reader.releaseLock();
-    }
-  };
-  var png_default = {
-    extract,
-    has_embed,
-    match: (fn) => !!fn.match(/\.png$/)
-  };
-
-  // src/pngv3.ts
-  init_esbuild_inject();
-  var import_buffer3 = __toESM(require_buffer(), 1);
 
   // src/utils.ts
   init_esbuild_inject();
@@ -11484,7 +11414,7 @@
 
   // src/pngv3.ts
   var CUM3 = import_buffer3.Buffer.from("doo\0m");
-  var BufferReadStream2 = (b) => {
+  var BufferReadStream = (b) => {
     const ret = new ReadableStream({
       pull(cont) {
         cont.enqueue(b);
@@ -11493,15 +11423,15 @@
     });
     return ret;
   };
-  var extract2 = async (png) => {
-    const reader = BufferReadStream2(png).getReader();
+  var extract = async (png) => {
+    const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
     try {
       for await (const [name, chunk, crc, offset] of sneed.chunks()) {
         let buff;
         switch (name) {
           case "tEXt":
-            buff = chunk;
+            buff = await chunk();
             if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
               return await decodeCoom3Payload(buff.slice(4 + CUM3.length));
             }
@@ -11535,7 +11465,7 @@
     return [ret, () => b];
   };
   var inject = async (container, injs) => {
-    const [writestream, extract7] = BufferWriteStream2();
+    const [writestream, extract6] = BufferWriteStream2();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
     let magic2 = false;
@@ -11545,23 +11475,28 @@
       if (magic2 && name != "IDAT")
         break;
       if (!magic2 && name == "IDAT") {
-        await encoder.insertchunk(["tEXt", buildChunk("tEXt", import_buffer3.Buffer.concat([CUM3, injb])), 0, 0]);
+        await encoder.insertchunk(["tEXt", async () => buildChunk("tEXt", import_buffer3.Buffer.concat([CUM3, injb])), () => Promise.resolve(0), 0]);
         magic2 = true;
       }
       await encoder.insertchunk([name, chunk, crc, offset]);
     }
-    await encoder.insertchunk(["IEND", buildChunk("IEND", import_buffer3.Buffer.from([])), 0, 0]);
-    return extract7();
+    await encoder.insertchunk([
+      "IEND",
+      async () => Promise.resolve(buildChunk("IEND", import_buffer3.Buffer.from([]))),
+      async () => Promise.resolve(0),
+      0
+    ]);
+    return extract6();
   };
-  var has_embed2 = async (png) => {
-    const reader = BufferReadStream2(png).getReader();
+  var has_embed = async (png) => {
+    const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
     try {
       for await (const [name, chunk, crc, offset] of sneed.chunks()) {
         let buff;
         switch (name) {
           case "tEXt":
-            buff = chunk;
+            buff = await chunk();
             if (buff.slice(4, 4 + CUM3.length).equals(CUM3))
               return true;
             break;
@@ -11579,8 +11514,8 @@
     }
   };
   var pngv3_default = {
-    extract: extract2,
-    has_embed: has_embed2,
+    extract,
+    has_embed,
     inject,
     match: (fn) => !!fn.match(/\.png$/)
   };
@@ -11660,7 +11595,7 @@
     ]);
     return import_buffer4.Buffer.from(enc.encode(chunks.filter((e) => e.name != "unknown")));
   };
-  var extract3 = (webm) => {
+  var extract2 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
     const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
@@ -11677,7 +11612,7 @@
     const links = await uploadFiles(injs);
     return embed(import_buffer4.Buffer.from(await container.arrayBuffer()), import_buffer4.Buffer.from(links.join(" ")));
   };
-  var has_embed3 = (webm) => {
+  var has_embed2 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
     const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
@@ -11689,8 +11624,8 @@
     return true;
   };
   var webm_default = {
-    extract: extract3,
-    has_embed: has_embed3,
+    extract: extract2,
+    has_embed: has_embed2,
     inject: inject2,
     match: (fn) => !!fn.match(/\.webm$/)
   };
@@ -11742,7 +11677,7 @@
     }
     throw "Shouldn't happen";
   };
-  var extract4 = extractBuff;
+  var extract3 = extractBuff;
   var write_data = async (writer, inj) => {
     await writer.write(magic);
     const byte = import_buffer5.Buffer.from([0]);
@@ -11774,7 +11709,7 @@
     }
   };
   var inject3 = async (container, injs) => {
-    const [writestream, extract7] = BufferWriteStream();
+    const [writestream, extract6] = BufferWriteStream();
     const writer = writestream.getWriter();
     const links = await uploadFiles(injs);
     const inj = import_buffer5.Buffer.from(links.join(" "));
@@ -11789,9 +11724,9 @@
     await writer.write(contbuff.slice(0, endo));
     await write_embedding(writer, import_buffer5.Buffer.from(inj));
     await writer.write(contbuff.slice(endo));
-    return extract7();
+    return extract6();
   };
-  var has_embed4 = (gif) => {
+  var has_embed3 = (gif) => {
     const field = gif.readUInt8(10);
     const gcte = !!(field & 1 << 7);
     let end = 13;
@@ -11816,8 +11751,8 @@
     return false;
   };
   var gif_default = {
-    extract: extract4,
-    has_embed: has_embed4,
+    extract: extract3,
+    has_embed: has_embed3,
     inject: inject3,
     match: (fn) => !!fn.match(/\.gif$/)
   };
@@ -11914,7 +11849,7 @@
       return [];
     }
   };
-  var extract5 = async (b, fn) => {
+  var extract4 = async (b, fn) => {
     let result;
     let booru;
     for (const e of Object.values(boorus)) {
@@ -11941,7 +11876,7 @@
       }
     }];
   };
-  var has_embed5 = async (b, fn) => {
+  var has_embed4 = async (b, fn) => {
     if (import_buffer6.Buffer.from(fn, "hex").equals(b))
       return false;
     let result = void 0;
@@ -11957,8 +11892,8 @@
   };
   var thirdeye_default = {
     skip: true,
-    extract: extract5,
-    has_embed: has_embed5,
+    extract: extract4,
+    has_embed: has_embed4,
     match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
   };
 
@@ -11987,7 +11922,7 @@
     }
     return ext;
   };
-  var extract6 = async (b, fn) => {
+  var extract5 = async (b, fn) => {
     const ext = getExt(fn);
     let rsource;
     for (const source of sources) {
@@ -12009,7 +11944,7 @@
       thumbnail: hasembed_default
     }];
   };
-  var has_embed6 = async (b, fn) => {
+  var has_embed5 = async (b, fn) => {
     const ext = getExt(fn);
     if (!ext)
       return false;
@@ -12024,8 +11959,8 @@
   };
   var pomf_default = {
     skip: true,
-    extract: extract6,
-    has_embed: has_embed6,
+    extract: extract5,
+    has_embed: has_embed5,
     match: (fn) => !!getExt(fn)
   };
 
@@ -16890,13 +16825,12 @@
 
   // src/main.ts
   var csettings4;
-  var processors = [thirdeye_default, pomf_default, png_default, pngv3_default, webm_default, gif_default];
+  var processors = [thirdeye_default, pomf_default, pngv3_default, webm_default, gif_default];
   var cappState;
   settings.subscribe((b) => {
     csettings4 = b;
     processors = [
       ...!csettings4.te ? [thirdeye_default] : [],
-      png_default,
       pngv3_default,
       pomf_default,
       webm_default,
