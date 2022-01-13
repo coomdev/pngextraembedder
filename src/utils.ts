@@ -10,6 +10,7 @@ const generateThumbnail = async (f: File): Promise<Buffer> => {
 
     const [sw, sh] = [125, 125];
     const url = URL.createObjectURL(f);
+
     let source: CanvasImageSource;
     let iw: number, ih: number;
 
