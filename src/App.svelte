@@ -52,6 +52,10 @@
     <h1>PEE Settings</h1>
     <hr />
     <label>
+      <input type="checkbox" bind:checked={$settings.vercheck} />
+      Check for new versions at startup.
+    </label>
+    <label>
       <input type="checkbox" bind:checked={$settings.xpi} />
       Autoexpand Images on opening.
     </label>
