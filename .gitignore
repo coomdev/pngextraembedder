@@ -14,3 +14,5 @@ ext
 *.mp4
 *.webm
 yarn.lock
+out
+*.data

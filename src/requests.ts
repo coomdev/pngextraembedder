@@ -77,7 +77,6 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
             },
             ontimeout: () => reject("fetch timeout"),
             onerror: (...args) => {
-                debugger;
                 reject("fetch error");
             },
             onabort: () => reject("fetch abort")

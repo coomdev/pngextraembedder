@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import type { ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
-import { buildPeeFile, decodeCoom3Payload, fireNotification } from "./utils";
+import { buildPeeFile, decodeCoom3Payload, fireNotification, uploadFiles } from "./utils";
 import { GM_fetch } from "./requests";
 
 const CUM3 = Buffer.from("doo\0" + "m");
@@ -63,36 +63,13 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
-function parseForm(data: object) {
-    const form = new FormData();
-
-    Object.entries(data)
-        .filter(([key, value]) => value !== null)
-        .map(([key, value]) => form.append(key, value));
-
-    return form;
-}
-
 const inject = async (container: File, injs: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
 
-    let total = 0;
-    fireNotification('info', `Uploading ${injs.length} files...`);
-    const links = await Promise.all(injs.map(async inj => {
-        const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
-            method: 'POST',
-            body: parseForm({
-                reqtype: 'fileupload',
-                fileToUpload: await buildPeeFile(inj)
-            })
-        })).text();
-        fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
-        return ret;
-    }));
-
     let magic = false;
+    const links = await uploadFiles(injs);
     const injb = Buffer.from(links.join(' '));
 
     for await (const [name, chunk, crc, offset] of decoder.chunks()) {

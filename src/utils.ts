@@ -134,3 +134,29 @@ export const fireNotification = (level: 'success' | 'error' | 'info' | 'warning'
         }
     }));
 };
+
+function parseForm(data: object) {
+    const form = new FormData();
+
+    Object.entries(data)
+        .filter(([key, value]) => value !== null)
+        .map(([key, value]) => form.append(key, value));
+
+    return form;
+}
+
+export const uploadFiles = async (injs: File[]) => {
+    let total = 0;
+    fireNotification('info', `Uploading ${injs.length} files...`);
+    return await Promise.all(injs.map(async inj => {
+        const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
+            method: 'POST',
+            body: parseForm({
+                reqtype: 'fileupload',
+                fileToUpload: await buildPeeFile(inj)
+            })
+        })).text();
+        fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
+        return ret;
+    }));
+};

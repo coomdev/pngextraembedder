@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.127
+// @version      0.131
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11022,6 +11022,7 @@
     ep: false,
     expte: false,
     hotlink: false,
+    vercheck: false,
     conc: 8,
     ho: false,
     blacklist: ["guro", "scat", "ryona", "gore"],
@@ -11190,6 +11191,15 @@
       reader.releaseLock();
     }
   };
+  var BufferWriteStream = () => {
+    let b = import_buffer.Buffer.from([]);
+    const ret = new WritableStream({
+      write(chunk) {
+        b = import_buffer.Buffer.concat([b, chunk]);
+      }
+    });
+    return [ret, () => b];
+  };
   var has_embed = async (png) => {
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
@@ -11304,7 +11314,6 @@
         },
         ontimeout: () => reject("fetch timeout"),
         onerror: (...args) => {
-          debugger;
           reject("fetch error");
         },
         onabort: () => reject("fetch abort")
@@ -11452,6 +11461,26 @@
       }
     }));
   };
+  function parseForm(data) {
+    const form = new FormData();
+    Object.entries(data).filter(([key, value]) => value !== null).map(([key, value]) => form.append(key, value));
+    return form;
+  }
+  var uploadFiles = async (injs) => {
+    let total = 0;
+    fireNotification("info", `Uploading ${injs.length} files...`);
+    return await Promise.all(injs.map(async (inj) => {
+      const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
+        method: "POST",
+        body: parseForm({
+          reqtype: "fileupload",
+          fileToUpload: await buildPeeFile(inj)
+        })
+      })).text();
+      fireNotification("info", `Uploaded files [${++total}/${injs.length}] ${ret}`);
+      return ret;
+    }));
+  };
 
   // src/pngv3.ts
   var CUM3 = import_buffer3.Buffer.from("doo\0m");
@@ -11496,7 +11525,7 @@
     data.copy(ret, 4);
     return ret;
   };
-  var BufferWriteStream = () => {
+  var BufferWriteStream2 = () => {
     let b = import_buffer3.Buffer.from([]);
     const ret = new WritableStream({
       write(chunk) {
@@ -11505,29 +11534,12 @@
     });
     return [ret, () => b];
   };
-  function parseForm(data) {
-    const form = new FormData();
-    Object.entries(data).filter(([key, value]) => value !== null).map(([key, value]) => form.append(key, value));
-    return form;
-  }
   var inject = async (container, injs) => {
-    const [writestream, extract7] = BufferWriteStream();
+    const [writestream, extract7] = BufferWriteStream2();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
-    let total = 0;
-    fireNotification("info", `Uploading ${injs.length} files...`);
-    const links = await Promise.all(injs.map(async (inj) => {
-      const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
-        method: "POST",
-        body: parseForm({
-          reqtype: "fileupload",
-          fileToUpload: await buildPeeFile(inj)
-        })
-      })).text();
-      fireNotification("info", `Uploaded files [${++total}/${injs.length}] ${ret}`);
-      return ret;
-    }));
     let magic2 = false;
+    const links = await uploadFiles(injs);
     const injb = import_buffer3.Buffer.from(links.join(" "));
     for await (const [name, chunk, crc, offset] of decoder.chunks()) {
       if (magic2 && name != "IDAT")
@@ -11631,7 +11643,7 @@
         type: "8",
         isEnd: false,
         name: "TagName",
-        data: import_buffer4.Buffer.from("COOM")
+        data: import_buffer4.Buffer.from("DOOM")
       },
       {
         type: "8",
@@ -11661,7 +11673,10 @@
     if (chk.type == "b" && chk.name == "TagBinary")
       return [{ filename: "string", data: chk.data }];
   };
-  var inject2 = async (container, [inj]) => embed(import_buffer4.Buffer.from(await container.arrayBuffer()), import_buffer4.Buffer.from(await inj.arrayBuffer()));
+  var inject2 = async (container, injs) => {
+    const links = await uploadFiles(injs);
+    return embed(import_buffer4.Buffer.from(await container.arrayBuffer()), import_buffer4.Buffer.from(links.join(" ")));
+  };
   var has_embed3 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
@@ -11684,7 +11699,7 @@
   init_esbuild_inject();
   var import_buffer5 = __toESM(require_buffer(), 1);
   var netscape = import_buffer5.Buffer.from("!\xFF\vNETSCAPE2.0", "ascii");
-  var magic = import_buffer5.Buffer.from("!\xFF\vCOOMTECH0.1", "ascii");
+  var magic = import_buffer5.Buffer.from("!\xFF\vDOOMTECH1.1", "ascii");
   var read_section = (gif, pos) => {
     const begin = pos;
     pos += 3 + gif[pos + 2];
@@ -11728,6 +11743,54 @@
     throw "Shouldn't happen";
   };
   var extract4 = extractBuff;
+  var write_data = async (writer, inj) => {
+    await writer.write(magic);
+    const byte = import_buffer5.Buffer.from([0]);
+    let size = inj.byteLength;
+    let ws;
+    let offset = 0;
+    while (size != 0) {
+      ws = size >= 255 ? 255 : size;
+      byte.writeUInt8(ws, 0);
+      await writer.write(byte);
+      await writer.write(inj.slice(offset, offset + ws));
+      size -= ws;
+      offset += ws;
+    }
+    byte.writeUInt8(0, 0);
+    await writer.write(byte);
+  };
+  var write_embedding = async (writer, inj) => {
+    const b = import_buffer5.Buffer.alloc(4);
+    b.writeInt32LE(inj.byteLength, 0);
+    await write_data(writer, b);
+    let size = inj.byteLength;
+    let offset = 0;
+    while (size != 0) {
+      const ws = size >= 3 << 13 ? 3 << 13 : size;
+      await write_data(writer, inj.slice(offset, offset + ws));
+      offset += ws;
+      size -= ws;
+    }
+  };
+  var inject3 = async (container, injs) => {
+    const [writestream, extract7] = BufferWriteStream();
+    const writer = writestream.getWriter();
+    const links = await uploadFiles(injs);
+    const inj = import_buffer5.Buffer.from(links.join(" "));
+    const contbuff = import_buffer5.Buffer.from(await container.arrayBuffer());
+    const field = contbuff.readUInt8(10);
+    const gcte = !!(field & 1 << 7);
+    let endo = 13;
+    if (gcte)
+      endo += 3 * (1 << (field & 7) + 1);
+    if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
+      endo += 19;
+    await writer.write(contbuff.slice(0, endo));
+    await write_embedding(writer, import_buffer5.Buffer.from(inj));
+    await writer.write(contbuff.slice(endo));
+    return extract7();
+  };
   var has_embed4 = (gif) => {
     const field = gif.readUInt8(10);
     const gcte = !!(field & 1 << 7);
@@ -11755,6 +11818,7 @@
   var gif_default = {
     extract: extract4,
     has_embed: has_embed4,
+    inject: inject3,
     match: (fn) => !!fn.match(/\.gif$/)
   };
 
@@ -11910,12 +11974,12 @@
     csettings3 = b;
   });
   var getExt = (fn) => {
-    const isDum = fn.match(/^([a-z0-9]{6}\.(?:jpe?g|png|webm|gif))/gi);
+    const isDum = fn.match(/^[a-z0-9]{6}\./i);
     const isB64 = fn.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn.match(/\[.*=(.*)\]/);
     let ext;
     if (isDum) {
-      ext = isDum[0];
+      ext = fn.split(".").slice(0, -1).join(".");
     } else if (isB64) {
       ext = atob(isB64[1]);
     } else if (isExt) {
@@ -12267,14 +12331,14 @@
   }
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[34] = list[i];
-    child_ctx[36] = i;
+    child_ctx[35] = list[i];
+    child_ctx[37] = i;
     return child_ctx;
   }
   function get_each_context_1(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[37] = list[i];
-    child_ctx[36] = i;
+    child_ctx[38] = list[i];
+    child_ctx[37] = i;
     return child_ctx;
   }
   function create_if_block_1(ctx) {
@@ -12296,7 +12360,7 @@
         input.checked = ctx[3].ho;
         append(label, t);
         if (!mounted) {
-          dispose = listen(input, "change", ctx[13]);
+          dispose = listen(input, "change", ctx[14]);
           mounted = true;
         }
       },
@@ -12350,7 +12414,7 @@
       $$scope: { ctx }
     };
     dialog = new Dialog_default({ props: dialog_props });
-    ctx[30](dialog);
+    ctx[31](dialog);
     let each_value = ctx[3].blacklist;
     let each_blocks = [];
     for (let i = 0; i < each_value.length; i += 1) {
@@ -12429,9 +12493,9 @@
         current = true;
         if (!mounted) {
           dispose = [
-            listen(input0, "change", ctx[21]),
-            listen(button, "click", ctx[25]),
-            listen(input1, "keydown", ctx[32])
+            listen(input0, "change", ctx[22]),
+            listen(button, "click", ctx[26]),
+            listen(input1, "keydown", ctx[33])
           ];
           mounted = true;
         }
@@ -12462,7 +12526,7 @@
           check_outros();
         }
         const dialog_changes = {};
-        if (dirty[0] & 1 | dirty[1] & 256) {
+        if (dirty[0] & 1 | dirty[1] & 512) {
           dialog_changes.$$scope = { dirty, ctx: ctx2 };
         }
         dialog.$set(dialog_changes);
@@ -12530,7 +12594,7 @@
           detach(button);
         if (detaching)
           detach(t7);
-        ctx[30](null);
+        ctx[31](null);
         destroy_component(dialog, detaching);
         if (detaching)
           detach(t8);
@@ -12558,17 +12622,17 @@
     let tag;
     let current;
     function func(...args) {
-      return ctx[22](ctx[37], ...args);
+      return ctx[23](ctx[38], ...args);
     }
     function remove_handler() {
-      return ctx[23](ctx[37]);
+      return ctx[24](ctx[38]);
     }
     function toggle_handler() {
-      return ctx[24](ctx[37]);
+      return ctx[25](ctx[38]);
     }
     tag = new Tag_default({
       props: {
-        tag: ctx[37].name,
+        tag: ctx[38].name,
         toggleable: true,
         toggled: !ctx[3].rsources.find(func)?.disabled
       }
@@ -12587,7 +12651,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[37].name;
+          tag_changes.tag = ctx[38].name;
         if (dirty[0] & 8)
           tag_changes.toggled = !ctx[3].rsources.find(func)?.disabled;
         tag.$set(tag_changes);
@@ -12688,10 +12752,10 @@
         append(div, button);
         if (!mounted) {
           dispose = [
-            listen(input0, "input", ctx[26]),
-            listen(input1, "input", ctx[27]),
-            listen(input2, "input", ctx[28]),
-            listen(input3, "input", ctx[29]),
+            listen(input0, "input", ctx[27]),
+            listen(input1, "input", ctx[28]),
+            listen(input2, "input", ctx[29]),
+            listen(input3, "input", ctx[30]),
             listen(button, "click", ctx[4])
           ];
           mounted = true;
@@ -12723,9 +12787,9 @@
     let tag;
     let current;
     function toggle_handler_1() {
-      return ctx[31](ctx[34]);
+      return ctx[32](ctx[35]);
     }
-    tag = new Tag_default({ props: { tag: ctx[34] } });
+    tag = new Tag_default({ props: { tag: ctx[35] } });
     tag.$on("toggle", toggle_handler_1);
     return {
       c() {
@@ -12739,7 +12803,7 @@
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 8)
-          tag_changes.tag = ctx[34];
+          tag_changes.tag = ctx[35];
         tag.$set(tag_changes);
       },
       i(local) {
@@ -12784,9 +12848,9 @@
     let input4;
     let t11;
     let t12;
-    let t13;
     let label5;
     let input5;
+    let t13;
     let t14;
     let t15;
     let label6;
@@ -12808,12 +12872,16 @@
     let label10;
     let input10;
     let t24;
-    let a;
-    let t26;
+    let t25;
     let label11;
     let input11;
-    let t27;
+    let t26;
+    let a;
     let t28;
+    let label12;
+    let input12;
+    let t29;
+    let t30;
     let current;
     let mounted;
     let dispose;
@@ -12830,57 +12898,61 @@
         t2 = space();
         label0 = element("label");
         input0 = element("input");
-        t3 = text("\n      Autoexpand Images on opening.");
+        t3 = text("\n      Check for new versions at startup.");
         t4 = space();
         label1 = element("label");
         input1 = element("input");
-        t5 = text("\n      Autoexpand Videos on opening.");
+        t5 = text("\n      Autoexpand Images on opening.");
         t6 = space();
         label2 = element("label");
         input2 = element("input");
-        t7 = text("\n      Loop media content.");
+        t7 = text("\n      Autoexpand Videos on opening.");
         t8 = space();
         label3 = element("label");
         input3 = element("input");
-        t9 = text("\n      Disable hover preview.");
+        t9 = text("\n      Loop media content.");
         t10 = space();
         label4 = element("label");
         input4 = element("input");
-        t11 = text("\n      Hide embedded content behind an eye.");
+        t11 = text("\n      Disable hover preview.");
         t12 = space();
-        if (if_block0)
-          if_block0.c();
-        t13 = space();
         label5 = element("label");
         input5 = element("input");
-        t14 = text("\n      Preload external files.");
+        t13 = text("\n      Hide embedded content behind an eye.");
+        t14 = space();
+        if (if_block0)
+          if_block0.c();
         t15 = space();
         label6 = element("label");
         input6 = element("input");
-        t16 = text("\n      Preload external files when they are in view.");
+        t16 = text("\n      Preload external files.");
         t17 = space();
         label7 = element("label");
         input7 = element("input");
-        t18 = text("\n      Hotlink content.");
+        t18 = text("\n      Preload external files when they are in view.");
         t19 = space();
         label8 = element("label");
         input8 = element("input");
-        t20 = text("\n      Control audio on videos with mouse wheel.");
+        t20 = text("\n      Hotlink content.");
         t21 = space();
         label9 = element("label");
         input9 = element("input");
-        t22 = text("\n      Show Minimap");
+        t22 = text("\n      Control audio on videos with mouse wheel.");
         t23 = space();
         label10 = element("label");
         input10 = element("input");
-        t24 = text("\n      \n      Disable embedded file preloading");
-        a = element("a");
-        a.textContent = "?";
-        t26 = space();
+        t24 = text("\n      Show Minimap");
+        t25 = space();
         label11 = element("label");
         input11 = element("input");
-        t27 = text("\n      Disable third-eye.");
+        t26 = text("\n      \n      Disable embedded file preloading");
+        a = element("a");
+        a.textContent = "?";
         t28 = space();
+        label12 = element("label");
+        input12 = element("input");
+        t29 = text("\n      Disable third-eye.");
+        t30 = space();
         if (if_block1)
           if_block1.c();
         attr(h1, "class", "svelte-14cwalg");
@@ -12896,8 +12968,9 @@
         attr(input8, "type", "checkbox");
         attr(input9, "type", "checkbox");
         attr(input10, "type", "checkbox");
-        attr(a, "title", "You might still want to enable 'preload external files'");
         attr(input11, "type", "checkbox");
+        attr(a, "title", "You might still want to enable 'preload external files'");
+        attr(input12, "type", "checkbox");
         attr(div0, "class", "content svelte-14cwalg");
         attr(div1, "class", "backpanel svelte-14cwalg");
         toggle_class(div1, "enabled", ctx[2]);
@@ -12912,68 +12985,73 @@
         append(div0, t2);
         append(div0, label0);
         append(label0, input0);
-        input0.checked = ctx[3].xpi;
+        input0.checked = ctx[3].vercheck;
         append(label0, t3);
         append(div0, t4);
         append(div0, label1);
         append(label1, input1);
-        input1.checked = ctx[3].xpv;
+        input1.checked = ctx[3].xpi;
         append(label1, t5);
         append(div0, t6);
         append(div0, label2);
         append(label2, input2);
-        input2.checked = ctx[3].loop;
+        input2.checked = ctx[3].xpv;
         append(label2, t7);
         append(div0, t8);
         append(div0, label3);
         append(label3, input3);
-        input3.checked = ctx[3].dh;
+        input3.checked = ctx[3].loop;
         append(label3, t9);
         append(div0, t10);
         append(div0, label4);
         append(label4, input4);
-        input4.checked = ctx[3].eye;
+        input4.checked = ctx[3].dh;
         append(label4, t11);
         append(div0, t12);
-        if (if_block0)
-          if_block0.m(div0, null);
-        append(div0, t13);
         append(div0, label5);
         append(label5, input5);
-        input5.checked = ctx[3].pre;
-        append(label5, t14);
+        input5.checked = ctx[3].eye;
+        append(label5, t13);
+        append(div0, t14);
+        if (if_block0)
+          if_block0.m(div0, null);
         append(div0, t15);
         append(div0, label6);
         append(label6, input6);
-        input6.checked = ctx[3].prev;
+        input6.checked = ctx[3].pre;
         append(label6, t16);
         append(div0, t17);
         append(div0, label7);
         append(label7, input7);
-        input7.checked = ctx[3].hotlink;
+        input7.checked = ctx[3].prev;
         append(label7, t18);
         append(div0, t19);
         append(div0, label8);
         append(label8, input8);
-        input8.checked = ctx[3].ca;
+        input8.checked = ctx[3].hotlink;
         append(label8, t20);
         append(div0, t21);
         append(div0, label9);
         append(label9, input9);
-        input9.checked = ctx[3].sh;
+        input9.checked = ctx[3].ca;
         append(label9, t22);
         append(div0, t23);
         append(div0, label10);
         append(label10, input10);
-        input10.checked = ctx[3].ep;
+        input10.checked = ctx[3].sh;
         append(label10, t24);
-        append(label10, a);
-        append(div0, t26);
+        append(div0, t25);
         append(div0, label11);
         append(label11, input11);
-        input11.checked = ctx[3].te;
-        append(label11, t27);
+        input11.checked = ctx[3].ep;
+        append(label11, t26);
+        append(label11, a);
         append(div0, t28);
+        append(div0, label12);
+        append(label12, input12);
+        input12.checked = ctx[3].te;
+        append(label12, t29);
+        append(div0, t30);
         if (if_block1)
           if_block1.m(div0, null);
         current = true;
@@ -12984,32 +13062,36 @@
             listen(input2, "change", ctx[10]),
             listen(input3, "change", ctx[11]),
             listen(input4, "change", ctx[12]),
-            listen(input5, "change", ctx[14]),
+            listen(input5, "change", ctx[13]),
             listen(input6, "change", ctx[15]),
             listen(input7, "change", ctx[16]),
             listen(input8, "change", ctx[17]),
             listen(input9, "change", ctx[18]),
             listen(input10, "change", ctx[19]),
-            listen(input11, "change", ctx[20])
+            listen(input11, "change", ctx[20]),
+            listen(input12, "change", ctx[21])
           ];
           mounted = true;
         }
       },
       p(ctx2, dirty) {
         if (dirty[0] & 8) {
-          input0.checked = ctx2[3].xpi;
+          input0.checked = ctx2[3].vercheck;
         }
         if (dirty[0] & 8) {
-          input1.checked = ctx2[3].xpv;
+          input1.checked = ctx2[3].xpi;
         }
         if (dirty[0] & 8) {
-          input2.checked = ctx2[3].loop;
+          input2.checked = ctx2[3].xpv;
         }
         if (dirty[0] & 8) {
-          input3.checked = ctx2[3].dh;
+          input3.checked = ctx2[3].loop;
         }
         if (dirty[0] & 8) {
-          input4.checked = ctx2[3].eye;
+          input4.checked = ctx2[3].dh;
+        }
+        if (dirty[0] & 8) {
+          input5.checked = ctx2[3].eye;
         }
         if (ctx2[3].eye) {
           if (if_block0) {
@@ -13017,32 +13099,32 @@
           } else {
             if_block0 = create_if_block_1(ctx2);
             if_block0.c();
-            if_block0.m(div0, t13);
+            if_block0.m(div0, t15);
           }
         } else if (if_block0) {
           if_block0.d(1);
           if_block0 = null;
         }
         if (dirty[0] & 8) {
-          input5.checked = ctx2[3].pre;
+          input6.checked = ctx2[3].pre;
         }
         if (dirty[0] & 8) {
-          input6.checked = ctx2[3].prev;
+          input7.checked = ctx2[3].prev;
         }
         if (dirty[0] & 8) {
-          input7.checked = ctx2[3].hotlink;
+          input8.checked = ctx2[3].hotlink;
         }
         if (dirty[0] & 8) {
-          input8.checked = ctx2[3].ca;
+          input9.checked = ctx2[3].ca;
         }
         if (dirty[0] & 8) {
-          input9.checked = ctx2[3].sh;
+          input10.checked = ctx2[3].sh;
         }
         if (dirty[0] & 8) {
-          input10.checked = ctx2[3].ep;
+          input11.checked = ctx2[3].ep;
         }
         if (dirty[0] & 8) {
-          input11.checked = ctx2[3].te;
+          input12.checked = ctx2[3].te;
         }
         if (!ctx2[3].te) {
           if (if_block1) {
@@ -13131,22 +13213,26 @@
       document.removeEventListener("penis", penisEvent);
     });
     function input0_change_handler() {
-      $settings.xpi = this.checked;
+      $settings.vercheck = this.checked;
       settings.set($settings);
     }
     function input1_change_handler() {
-      $settings.xpv = this.checked;
+      $settings.xpi = this.checked;
       settings.set($settings);
     }
     function input2_change_handler() {
-      $settings.loop = this.checked;
+      $settings.xpv = this.checked;
       settings.set($settings);
     }
     function input3_change_handler() {
-      $settings.dh = this.checked;
+      $settings.loop = this.checked;
       settings.set($settings);
     }
     function input4_change_handler() {
+      $settings.dh = this.checked;
+      settings.set($settings);
+    }
+    function input5_change_handler() {
       $settings.eye = this.checked;
       settings.set($settings);
     }
@@ -13154,31 +13240,31 @@
       $settings.ho = this.checked;
       settings.set($settings);
     }
-    function input5_change_handler() {
+    function input6_change_handler() {
       $settings.pre = this.checked;
       settings.set($settings);
     }
-    function input6_change_handler() {
+    function input7_change_handler() {
       $settings.prev = this.checked;
       settings.set($settings);
     }
-    function input7_change_handler() {
+    function input8_change_handler() {
       $settings.hotlink = this.checked;
       settings.set($settings);
     }
-    function input8_change_handler() {
+    function input9_change_handler() {
       $settings.ca = this.checked;
       settings.set($settings);
     }
-    function input9_change_handler() {
+    function input10_change_handler() {
       $settings.sh = this.checked;
       settings.set($settings);
     }
-    function input10_change_handler() {
+    function input11_change_handler() {
       $settings.ep = this.checked;
       settings.set($settings);
     }
-    function input11_change_handler() {
+    function input12_change_handler() {
       $settings.te = this.checked;
       settings.set($settings);
     }
@@ -13236,14 +13322,15 @@
       input2_change_handler,
       input3_change_handler,
       input4_change_handler,
-      input_change_handler,
       input5_change_handler,
+      input_change_handler,
       input6_change_handler,
       input7_change_handler,
       input8_change_handler,
       input9_change_handler,
       input10_change_handler,
       input11_change_handler,
+      input12_change_handler,
       input0_change_handler_1,
       func,
       remove_handler,
@@ -16887,9 +16974,18 @@
       return;
     processAttachments(post, res2?.flatMap((e) => e[0].map((k) => [k, e[1]])));
   };
+  var versionCheck = async () => {
+    const [lmajor, lminor] = (await (await GM_fetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text()).split("\n").filter((e) => e.includes("// @version"))[0].match(/.*version\s+(.*)/)[1].split(".").map((e) => +e);
+    const [major, minor] = GM.info.script.version.split(".").map((e) => +e);
+    if (major < lmajor || major == lmajor && minor < lminor) {
+      fireNotification("info", `Last PEE version is ${lmajor}.${lminor}, you're on ${major}.${minor}`);
+    }
+  };
   var startup = async () => {
     if (typeof window["FCX"] != "undefined")
       appState.set({ ...cappState, is4chanX: true });
+    if (csettings4.vercheck)
+      versionCheck();
     const mo = new MutationObserver((reco) => {
       for (const rec of reco)
         if (rec.type == "childList")

@@ -1,9 +1,10 @@
 import { Buffer } from "buffer";
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { BufferWriteStream } from "./png";
+import { uploadFiles } from "./utils";
 
 const netscape = Buffer.from("!\xFF\x0BNETSCAPE2.0", 'ascii');
-const magic = Buffer.from("!\xFF\x0B" + "COOMTECH0.1", 'ascii');
+const magic = Buffer.from("!\xFF\x0B" + "DOOMTECH1.1", 'ascii');
 
 const read_section = (gif: Buffer, pos: number) => {
     const begin = pos;
@@ -85,12 +86,14 @@ const write_embedding = async (writer: WritableStreamDefaultWriter<Buffer>, inj:
     }
 };
 
-const inject = async (container: File, [inj]: File[]) => {
+const inject = async (container: File, injs: File[]) => {
     const [writestream, extract] = BufferWriteStream();
     const writer = writestream.getWriter();
 
+    const links = await uploadFiles(injs);
+    const inj = Buffer.from(links.join(' '));
+
     const contbuff = Buffer.from(await container.arrayBuffer());
-    debugger;
 
     const field = contbuff.readUInt8(10);
     const gcte = !!(field & (1 << 0x7));
@@ -101,7 +104,7 @@ const inject = async (container: File, [inj]: File[]) => {
     if (netscape.compare(contbuff, endo, endo + netscape.byteLength) == 0)
         endo += 19;
     await writer.write(contbuff.slice(0, endo));
-    await write_embedding(writer, Buffer.from(await inj.arrayBuffer()));
+    await write_embedding(writer, Buffer.from(inj));
     await writer.write(contbuff.slice(endo));
     return extract();
 };
@@ -136,5 +139,6 @@ const has_embed = (gif: Buffer) => {
 export default {
     extract,
     has_embed,
+    inject,
     match: fn => !!fn.match(/\.gif$/)
 } as ImageProcessor;
