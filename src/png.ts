@@ -70,11 +70,11 @@ export class PNGEncoder {
 
     async insertchunk(chunk: PNGChunk) {
         const b = Buffer.alloc(4);
-        b.writeInt32BE(chunk[1].length - 4, 0);
+        const buff = await chunk[1]();
+        b.writeInt32BE(buff.length - 4, 0);
         await this.writer.write(b); // write length
-        const buff = chunk[1];
-        await this.writer.write(await buff()); // chunk includes chunkname
-        b.writeInt32BE(buf(await buff()), 0);
+        await this.writer.write(buff); // chunk includes chunkname
+        b.writeInt32BE(buf(buff), 0);
         await this.writer.write(b);
     }
 
