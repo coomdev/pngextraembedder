@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.137
+// @version      0.140
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11817,7 +11817,7 @@
     if (!pngfile || pngfile.size > 3e3 * 1024) {
       throw "Couldn't convert file to PNG: resulting filesize too big.";
     }
-    return pngv3_default.inject(b, c);
+    return pngv3_default.inject(new File([pngfile], b.name), c);
   };
   var jpg_default = {
     skip: true,
@@ -17254,19 +17254,6 @@
         opFile?.append(imgcont);
     }
     post.setAttribute("data-processed", "true");
-  }
-  if (window["pagemode"]) {
-    onload = () => {
-      const resbuf = async (s) => typeof s != "string" && (import_buffer9.Buffer.isBuffer(s) ? s : await s());
-      const container = document.getElementById("container");
-      container.onchange = async () => {
-        const result = document.getElementById("result");
-        const output = await convertToPng(container.files[0]);
-        if (!output)
-          return;
-        result.src = URL.createObjectURL(output);
-      };
-    };
   }
 })();
 /*!
