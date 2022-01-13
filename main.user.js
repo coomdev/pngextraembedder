@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.132
+// @version      0.133
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -16006,10 +16006,10 @@
       dispatch("fileinfo", { type });
       if (hovering) {
         setTimeout(async () => {
-          while (dims[0] == 0 && dims[1] == 0) {
+          do {
             hoverUpdate();
             await new Promise((_) => setTimeout(_, 20));
-          }
+          } while (dims[0] == 0 && dims[1] == 0);
         }, 20);
       }
     }
