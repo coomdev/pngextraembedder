@@ -2,9 +2,10 @@ import { Buffer } from "buffer";
 import { appState, settings } from "./stores";
 import globalCss from './global.css';
 
-import pngv3 from "./pngv3";
+import pngv3, { inject_data } from "./pngv3";
 import webm from "./webm";
 import gif from "./gif";
+import jpg, { convertToPng } from "./jpg";
 import thirdeye from "./thirdeye";
 import pomf from "./pomf";
 
@@ -29,12 +30,13 @@ export interface ImageProcessor {
 
 export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
-    [thirdeye, pomf, pngv3, webm, gif];
+    [thirdeye, pomf, pngv3, jpg, webm, gif];
 
 let cappState: Parameters<typeof appState['set']>[0];
 settings.subscribe(b => {
     csettings = b;
-    processors = [...(!csettings.te ? [thirdeye] : []), pngv3, pomf, webm, gif
+    processors = [...(!csettings.te ? [thirdeye] : []),
+        pngv3, pomf, jpg, webm, gif
     ];
 });
 
@@ -155,6 +157,93 @@ const versionCheck = async () => {
     }
 };
 
+const scrapeBoard = async (self: HTMLButtonElement) => {
+    self.disabled = true;
+    self.textContent = "Searching...";
+    const boardname = location.pathname.match(/\/(.*)\//)![1];
+    const res = await GM_fetch(`https://a.4cdn.org/${boardname}/threads.json`);
+    const pages = await res.json() as Page[];
+    type Page = { threads: Thread[] }
+    type Thread = { no: number; posts: Post[] };
+    type BasePost = { resto: number, tim: number };
+    type PostWithFile = BasePost & { tim: number, ext: string, md5: string, filename: string };
+    type PostWithoutFile = BasePost & Record<string, unknown>;
+    type Post = (PostWithoutFile | PostWithFile);
+    fireNotification("info", "Fetching all threads...");
+    const threads = await Promise.all(pages
+        .reduce((a: Thread[], b: Page) => [...a, ...b.threads], [])
+        .map(e => e.no)
+        .map(id => GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`).then(e => e.json() as Promise<Thread>)));
+    const filenames = threads
+        .reduce((a, b) => [...a, ...b.posts.filter(p => p.ext)
+            .map(p => p as PostWithFile)], [] as PostWithFile[]).filter(p => p.ext != '.webm' && p.ext != '.gif')
+        .map(p => [p.resto, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext] as [number, string, string, string]);
+
+    console.log(filenames);
+    fireNotification("info", "Analyzing images...");
+    const n = 7;
+    //console.log(posts);
+    const processFile = (src: string, fn: string, hex: string) => {
+        return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
+            if (proc.skip) {
+                const md5 = Buffer.from(hex, 'base64');
+                return await proc.has_embed(md5, fn);
+            }
+            // TODO: Move this outside the loop?
+            const iter = streamRemote(src);
+            if (!iter)
+                return false;
+            let cumul = Buffer.alloc(0);
+            let found: boolean | undefined;
+            let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
+            do {
+                const { value, done } = await iter.next(found === false);
+                if (done) {
+                    chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
+                } else {
+                    chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
+                }
+                if (!done)
+                    cumul = Buffer.concat([cumul, value!]);
+                found = await proc.has_embed(cumul);
+            } while (found !== false && !chunk.done);
+            await iter.next(true);
+            return found === true;
+        }));
+    };
+    const range = ~~(filenames.length / n) + 1;
+    const hasEmbed: typeof filenames = [];
+    const total = filenames.length;
+    let processed = 0;
+
+    const int = setInterval(() => {
+        fireNotification("info", `Processed [${processed} / ${total}] files`);
+    }, 5000);
+
+    await Promise.all([...new Array(n + 1)].map(async (e, i) => {
+        const postsslice = filenames.slice(i * range, (i + 1) * range);
+        for (const post of postsslice) {
+            try {
+                const res = await processFile(post[1], post[3], post[2]);
+                processed++;
+                if (res.some(e => e)) {
+                    hasEmbed.push(post);
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+    }));
+
+    clearInterval(int);
+
+    const counters: Record<number, number> = {};
+    for (const k of hasEmbed)
+        counters[k[0]] = k[0] in counters ? counters[k[0]] + 1 : 1;
+    console.log(counters);
+    fireNotification("success", "Processing finished!");
+};
+
 const startup = async () => {
     if (typeof (window as any)['FCX'] != "undefined")
         appState.set({ ...cappState, is4chanX: true });
@@ -204,6 +293,15 @@ const startup = async () => {
         isCatalog: !!document.querySelector('.catalog-small') || !!location.pathname.match(/\/catalog$/),
     });
     //await processPost(posts[0] as any);
+
+    if (cappState.isCatalog) {
+        const opts = document.getElementById('index-options') as HTMLDivElement;
+        const button = document.createElement('button');
+        button.textContent = "おもらし";
+        button.onclick = () => scrapeBoard(button);
+        opts.insertAdjacentElement("beforebegin", button);
+
+    }
 
     const n = 7;
     //console.log(posts);
@@ -395,33 +493,31 @@ function parseForm(data: object) {
     return form;
 }
 
-// if ((window as any)['pagemode']) {
-//     onload = () => {
-//         const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
-//         const container = document.getElementById("container") as HTMLInputElement;
-//         const injection = document.getElementById("injection") as HTMLInputElement;
-//         container.onchange = async () => {
-//             const ret = await fetch("https://catbox.moe/user/api.php", {
-//                 method: 'POST',
-//                 body: parseForm({
-//                     reqtype: 'fileupload',
-//                     fileToUpload: container.files![0]
-//                 })
-//             });
-//             console.log(ret);
-//             console.log(await ret.text());
-//         };
-//     };
-// }
+if ((window as any)['pagemode']) {
+    onload = () => {
+        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
+        const container = document.getElementById("container") as HTMLInputElement;
+        container.onchange = async () => {
+            const result = document.getElementById("result") as HTMLImageElement;
+            const output = await convertToPng(container.files![0]);
+            if (!output)
+                return;
+            result.src = URL.createObjectURL(output);
+        };
+    };
+}
 
-// if ((window as any)['pagemode']) {
-//     onload = () => {
-//         const extraction = document.getElementById("extraction") as HTMLInputElement;
-//         /* extraction.onchange = async () => {
-//              const pee = await buildPeeFile(extraction.files![0]);
-//              const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-//              dlr.href = URL.createObjectURL(pee);
-//          };*/
+//if ((window as any)['pagemode']) {
+//    onload = () => {
+//        const extraction = document.getElementById("extraction") as HTMLInputElement;
+//        extraction.onchange = async () => {
+//            const pee = await convertToPng(extraction.files![0]);
+//            const result = document.getElementById("result") as HTMLImageElement;
+//            const data = await inject_data(new File([pee!], 'image.png', { type: "image/png" }), Buffer.from("coom"));
+//            result.src = URL.createObjectURL(new Blob([data]));
+//        };
+//    };
+//}
 
 //         document.addEventListener("CreateNotification", (e: any) => console.log(e.detail));
 //         console.log("loaded");

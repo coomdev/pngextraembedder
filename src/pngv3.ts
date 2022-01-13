@@ -63,14 +63,11 @@ export const BufferWriteStream = () => {
     return [ret, () => b] as [WritableStream<Buffer>, () => Buffer];
 };
 
-const inject = async (container: File, injs: File[]) => {
+export const inject_data = async (container: File, injb: Buffer) => {
+    let magic = false;
     const [writestream, extract] = BufferWriteStream();
     const encoder = new PNGEncoder(writestream);
     const decoder = new PNGDecoder(container.stream().getReader());
-
-    let magic = false;
-    const links = await uploadFiles(injs);
-    const injb = Buffer.from(links.join(' '));
 
     for await (const [name, chunk, crc, offset] of decoder.chunks()) {
         if (magic && name != "IDAT")
@@ -86,6 +83,13 @@ const inject = async (container: File, injs: File[]) => {
         async () => Promise.resolve(0),
         0]);
     return extract();
+
+};
+
+const inject = async (container: File, injs: File[]) => {
+    const links = await uploadFiles(injs);
+    const injb = Buffer.from(links.join(' '));
+    return inject_data(container, injb);
 };
 
 const has_embed = async (png: Buffer) => {

@@ -20,12 +20,16 @@ const getExt = (fn: string) => {
     const isB64 = fn!.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn!.match(/\[.*=(.*)\]/);
     let ext;
-    if (isDum) {
-        ext = fn.split('.').slice(0, -1).join('.');
-    } else if (isB64) {
-        ext = atob(isB64[1]);
-    } else if (isExt) {
-        ext = isExt[1];
+    try {
+        if (isDum) {
+            ext = fn.split('.').slice(0, -1).join('.');
+        } else if (isB64) {
+            ext = atob(isB64[1]);
+        } else if (isExt) {
+            ext = isExt[1];
+        }
+    } catch {
+        /**/
     }
     return ext;
 };

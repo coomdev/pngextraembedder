@@ -7,32 +7,45 @@ const generateThumbnail = async (f: File): Promise<Buffer> => {
     const can = document.createElement("canvas");
     can.width = 125;
     can.height = 125;
-    const ctx = can.getContext("2d");
-
-    if (!ctx)
-        return Buffer.alloc(0);
 
     const [sw, sh] = [125, 125];
     const url = URL.createObjectURL(f);
+    let source: CanvasImageSource;
+    let iw: number, ih: number;
 
     if (f.type.startsWith("image")) {
         const imgElem = document.createElement('img');
         imgElem.src = url;
         await new Promise(_ => imgElem.onload = _);
-        const [iw, ih] = [imgElem.naturalWidth, imgElem.naturalHeight];
-        const scale = Math.min(1, sw / iw, sh / ih);
-        const dims = [~~(iw * scale), ~~(ih * scale)] as [number, number];
-        ctx.drawImage(imgElem, 0, 0, dims[0], dims[1]);
+        [iw, ih] = [imgElem.naturalWidth, imgElem.naturalHeight];
+        source = imgElem;
     } else if (f.type.startsWith("video")) {
         const vidElem = document.createElement('video');
         vidElem.src = url;
         await new Promise(_ => vidElem.onloadedmetadata = _);
-        const [iw, ih] = [vidElem.videoWidth, vidElem.videoHeight];
-        const scale = Math.min(1, sw / iw, sh / ih);
-        const dims = [~~(iw * scale), ~~(ih * scale)] as [number, number];
-        ctx.drawImage(vidElem, 0, 0, dims[0], dims[1]);
+        vidElem.currentTime = 0;
+        await new Promise(_ => vidElem.onloadeddata = _);
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        [iw, ih] = [vidElem.videoWidth, vidElem.videoHeight];
+        source = vidElem;
     } else
         return Buffer.alloc(0);
+
+    const scale = Math.min(1, sw / iw, sh / ih);
+    const dims = [~~(iw * scale), ~~(ih * scale)] as [number, number];
+
+    can.width = dims[0];
+    can.height = dims[1];
+
+    const ctx = can.getContext("2d");
+
+    if (!ctx)
+        return Buffer.alloc(0);
+
+    ctx.drawImage(source, 0, 0, dims[0], dims[1]);
+
     const blob = await new Promise<Blob | null>(_ => can.toBlob(_, "image/jpg"));
     if (!blob)
         return Buffer.alloc(0);
@@ -88,6 +101,8 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             let hptr = 0;
             if (header.slice(0, 4).toString() == "PEE\0")
                 hptr += 4;
+            else
+                return;
             const flags = header[hptr];
             const hasFn = !!(flags & 1);
             const hasTags = !!(flags & 2);
@@ -122,7 +137,7 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             // niggers trying to fuck with bad links
             console.warn(e);
         }
-    }))).map(e => e);
+    }))).filter(e => e);
 };
 
 export const fireNotification = (level: 'success' | 'error' | 'info' | 'warning', text: string, lifetime = 3) => {

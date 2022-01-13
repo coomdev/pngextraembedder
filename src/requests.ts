@@ -52,7 +52,7 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
             else reject("unknown to");
         });
     }
-    return new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
+    return new Promise<Awaited<ReturnType<typeof fetch>>>((resolve, reject) => {
         // https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_xmlhttpRequest
         const gmopt: Tampermonkey.Request<any> = {
             url: url.toString(),

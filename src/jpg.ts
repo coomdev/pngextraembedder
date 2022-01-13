@@ -3,7 +3,7 @@ import type { ImageProcessor } from "./main";
 import pngv3 from "./pngv3";
 import { fireNotification } from "./utils";
 
-const convertToPng = async (f: File): Promise<Blob | undefined> => {
+export const convertToPng = async (f: File): Promise<Blob | undefined> => {
     const can = document.createElement("canvas");
 
     const url = URL.createObjectURL(f);
@@ -22,6 +22,9 @@ const convertToPng = async (f: File): Promise<Blob | undefined> => {
             await new Promise(_ => vidElem.onloadedmetadata = _);
             vidElem.currentTime = 0;
             await new Promise(_ => vidElem.onloadeddata = _);
+            await new Promise(requestAnimationFrame);
+            await new Promise(requestAnimationFrame);
+            await new Promise(requestAnimationFrame);
             dims = [vidElem.videoWidth, vidElem.videoHeight];
             source = vidElem;
         } else
@@ -29,6 +32,7 @@ const convertToPng = async (f: File): Promise<Blob | undefined> => {
         can.width = dims[0];
         can.height = dims[1];
         const ctx = can.getContext("2d");
+        
         if (!ctx)
             return;
         ctx.drawImage(source, 0, 0, dims[0], dims[1]);
