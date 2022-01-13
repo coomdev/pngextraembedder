@@ -98,6 +98,7 @@ const processImage = async (src: string, fn: string, hex: string): Promise<([Emb
                 return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
             return;
         }
+        // TODO: Move this outside the loop?
         const iter = streamRemote(src);
         if (!iter)
             return;
