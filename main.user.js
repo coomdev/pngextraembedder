@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.135
+// @version      0.136
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11598,7 +11598,7 @@
   var extract2 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
-    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
+    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "DOOM");
     const cl = chunks.find((e) => e.name == "Cluster");
     if (cl && embed2 == -1)
       return;
@@ -11606,7 +11606,7 @@
       return;
     const chk = chunks[embed2 + 1];
     if (chk.type == "b" && chk.name == "TagBinary")
-      return [{ filename: "string", data: chk.data }];
+      return decodeCoom3Payload(chk.data);
   };
   var inject2 = async (container, injs) => {
     const links = await uploadFiles(injs);
@@ -11615,7 +11615,7 @@
   var has_embed2 = (webm) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
-    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "COOM");
+    const embed2 = chunks.findIndex((e) => e.name == "TagName" && e.type == "8" && e.value == "DOOM");
     const cl = chunks.find((e) => e.name == "Cluster");
     if (cl && embed2 == -1)
       return false;
@@ -11662,7 +11662,7 @@
     }
     while (gif[end] == "!".charCodeAt(0)) {
       let sec = read_section(gif, end);
-      if (sec.appname == "COOMTECH") {
+      if (sec.appname == "DOOMTECH") {
         const ret = import_buffer5.Buffer.alloc(sec.data.readInt32LE(0));
         let ptr = 0;
         do {
@@ -11670,8 +11670,8 @@
           sec.data.copy(ret, ptr);
           ptr += sec.data.byteLength;
           end = sec.end;
-        } while (sec.appname == "COOMTECH" && gif[end] == "!".charCodeAt(0));
-        return [{ data: ret, filename: "embedded" }];
+        } while (sec.appname == "DOOMTECH" && gif[end] == "!".charCodeAt(0));
+        return decodeCoom3Payload(ret);
       }
       end = sec.end;
     }

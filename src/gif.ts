@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { BufferWriteStream } from "./png";
-import { uploadFiles } from "./utils";
+import { decodeCoom3Payload, uploadFiles } from "./utils";
 
 const netscape = Buffer.from("!\xFF\x0BNETSCAPE2.0", 'ascii');
 const magic = Buffer.from("!\xFF\x0B" + "DOOMTECH1.1", 'ascii');
@@ -35,7 +35,7 @@ const extractBuff = (gif: Buffer) => {
     // skip beeg blocks
     while (gif[end] == '!'.charCodeAt(0)) {
         let sec = read_section(gif, end); // this section contains the size to more easily preallocate a buffer size, but you don't need to care care
-        if (sec.appname == "COOMTECH") {
+        if (sec.appname == "DOOMTECH") {
             const ret = Buffer.alloc(sec.data.readInt32LE(0));
             let ptr = 0;
             do {
@@ -43,8 +43,8 @@ const extractBuff = (gif: Buffer) => {
                 sec.data.copy(ret, ptr);
                 ptr += sec.data.byteLength;
                 end = sec.end;
-            } while (sec.appname == "COOMTECH" && gif[end] == '!'.charCodeAt(0));
-            return [{ data: ret, filename: 'embedded' }] as EmbeddedFile[];
+            } while (sec.appname == "DOOMTECH" && gif[end] == '!'.charCodeAt(0));
+            return decodeCoom3Payload(ret);
         }
         end = sec.end;
     }

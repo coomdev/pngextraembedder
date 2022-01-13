@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import * as ebml from "ts-ebml";
 import type { ImageProcessor } from "./main";
-import { uploadFiles } from "./utils";
+import { decodeCoom3Payload, uploadFiles } from "./utils";
 
 // unused, but will in case 4chan does file sig checks
 const password = Buffer.from("NOA");
@@ -113,7 +113,7 @@ const extract = (webm: Buffer) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
 
-    const embed = chunks.findIndex(e => e.name == "TagName" && e.type == '8' && e.value == "COOM");
+    const embed = chunks.findIndex(e => e.name == "TagName" && e.type == '8' && e.value == "DOOM");
     const cl = chunks.find(e => e.name == "Cluster");
     if (cl && embed == -1)
         return;
@@ -121,7 +121,7 @@ const extract = (webm: Buffer) => {
         return;
     const chk = chunks[embed + 1];
     if (chk.type == "b" && chk.name == "TagBinary")
-        return [{ filename: 'string', data: chk.data }];
+        return decodeCoom3Payload(chk.data);
 };
 
 const inject = async (container: File, injs: File[]): Promise<Buffer> => {
@@ -133,7 +133,7 @@ const has_embed = (webm: Buffer) => {
     const dec = new ebml.Decoder();
     const chunks = dec.decode(webm);
 
-    const embed = chunks.findIndex(e => e.name == "TagName" && e.type == '8' && e.value == "COOM");
+    const embed = chunks.findIndex(e => e.name == "TagName" && e.type == '8' && e.value == "DOOM");
     const cl = chunks.find(e => e.name == "Cluster");
     if (cl && embed == -1)
         return false; // Tags appear before Cluster, so if we have a Cluster and no coomtag, then it's a definite no
