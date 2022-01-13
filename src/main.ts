@@ -142,10 +142,25 @@ const processPost = async (post: HTMLDivElement) => {
     processAttachments(post, res2?.flatMap(e => e![0].map(k => [k, e![1]] as [EmbeddedFile, boolean])));
 };
 
+const versionCheck = async () => {
+    const [lmajor, lminor] =
+        (await (await GM_fetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js"))
+            .text())
+            .split('\n')
+            .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
+            .map(e => +e);
+    const [major, minor] = GM.info.script.version.split('.').map(e => +e);
+    if (major < lmajor || (major == lmajor && minor < lminor)) {
+        fireNotification("info", `Last PEE version is ${lmajor}.${lminor}, you're on ${major}.${minor}`);
+    }
+};
+
 const startup = async () => {
     if (typeof (window as any)['FCX'] != "undefined")
         appState.set({ ...cappState, is4chanX: true });
 
+    if (csettings.vercheck)
+        versionCheck();
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     // keep this to handle posts getting inlined

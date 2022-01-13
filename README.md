@@ -1,3 +1,6 @@
+# hurr durr im retard
+[click here!](#coom)
+
 PNG Extra Embedder (PEE)
 ========================
 
@@ -7,7 +10,7 @@ Requires 4chanX and violentmonkey.
 How to Install
 ==============
 
-Ok retard, listen up, just click on these things out of your grasp:
+Ok retard, listen up, just click on thes things out of your grasp:
 - [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
 - [Install 4chanX](https://www.4chan-x.net/builds/4chan-X.user.js)
 - Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
@@ -32,10 +35,25 @@ You need to select a png/webm/gif file to upload first, as you would normally (t
 ![qr](screen.png)
 
 
-# TroubleShooting
+# <a id="coom"></a> TroubleShooting
+
+## Is this a virus
+Yes
+
+## Does this automatically download viruses and install them
+Yes
+
+## but i dont want a virus...
+too bad fren...
+
+## What should I use instead
+Use [Zip's Media Embedder](https://git.coom.tech/Zip/Media-Embedder), it's very small, easily auditable, clean, in active development, and 100% work :^)
+
+## thnk u fren im out
+[Good, leave and never come back](https://google.com)
 
 ## "It doesn't wor-"
-![ACK](ack.png)
+![ACK](ACK.webp)
 
 **ACK!**
 
@@ -88,24 +106,19 @@ GIF
 The embedded data is contained in an application extension chunk, usually right after the NETSCAPE extension.
 The extension is named COOMTECH0.1, the rest of the bytes encode directly the file content, with no filename. The filesize is implicitely determined by a sentinel value that marks the end of the subchunk.
 
-JPG
----
-
-Can never be supported as 4chan reincodes them.
-
 Third Eye
 ---------
 
 Third eye filenames are supported.
 Filename just need to be made of 32 hex characters that correspond to a filename in any of the supported boorus.
 
-Other formats
-=============
+Catbox
+------
 
-The format used by Zip anon won't be supported because:
-- it isn't extensible (if change were to the storage format, an extension update wouldn't be backcompatible)
-- requires parsing the whole file to know if it has an embedded file
-- and includes a private chunk type that is functionally defective (stores the length of the last IDAT chunk as a mean to identify it, instead of assooming it's simply the last one)
+Supports:
+- Base64 filenames
+- [\<host>=\<file>] filesnames
+- <6char file>(.\<ext>) filesnames
 
 Bugs
 ====
