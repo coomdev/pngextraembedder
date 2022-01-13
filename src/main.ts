@@ -493,19 +493,19 @@ function parseForm(data: object) {
     return form;
 }
 
-if ((window as any)['pagemode']) {
-    onload = () => {
-        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
-        const container = document.getElementById("container") as HTMLInputElement;
-        container.onchange = async () => {
-            const result = document.getElementById("result") as HTMLImageElement;
-            const output = await convertToPng(container.files![0]);
-            if (!output)
-                return;
-            result.src = URL.createObjectURL(output);
-        };
-    };
-}
+//if ((window as any)['pagemode']) {
+//    onload = () => {
+//        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
+//        const container = document.getElementById("container") as HTMLInputElement;
+//        container.onchange = async () => {
+//            const result = document.getElementById("result") as HTMLImageElement;
+//            const output = await convertToPng(container.files![0]);
+//            if (!output)
+//                return;
+//            result.src = URL.createObjectURL(output);
+//        };
+//    };
+//}
 
 //if ((window as any)['pagemode']) {
 //    onload = () => {
