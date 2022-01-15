@@ -13,6 +13,7 @@ import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
 import App from "./App.svelte";
 import ScrollHighlighter from "./ScrollHighlighter.svelte";
+import PostOptions from "./PostOptions.svelte";
 import SettingsButton from './SettingsButton.svelte';
 //import Embedding from './Embedding.svelte';
 import Embeddings from './Embeddings.svelte';
@@ -77,7 +78,7 @@ type EmbeddedFileWithPreview = {
     source?: string; // can be like a twitter post this was posted in originally
     thumbnail: Buffer;
     filename: string;
-    data: string | ((lisn?: EventTarget) => Promise<Buffer>);
+    data: EmbeddedFileWithoutPreview['data'] | ((lisn?: EventTarget) => Promise<Buffer>);
 };
 
 type EmbeddedFileWithoutPreview = {
@@ -244,9 +245,8 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     fireNotification("success", "Processing finished!");
 };
 
-const startup = async () => {
-    if (typeof (window as any)['FCX'] != "undefined")
-        appState.set({ ...cappState, is4chanX: true });
+const startup = async (is4chanX = true) => {
+    appState.set({ ...cappState, is4chanX });
 
     if (csettings.vercheck)
         versionCheck();
@@ -296,11 +296,12 @@ const startup = async () => {
 
     if (cappState.isCatalog) {
         const opts = document.getElementById('index-options') as HTMLDivElement;
-        const button = document.createElement('button');
-        button.textContent = "おもらし";
-        button.onclick = () => scrapeBoard(button);
-        opts.insertAdjacentElement("beforebegin", button);
-
+        if (opts) {
+            const button = document.createElement('button');
+            button.textContent = "おもらし";
+            button.onclick = () => scrapeBoard(button);
+            opts.insertAdjacentElement("beforebegin", button);
+        }
     }
 
     const n = 7;
@@ -315,15 +316,8 @@ const startup = async () => {
     //await Promise.all(posts.map(e => processPost(e as any)));
 };
 
-const getSelectedFile = () => {
-    return new Promise<File>(res => {
-        document.addEventListener('QRFile', e => res((e as any).detail), { once: true });
-        document.dispatchEvent(new CustomEvent('QRGetFile'));
-    });
-};
-
 //if (cappState!.is4chanX)
-document.addEventListener('4chanXInitFinished', startup);
+document.addEventListener('4chanXInitFinished', () => startup(true));
 /*else {
     document.addEventListener("QRGetFile", (e) => {
         const qr = document.getElementById('qrFile') as HTMLInputElement | null;
@@ -353,51 +347,22 @@ if (cappState!.is4chanX) {
 }
 
 document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>) => {
-    const a = document.createElement('a');
-    const i = document.createElement('i');
-    i.className = "fa fa-magnet";
-    a.appendChild(i);
-    a.title = "Embed File (Select a file before...)";
+    const a = document.createElement('span');
 
     let target;
-    if (cappState.is4chanX) {
-        i.innerText = "🧲";
+    if (!cappState.is4chanX) {
         target = e.detail;
         target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
     }
     else {
         target = e.target as HTMLDivElement;
+        new PostOptions({
+            target: a,
+            props: { processors, textinput: target.querySelector('textarea')! }
+        });
         target.querySelector('#qr-filename-container')?.appendChild(a);
     }
 
-    a.onclick = async (e) => {
-        const file = await getSelectedFile();
-        if (!file)
-            return;
-        const input = document.createElement('input') as HTMLInputElement;
-        input.setAttribute("type", "file");
-        const type = file.type;
-        input.multiple = true;
-        input.onchange = (async ev => {
-            if (input.files) {
-                try {
-                    const proc = processors.filter(e => e.inject).find(e => e.match(file.name));
-                    if (!proc)
-                        throw new Error("Container filetype not supported");
-                    const buff = await proc.inject!(file, [...input.files].slice(0, 5));
-                    document.dispatchEvent(new CustomEvent('QRSetFile', {
-                        //detail: { file: new Blob([buff]), name: file.name, type: file.type }
-                        detail: { file: new Blob([buff], { type }), name: file.name }
-                    }));
-                    fireNotification('success', `File${input.files.length > 1 ? 's' : ''} successfully embedded!`);
-                } catch (err) {
-                    const e = err as Error;
-                    fireNotification('error', "Couldn't embed file: " + e.message);
-                }
-            }
-        });
-        input.click();
-    };
 }), { once: !cappState!.is4chanX }); // 4chan's normal extension destroys the QR form everytime
 
 const customStyles = document.createElement('style');

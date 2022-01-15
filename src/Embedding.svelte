@@ -5,6 +5,9 @@
   import type { EmbeddedFile } from './main'
   import { createEventDispatcher } from 'svelte'
   import { GM_head, headerStringToObject } from '../dist/requests'
+  import { text } from 'svelte/internal'
+  import App from './App.svelte'
+  import { Buffer } from 'buffer'
 
   export const dispatch = createEventDispatcher()
 
@@ -12,6 +15,7 @@
   let isVideo = false
   let isImage = false
   let isAudio = false
+  let isText = false
   let url = ''
   let settled = false
   let contracted = true
@@ -38,6 +42,7 @@
     return contracted
   }
 
+  let content: Blob
   beforeUpdate(async () => {
     if (settled) return
     settled = true
@@ -46,7 +51,15 @@
     let type: FileTypeResult | undefined
     if (typeof thumb != 'string') {
       type = await fileTypeFromBuffer(thumb)
-      url = URL.createObjectURL(new Blob([thumb], { type: type?.mime }))
+      if (
+        !type &&
+        file.filename.endsWith('.txt') &&
+        file.filename.startsWith('message')
+      ) {
+        type = { ext: 'txt', mime: 'text/plain' } as any
+      }
+      content = new Blob([thumb], { type: type?.mime })
+      url = URL.createObjectURL(content)
       if (!type) return
     } else {
       let head = headerStringToObject(await GM_head(thumb, undefined))
@@ -56,6 +69,7 @@
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
+    isText = type.mime.startsWith('text/plain')
     dispatch('fileinfo', { type })
 
     if (isImage) {
@@ -97,9 +111,17 @@
       lisn.addEventListener('progress', (e: any) => {
         progress = e.detail
       })
-      let full = await file.data(lisn)
+      let full = Buffer.isBuffer(file.data) ? file.data : await file.data(lisn)
       type = await fileTypeFromBuffer(full)
-      furl = URL.createObjectURL(new Blob([full], { type: type?.mime }))
+      if (
+        !type &&
+        file.filename.endsWith('.txt') &&
+        file.filename.startsWith('message')
+      ) {
+        type = { ext: 'txt', mime: 'text/plain' } as any
+      }
+      content = new Blob([full], { type: type?.mime })
+      furl = URL.createObjectURL(content)
     } else {
       url = file.data
       furl = file.data
@@ -110,6 +132,7 @@
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
+    isText = type.mime.startsWith('text/plain')
     unzipping = false
 
     dispatch('fileinfo', { type })
@@ -186,7 +209,7 @@
     let [iw, ih] = [0, 0]
     if (isImage) {
       ;[iw, ih] = [imgElem.naturalWidth, imgElem.naturalHeight]
-    } else {
+    } else if (isVideo) {
       ;[iw, ih] = [videoElem.videoWidth, videoElem.videoHeight]
     }
     let scale = Math.min(1, sw / iw, sh / ih)
@@ -197,6 +220,7 @@
   }
 
   async function hoverStart(ev?: MouseEvent) {
+    if (!(isVideo || isImage)) return
     if ($settings.dh) return
     if (file.thumbnail && !furl) {
       unzip()
@@ -231,6 +255,7 @@
     lastev = lastev || ev
     if ($settings.dh) return
     if (!contracted) return
+    if (!(isVideo || isImage)) return
     recompute() // yeah I gave up
     const [sw, sh] = [visualViewport.width, visualViewport.height]
     // shamelessly stolen from 4chanX
@@ -310,6 +335,16 @@
       />
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
+    {#if isText}
+      <!-- svelte-ignore a11y-media-has-caption -->
+      <!-- svelte-ignore a11y-missing-attribute -->
+      {#await content.text()}
+        <pre>Loading...</pre>
+      {:then con}
+        <pre>{con}</pre>
+      {/await}
+      <!-- assoom videos will never be loaded from thumbnails -->
+    {/if}
   </div>
   <div
     bind:this={hoverElem}
@@ -368,6 +403,16 @@
   .visible {
     display: block;
     z-index: 9;
+  }
+
+  pre {
+    padding: 10px;
+  }
+
+  .contract pre {
+    max-width: 20ch;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   .contract img,

@@ -116,12 +116,12 @@ const shoujoFind = async (hex: string): Promise<ApiResult> => {
 
 const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
     try {
-        if (experimentalApi) {
+/*        if (experimentalApi) {
             const res = await shoujoFind(hex);
             if (!res)
                 debugger;
             return hex in res ? (res[hex][b.domain] || []) : [];
-        }
+        }*/
         if (b.domain in cache && hex in cache[b.domain])
             return cache[b.domain][hex] as BooruMatch[];
         const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);

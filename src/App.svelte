@@ -113,13 +113,6 @@
       Disable third-eye.
     </label>
     {#if !$settings.te}
-    <label>
-      <input type="checkbox" bind:checked={$settings.expte} />
-      <!-- svelte-ignore a11y-missing-attribute -->
-      Use Experimental Query API<a title="Can be up to 30% faster, reduces strain on boorus, may break">?</a
-      >
-    </label>
-
       <h3>Booru sources</h3>
       <div class="tagcont">
         {#each $settings.rsources as source, i}

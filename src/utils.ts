@@ -60,7 +60,7 @@ export const buildPeeFile = async (f: File) => {
     const namebuf = Buffer.from(f.name);
     const ret = Buffer.alloc(4 /* Magic */ +
         1 /* Flags */ + namebuf.byteLength + 1 +
-        (4 + thumbnail.byteLength) /* TSize + Thumbnail */ +
+        (thumbnail.byteLength != 0 ? (4 + thumbnail.byteLength) : 0) /* TSize + Thumbnail */ +
         f.size /*Teh file*/);
     let ptr = 0;
     ret.write('PEE\0', 0);
@@ -126,12 +126,16 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             let thumbsize = 0;
             if (hasThumbnail) {
                 thumbsize = header.readInt32LE(ptr);
-                thumb = Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr + 4}-${ptr + 4 + thumbsize}` } })).arrayBuffer());
+                ptr += 4;
+                thumb = Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
+                ptr += thumbsize;
             }
+            const unzip = async (lsn?: EventTarget) =>
+                Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
             return {
                 filename: fn,
-                data: async (lsn) =>
-                    Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr + 4 + thumbsize}-${size - 1}` } }, lsn)).arrayBuffer()),
+                // if file is small, then just get it fully
+                data: size < 3072 ? await unzip() : unzip,
                 thumbnail: thumb,
             } as EmbeddedFile;
         } catch (e) {
@@ -175,4 +179,11 @@ export const uploadFiles = async (injs: File[]) => {
         fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));
+};
+
+export const getSelectedFile = () => {
+    return new Promise<File>(res => {
+        document.addEventListener('QRFile', e => res((e as any).detail), { once: true });
+        document.dispatchEvent(new CustomEvent('QRGetFile'));
+    });
 };

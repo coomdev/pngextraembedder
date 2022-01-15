@@ -73,3 +73,7 @@ div.hasmultiple .catalog-host img {
     display: flex;
     gap: 20px;
 }
+
+#qr > form {
+    overflow: visible !important;
+}
