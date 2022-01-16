@@ -182,7 +182,7 @@ export const uploadFiles = async (injs: File[]) => {
     let total = 0;
     fireNotification('info', `Uploading ${injs.length} files...`);
     return await Promise.all(injs.map(async inj => {
-        const ret = await filehosts[csettings.fhost].uploadFile(await buildPeeFile(inj));
+        const ret = await filehosts[csettings.fhost || 0].uploadFile(await buildPeeFile(inj));
         fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.144
+// @version      0.145
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11643,7 +11643,7 @@
     let total = 0;
     fireNotification("info", `Uploading ${injs.length} files...`);
     return await Promise.all(injs.map(async (inj) => {
-      const ret = await filehosts[csettings2.fhost].uploadFile(await buildPeeFile(inj));
+      const ret = await filehosts[csettings2.fhost || 0].uploadFile(await buildPeeFile(inj));
       fireNotification("info", `Uploaded files [${++total}/${injs.length}] ${ret}`);
       return ret;
     }));
