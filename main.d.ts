@@ -5,3 +5,5 @@ declare module '*.css' {
 declare module '*.png' {
     export default new Uint8Array;
 }
+
+declare const QR: any;

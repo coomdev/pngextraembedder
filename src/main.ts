@@ -18,8 +18,10 @@ import SettingsButton from './SettingsButton.svelte';
 //import Embedding from './Embedding.svelte';
 import Embeddings from './Embeddings.svelte';
 import EyeButton from './EyeButton.svelte';
+import NotificationsHandler from './NotificationsHandler.svelte';
 import { buildPeeFile, fireNotification } from "./utils";
 import { fileTypeFromBuffer } from "file-type";
+import { getQueryProcessor, QueryProcessor } from "./websites";
 
 export interface ImageProcessor {
     skip?: true;
@@ -28,6 +30,7 @@ export interface ImageProcessor {
     extract(b: Buffer, fn?: string): EmbeddedFile[] | Promise<EmbeddedFile[]>;
     inject?(b: File, c: File[]): Buffer | Promise<Buffer>;
 }
+let qp: QueryProcessor;
 
 export let csettings: Parameters<typeof settings['set']>[0];
 let processors: ImageProcessor[] =
@@ -91,15 +94,16 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string, hex: string): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
+const processImage = async (src: string, fn: string, hex: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
     return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
         if (proc.skip) {
             // skip file downloading, file is referenced from the filename
             // basically does things like filtering out blacklisted tags
             const md5 = Buffer.from(hex, 'base64');
-            if (await proc.has_embed(md5, fn) === true)
+            if (await proc.has_embed(md5, fn) === true) {
+                onfound();
                 return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
-            return;
+            } return;
         }
         // TODO: Move this outside the loop?
         const iter = streamRemote(src);
@@ -124,6 +128,7 @@ const processImage = async (src: string, fn: string, hex: string): Promise<([Emb
             //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
             return;
         }
+        onfound();
         return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
     }));
 };
@@ -133,12 +138,13 @@ const textToElement = <T = HTMLElement>(s: string) =>
 
 const processPost = async (post: HTMLDivElement) => {
     const thumb = post.querySelector("a.fileThumb") as HTMLAnchorElement;
-    const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
+    const origlink = qp.getImageLink(post);
     if (!thumb || !origlink)
         return;
-    let res2 = await processImage(origlink.href,
-        (origlink.querySelector('.fnfull') || origlink).textContent || '',
-        post.querySelector("[data-md5]")?.getAttribute('data-md5') || '');
+    let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post),
+        () => {
+            post.querySelector('.post')?.classList.add("embedfound");
+        });
     res2 = res2?.filter(e => e);
     if (!res2 || res2.length == 0)
         return;
@@ -247,9 +253,44 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
 
 const startup = async (is4chanX = true) => {
     appState.set({ ...cappState, is4chanX });
+    const lqp = getQueryProcessor(is4chanX);
+    if (!lqp)
+        return;
+    else
+        qp = lqp;
 
     if (csettings.vercheck)
         versionCheck();
+
+    if (!is4chanX) {
+        const qr = QR;
+        const show = qr.show.bind(qr);
+        qr.show = (...args: any[]) => {
+            show(...args);
+            document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+                detail: document.getElementById('quickReply')
+            }));
+        };
+
+        document.addEventListener("QRGetFile", (e) => {
+            const qr = document.getElementById('qrFile') as HTMLInputElement | null;
+            document.dispatchEvent(new CustomEvent("QRFile", { detail: (qr?.files || [])[0] }));
+        });
+
+        document.addEventListener("QRSetFile", ((e: CustomEvent<{ file: Blob, name: string }>) => {
+            const qr = document.getElementById('qrFile') as HTMLInputElement | null;
+            if (!qr) return;
+            const dt = new DataTransfer();
+            dt.items.add(new File([e.detail.file], e.detail.name));
+            qr.files = dt.files;
+        }) as any);
+
+        const notificationHost = document.createElement('span');
+        new NotificationsHandler({
+            target: notificationHost
+        });
+        document.body.append(notificationHost);
+    }
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
     // keep this to handle posts getting inlined
@@ -260,9 +301,9 @@ const startup = async (is4chanX = true) => {
                     if (!(e instanceof HTMLElement))
                         return;
                     // apparently querySelector cannot select the root element if it matches
-                    let el = (e as any).querySelectorAll('.postContainer:not([class*="noFile"])');
+                    let el = qp.postsWithFiles(e);
                     if (!el && e.classList.contains('postContainer'))
-                        el = e;
+                        el = [e];
                     if (el)
                         [...el].map(el => processPost(el as any));
                 });
@@ -271,9 +312,9 @@ const startup = async (is4chanX = true) => {
     document.querySelectorAll('.board').forEach(e => {
         mo.observe(e!, { childList: true, subtree: true });
     });
-    const posts = [...document.querySelectorAll('.postContainer:not([class*="noFile"])')];
+    const posts = qp.postsWithFiles();
 
-    const scts = document.getElementById('shortcuts');
+    const scts = qp.settingsHost();
     const button = textToElement(`<span></span>`);
     const settingsButton = new SettingsButton({
         target: button
@@ -295,7 +336,7 @@ const startup = async (is4chanX = true) => {
     //await processPost(posts[0] as any);
 
     if (cappState.isCatalog) {
-        const opts = document.getElementById('index-options') as HTMLDivElement;
+        const opts = qp.catalogControlHost() as HTMLDivElement;
         if (opts) {
             const button = document.createElement('button');
             button.textContent = "おもらし";
@@ -316,17 +357,17 @@ const startup = async (is4chanX = true) => {
     //await Promise.all(posts.map(e => processPost(e as any)));
 };
 
-//if (cappState!.is4chanX)
 document.addEventListener('4chanXInitFinished', () => startup(true));
-/*else {
-    document.addEventListener("QRGetFile", (e) => {
-        const qr = document.getElementById('qrFile') as HTMLInputElement | null;
-        document.dispatchEvent(new CustomEvent("QRFile", { detail: (qr?.files || [])[0] }));
-    });
-    startup();
-}*/
+document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
 
-// Basically this is a misnommer: fires even when inlining existings posts, also posts are inlined through some kind of dom projection
+document.addEventListener('4chanThreadUpdated', ((e: CustomEvent<{ count: number }>) => {
+    document.dispatchEvent(new CustomEvent("ThreadUpdate", {
+        detail: {
+            newPosts: [...document.querySelector(".thread")!.children].slice(-e.detail.count).map(e => 'b.' + e.id.slice(2))
+        }
+    }));
+}) as any);
+
 document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
     const newPosts = e.detail.newPosts;
     for (const post of newPosts) {
@@ -335,31 +376,22 @@ document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
     }
 }));
 
-if (cappState!.is4chanX) {
-    const qr = (window as any)['QR'];
-    const show = qr.show.bind(qr);
-    qr.show = (...args: any[]) => {
-        show(...args);
-        document.dispatchEvent(new CustomEvent("QRDialogCreation", {
-            detail: document.getElementById('quickReply')
-        }));
-    };
-}
-
 document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>) => {
     const a = document.createElement('span');
+
+    new PostOptions({
+        target: a,
+        props: { processors, textinput: (e.detail || e.target).querySelector('textarea')! }
+    });
 
     let target;
     if (!cappState.is4chanX) {
         target = e.detail;
+        a.style.display = "inline-block";
         target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
     }
     else {
         target = e.target as HTMLDivElement;
-        new PostOptions({
-            target: a,
-            props: { processors, textinput: target.querySelector('textarea')! }
-        });
         target.querySelector('#qr-filename-container')?.appendChild(a);
     }
 
@@ -391,8 +423,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     // add buttons
     if (!isCatalog) {
         const ft = post.querySelector('div.file') as HTMLDivElement;
-        const info = post.querySelector("span.file-info") as HTMLSpanElement;
-
+        const info = qp.getInfoBox(post);
         const filehost: HTMLElement | null = ft.querySelector('.filehost');
         const eyehost: HTMLElement | null = info.querySelector('.eyehost');
         const imgcont = filehost || document.createElement('div');
@@ -446,16 +477,6 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     }
 
     post.setAttribute('data-processed', "true");
-}
-
-function parseForm(data: object) {
-    const form = new FormData();
-
-    Object.entries(data)
-        .filter(([key, value]) => value !== null)
-        .map(([key, value]) => form.append(key, value));
-
-    return form;
 }
 
 //if ((window as any)['pagemode']) {

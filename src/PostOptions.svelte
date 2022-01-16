@@ -101,6 +101,9 @@
 </div>
 
 <style scoped>
+  a i {
+    font-style: normal;
+  }
   a {
     cursor: pointer;
   }

@@ -10,6 +10,10 @@
     cursor: pointer;
 }
 
+#delform .postContainer>div.embedfound {
+    border-right: 3px dashed green !important;
+}
+
 #delform .postContainer>div.hasembed {
     border-right: 3px dashed deeppink !important;
 }

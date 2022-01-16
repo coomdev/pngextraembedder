@@ -21,13 +21,13 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
             method: "HEAD",
             onload: (resp) => {
                 if ((resp.status / 100) >= 4)
-                    reject("response error");
+                    reject(new Error("response error"));
                 else
                     resolve(resp.responseHeaders);
             },
-            ontimeout: () => reject("fetch timeout"),
-            onerror: () => reject("fetch error"),
-            onabort: () => reject("fetch abort")
+            ontimeout: () => reject(new Error("fetch timeout")),
+            onerror: () => reject(new Error("fetch error")),
+            onabort: () => reject(new Error("fetch abort"))
         };
         xmlhttprequest(gmopt);
     });
@@ -49,7 +49,7 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
             if (to == "arrayBuffer") fileReader.readAsArrayBuffer(blob);
             else if (to == "base64") fileReader.readAsDataURL(blob); // "data:*/*;base64,......"
             else if (to == "text") fileReader.readAsText(blob, "utf-8");
-            else reject("unknown to");
+            else reject(new Error("unknown to"));
         });
     }
     return new Promise<Awaited<ReturnType<typeof fetch>>>((resolve, reject) => {
@@ -67,6 +67,10 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
                 },
             } : {}),
             onload: (resp) => {
+                if ((resp.status / 100) >= 4) {
+                    reject(new Error("Server Error: " + resp.status));
+                    return;
+                }
                 const blob = resp.response as Blob;
                 const ref = resp as any as Awaited<ReturnType<typeof fetch>>;
                 ref.blob = () => Promise.resolve(blob);
@@ -75,11 +79,11 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
                 ref.json = async () => JSON.parse(await (blobTo("text", blob) as Promise<any>));
                 resolve(resp as any);
             },
-            ontimeout: () => reject("fetch timeout"),
+            ontimeout: () => reject(new Error("fetch timeout")),
             onerror: (...args) => {
-                reject("fetch error");
+                reject(new Error("fetch error"));
             },
-            onabort: () => reject("fetch abort")
+            onabort: () => reject(new Error("fetch abort"))
         };
         xmlhttprequest(gmopt);
     });

@@ -145,12 +145,10 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
     }))).filter(e => e);
 };
 
-export const fireNotification = (level: 'success' | 'error' | 'info' | 'warning', text: string, lifetime = 3) => {
+export const fireNotification = (type: 'success' | 'error' | 'info' | 'warning', content: string, lifetime = 3) => {
     document.dispatchEvent(new CustomEvent("CreateNotification", {
         detail: {
-            type: level,
-            content: text,
-            lifetime
+            type, content, lifetime
         }
     }));
 };
@@ -169,13 +167,14 @@ export const uploadFiles = async (injs: File[]) => {
     let total = 0;
     fireNotification('info', `Uploading ${injs.length} files...`);
     return await Promise.all(injs.map(async inj => {
-        const ret = await (await GM_fetch("https://catbox.moe/user/api.php", {
+        const resp = await GM_fetch("https://catbox.moe/user/api.php", {
             method: 'POST',
             body: parseForm({
                 reqtype: 'fileupload',
                 fileToUpload: await buildPeeFile(inj)
             })
-        })).text();
+        });
+        const ret = await resp.text();
         fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));
