@@ -96,8 +96,14 @@ rest: [X bytes of thumbnail data])[file bytes]
 &4 => has thumbnail
 */
 export const decodeCoom3Payload = async (buff: Buffer) => {
-    const allowed_domains = filehosts.map(e => e.domain);
-    const pees = buff.toString().split(' ').slice(0, csettings.maxe).filter(e => allowed_domains.some(v => e.match(`https://(.*\\.)?${v}/`)));
+    const allowed_domains = filehosts.map(e => e.serving.replaceAll('.', '\\.'));
+    const pees = buff
+        .toString()
+        .split(' ')
+        .slice(0, csettings.maxe)
+        .filter(e => allowed_domains
+            .some(v => e.match(`https://(.*\\.)?${v}/`)));
+
     return (await Promise.all(pees.map(async pee => {
         try {
             const headers = headerStringToObject(await GM_head(pee));

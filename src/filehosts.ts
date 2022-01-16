@@ -1,12 +1,5 @@
 import { GM_fetch } from "./requests";
 
-const lolisafe = (domain: string) => ({
-    domain,
-    async uploadFile(f: Blob) {
-        return '';
-    }
-});
-
 function parseForm(data: object) {
     const form = new FormData();
 
@@ -17,8 +10,28 @@ function parseForm(data: object) {
     return form;
 }
 
-const catbox = (domain: string) => ({
+export const lolisafe = (domain: string, serving = domain) => ({
     domain,
+    serving,
+    async uploadFile(f: Blob) {
+        const resp = await GM_fetch(`https://${domain}/api/upload`, {
+            headers: {
+                accept: "application/json",
+            },
+            "body": parseForm({
+                reqtype: 'fileupload',
+                'files[]': new File([f], 'f.pee')
+            }),
+            "method": "POST",
+        });
+        const res = (await resp.json()) as { success: boolean, files: { url: string, name: string, size: number }[] };
+        return res.files.map(e => e.url)[0];
+    }
+});
+
+export const catbox = (domain: string, serving: string) => ({
+    domain,
+    serving,
     async uploadFile(inj: Blob) {
         const resp = await GM_fetch(`https://${domain}/user/api.php`, {
             method: 'POST',
@@ -33,15 +46,13 @@ const catbox = (domain: string) => ({
 
 export type API = {
     domain: string;
+    serving: string;
     uploadFile(f: Blob): Promise<string>;
 }
 
 export const filehosts: API[] = [
-    catbox('catbox.moe'),
-    lolisafe('zz.ht'),
+    catbox('catbox.moe', 'files.catbox.moe'),
+    lolisafe('zz.ht', 'z.zz.fo'),
     lolisafe('imouto.kawaii.su'),
     lolisafe('take-me-to.space'),
-    lolisafe('loli.solutions'),
-    lolisafe('loli.graphics'),
-    lolisafe('sucks-to-b.eu')
 ];

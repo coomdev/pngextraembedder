@@ -22,6 +22,7 @@ import NotificationsHandler from './Components/NotificationsHandler.svelte';
 import { buildPeeFile, fireNotification } from "./utils";
 import { fileTypeFromBuffer } from "file-type";
 import { getQueryProcessor, QueryProcessor } from "./websites";
+import { lolisafe } from "./filehosts";
 
 export interface ImageProcessor {
     skip?: true;
@@ -484,16 +485,16 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
 //        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
 //        const container = document.getElementById("container") as HTMLInputElement;
 //        container.onchange = async () => {
-//            const result = document.getElementById("result") as HTMLImageElement;
-//            const output = await convertToPng(container.files![0]);
-//            if (!output)
-//                return;
-//            result.src = URL.createObjectURL(output);
+//            const api = lolisafe('zz.ht', 'z.zz.fo');
+//            const file = container.files![0];
+//            const blo = new Blob([file], {type: 'application/octet-stream'});
+//            const link = await api.uploadFile(blo);
+//            console.log(link);
 //        };
 //    };
 //}
-
-//if ((window as any)['pagemode']) {
+//
+////if ((window as any)['pagemode']) {
 //    onload = () => {
 //        const extraction = document.getElementById("extraction") as HTMLInputElement;
 //        extraction.onchange = async () => {

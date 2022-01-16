@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.143
+// @version      0.144
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11465,19 +11465,32 @@
 
   // src/filehosts.ts
   init_esbuild_inject();
-  var lolisafe = (domain) => ({
-    domain,
-    async uploadFile(f) {
-      return "";
-    }
-  });
   function parseForm(data) {
     const form = new FormData();
     Object.entries(data).filter(([key, value]) => value !== null).map(([key, value]) => form.append(key, value));
     return form;
   }
-  var catbox = (domain) => ({
+  var lolisafe = (domain, serving = domain) => ({
     domain,
+    serving,
+    async uploadFile(f) {
+      const resp = await GM_fetch(`https://${domain}/api/upload`, {
+        headers: {
+          accept: "application/json"
+        },
+        "body": parseForm({
+          reqtype: "fileupload",
+          "files[]": new File([f], "f.pee")
+        }),
+        "method": "POST"
+      });
+      const res = await resp.json();
+      return res.files.map((e) => e.url)[0];
+    }
+  });
+  var catbox = (domain, serving) => ({
+    domain,
+    serving,
     async uploadFile(inj) {
       const resp = await GM_fetch(`https://${domain}/user/api.php`, {
         method: "POST",
@@ -11490,13 +11503,10 @@
     }
   });
   var filehosts = [
-    catbox("catbox.moe"),
-    lolisafe("zz.ht"),
+    catbox("catbox.moe", "files.catbox.moe"),
+    lolisafe("zz.ht", "z.zz.fo"),
     lolisafe("imouto.kawaii.su"),
-    lolisafe("take-me-to.space"),
-    lolisafe("loli.solutions"),
-    lolisafe("loli.graphics"),
-    lolisafe("sucks-to-b.eu")
+    lolisafe("take-me-to.space")
   ];
 
   // src/utils.ts
@@ -11566,7 +11576,7 @@
     return new Blob([ret]);
   };
   var decodeCoom3Payload = async (buff) => {
-    const allowed_domains = filehosts.map((e) => e.domain);
+    const allowed_domains = filehosts.map((e) => e.serving.replaceAll(".", "\\."));
     const pees = buff.toString().split(" ").slice(0, csettings2.maxe).filter((e) => allowed_domains.some((v) => e.match(`https://(.*\\.)?${v}/`)));
     return (await Promise.all(pees.map(async (pee) => {
       try {
@@ -18764,17 +18774,6 @@
         opFile?.append(imgcont);
     }
     post.setAttribute("data-processed", "true");
-  }
-  if (window["pagemode"]) {
-    onload = () => {
-      document.body.innerHTML = "";
-      new App_default({
-        target: document.body
-      });
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent("penis"));
-      }, 30);
-    };
   }
 })();
 /*!
