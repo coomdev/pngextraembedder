@@ -48,9 +48,8 @@ export const X4chan: QueryProcessor = {
     getImageLink: (post: HTMLElement) => post.querySelector('a[target="_blank"]')?.getAttribute('href') || '',
     getFilename: (post: HTMLElement) => {
         const a = post.querySelector('a[target="_blank"]') as (HTMLAnchorElement | null);
-        if (a && a.title)
-            return a.title;
-        return a?.textContent || '';
+        const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
+        return (origlink.querySelector('.fnfull') || origlink)?.textContent || '';
     },
     getMD5: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || '',
     getInfoBox: post => post.querySelector("span.file-info")!

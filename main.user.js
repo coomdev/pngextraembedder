@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.146
+// @version      0.147
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12072,7 +12072,7 @@
     preview_url: e.preview_url || e.preview_url,
     source: e.source,
     ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
-    page: `${prefix}${e.id}`,
+    page: `${prefix}${e.id || e.parent_id}`,
     tags: (e.tag_string || e.tags && (typeof Array.isArray(e.tags) && typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" ")) || "").split(" ")
   })) || [];
   var experimentalApi = false;
@@ -18405,9 +18405,8 @@
     getImageLink: (post) => post.querySelector('a[target="_blank"]')?.getAttribute("href") || "",
     getFilename: (post) => {
       const a = post.querySelector('a[target="_blank"]');
-      if (a && a.title)
-        return a.title;
-      return a?.textContent || "";
+      const origlink = post.querySelector('.file-info > a[target*="_blank"]');
+      return (origlink.querySelector(".fnfull") || origlink)?.textContent || "";
     },
     getMD5: (post) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || "",
     getInfoBox: (post) => post.querySelector("span.file-info")

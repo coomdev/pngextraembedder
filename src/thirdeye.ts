@@ -43,7 +43,7 @@ const gelquirk: (s: string) => tran = prefix => (a =>
         source: e.source,
 
         ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
-        page: `${prefix}${e.id}`,
+        page: `${prefix}${(e.id || e.parent_id)}`,
         tags: (e.tag_string || (e.tags && (typeof Array.isArray(e.tags) && typeof e.tags[0] == "string" ? e.tags.join(' ') : e.tags.map((e: any) => e.name_en).join(' '))) || '').split(' ')
     } as BooruMatch)) || []);
 
