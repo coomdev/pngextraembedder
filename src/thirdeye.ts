@@ -37,14 +37,14 @@ function firstThatFor<T>(promises: Promise<T>[], pred: (v: T) => boolean) {
 }
 
 const gelquirk: (s: string) => tran = prefix => (a =>
-    (a.post || a).map((e: any) => ({
+    (a.post || a.data || a).map((e: any) => ({
         full_url: e.file_url,
         preview_url: e.preview_url || e.preview_url,
         source: e.source,
 
         ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
         page: `${prefix}${e.id}`,
-        tags: (e.tag_string || e.tags || '').split(' ')
+        tags: (e.tag_string || (e.tags && (typeof Array.isArray(e.tags) && typeof e.tags[0] == "string" ? e.tags.join(' ') : e.tags.map((e: any) => e.name_en).join(' '))) || '').split(' ')
     } as BooruMatch)) || []);
 
 let experimentalApi = false;
@@ -116,12 +116,12 @@ const shoujoFind = async (hex: string): Promise<ApiResult> => {
 
 const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
     try {
-/*        if (experimentalApi) {
-            const res = await shoujoFind(hex);
-            if (!res)
-                debugger;
-            return hex in res ? (res[hex][b.domain] || []) : [];
-        }*/
+        /*        if (experimentalApi) {
+                    const res = await shoujoFind(hex);
+                    if (!res)
+                        debugger;
+                    return hex in res ? (res[hex][b.domain] || []) : [];
+                }*/
         if (b.domain in cache && hex in cache[b.domain])
             return cache[b.domain][hex] as BooruMatch[];
         const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
@@ -190,5 +190,5 @@ export default {
     skip: true,
     extract,
     has_embed,
-    match: fn => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
+    match: fn => !!fn.match(/^[0-9a-f]{32}\.....?/)
 } as ImageProcessor;

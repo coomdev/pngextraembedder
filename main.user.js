@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.145
+// @version      0.146
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12067,13 +12067,13 @@
   settings.subscribe((b) => {
     csettings3 = b;
   });
-  var gelquirk = (prefix) => (a) => (a.post || a).map((e) => ({
+  var gelquirk = (prefix) => (a) => (a.post || a.data || a).map((e) => ({
     full_url: e.file_url,
     preview_url: e.preview_url || e.preview_url,
     source: e.source,
     ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
     page: `${prefix}${e.id}`,
-    tags: (e.tag_string || e.tags || "").split(" ")
+    tags: (e.tag_string || e.tags && (typeof Array.isArray(e.tags) && typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" ")) || "").split(" ")
   })) || [];
   var experimentalApi = false;
   settings.subscribe((s) => {
@@ -12153,7 +12153,7 @@
     skip: true,
     extract: extract4,
     has_embed: has_embed4,
-    match: (fn) => !!fn.match(/^[0-9a-fA-F]{32}\.....?/)
+    match: (fn) => !!fn.match(/^[0-9a-f]{32}\.....?/)
   };
 
   // src/pomf.ts
