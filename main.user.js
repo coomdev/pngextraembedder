@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.147
+// @version      0.148
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -12073,7 +12073,7 @@
     source: e.source,
     ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
     page: `${prefix}${e.id || e.parent_id}`,
-    tags: (e.tag_string || e.tags && (typeof Array.isArray(e.tags) && typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" ")) || "").split(" ")
+    tags: (e.tag_string || (e.tags && (Array.isArray(e.tags) && (typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" "))) || e.tags) || "").split(" ")
   })) || [];
   var experimentalApi = false;
   settings.subscribe((s) => {
