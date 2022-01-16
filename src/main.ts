@@ -11,14 +11,14 @@ import pomf from "./pomf";
 
 import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 
-import App from "./App.svelte";
-import ScrollHighlighter from "./ScrollHighlighter.svelte";
-import PostOptions from "./PostOptions.svelte";
-import SettingsButton from './SettingsButton.svelte';
-//import Embedding from './Embedding.svelte';
-import Embeddings from './Embeddings.svelte';
-import EyeButton from './EyeButton.svelte';
-import NotificationsHandler from './NotificationsHandler.svelte';
+import App from "./Components/App.svelte";
+import ScrollHighlighter from "./Components/ScrollHighlighter.svelte";
+import PostOptions from "./Components/PostOptions.svelte";
+import SettingsButton from './Components/SettingsButton.svelte';
+//import Embedding from './Components/Embedding.svelte';
+import Embeddings from './Components/Embeddings.svelte';
+import EyeButton from './Components/EyeButton.svelte';
+import NotificationsHandler from './Components/NotificationsHandler.svelte';
 import { buildPeeFile, fireNotification } from "./utils";
 import { fileTypeFromBuffer } from "file-type";
 import { getQueryProcessor, QueryProcessor } from "./websites";
@@ -542,5 +542,18 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
 //                 //dle.href = extracted.src;
 //             }
 //         };
+//     };
+// }
+
+// if ((window as any)['pagemode']) {
+//     onload = () => {
+//         document.body.innerHTML = '';
+
+//         new App({
+//             target: document.body
+//         });
+//         setTimeout(() => {
+//             document.dispatchEvent(new CustomEvent("penis"));
+//         }, 30);
 //     };
 // }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { EmbeddedFile } from './main';
+  import type { EmbeddedFile } from '../main';
 	import { createEventDispatcher } from 'svelte';
   import Embedding from './Embedding.svelte';
 

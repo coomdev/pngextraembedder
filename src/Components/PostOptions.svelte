@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { appState } from './stores'
-  import type { ImageProcessor } from './main'
+  import { appState, settings } from '../stores'
+  import type { ImageProcessor } from '../main'
 
-  import { fireNotification, getSelectedFile } from './utils'
+  import { fireNotification, getSelectedFile } from '../utils'
 
   export let processors: ImageProcessor[] = []
   export let textinput: HTMLTextAreaElement
@@ -11,12 +11,12 @@
 
   const addContent = (...newfiles: File[]) => {
     files = [...files, ...newfiles]
-    if (files.length > 5) {
+    if (files.length > $settings.maxe) {
       fireNotification(
         'warning',
-        'Can only add up to 5 attachments, further attachments will be dropped',
+        `Can only add up to ${$settings.maxe} attachments, further attachments will be dropped`,
       )
-      files = files.slice(0, 5)
+      files = files.slice(0, $settings.maxe)
     }
   }
 
@@ -44,7 +44,7 @@
         .filter((e) => e.inject)
         .find((e) => e.match(file.name))
       if (!proc) throw new Error('Container filetype not supported')
-      const buff = await proc.inject!(file, [...files].slice(0, 5))
+      const buff = await proc.inject!(file, [...files].slice(0, $settings.maxe))
       document.dispatchEvent(
         new CustomEvent('QRSetFile', {
           //detail: { file: new Blob([buff]), name: file.name, type: file.type }

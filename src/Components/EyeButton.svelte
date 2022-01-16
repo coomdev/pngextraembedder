@@ -4,9 +4,9 @@
   import type Embedding from './Embedding.svelte'
   import type Embeddings from './Embeddings.svelte'
 
-  import type { EmbeddedFile } from './main'
+  import type { EmbeddedFile } from '../main'
 
-  import { settings } from './stores'
+  import { settings } from '../stores'
 
   export let id = ''
   export let files: EmbeddedFile[]

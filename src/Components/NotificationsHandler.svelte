@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { fireNotification } from './utils'
+  import type { fireNotification } from '../utils'
 
   type t = Parameters<typeof fireNotification>
   type Notification = {

@@ -1,9 +1,6 @@
 <script lang="ts">
-import { fileTypeFromBuffer } from 'file-type';
 import { onDestroy, onMount } from 'svelte';
-import type { EmbeddedFile } from './main';
-
-import { settings, appState } from './stores'
+import { settings, appState } from '../stores'
 
 function getOffset(el: HTMLElement | null) {
   var _x = 0;

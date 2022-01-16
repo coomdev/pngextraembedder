@@ -1,10 +1,10 @@
 <script lang="ts">
   import { fileTypeFromBuffer, FileTypeResult } from 'file-type'
-  import { settings, appState } from './stores'
+  import { settings, appState } from '../stores'
   import { beforeUpdate, tick } from 'svelte'
-  import type { EmbeddedFile } from './main'
+  import type { EmbeddedFile } from '../main'
   import { createEventDispatcher } from 'svelte'
-  import { GM_head, headerStringToObject } from '../dist/requests'
+  import { GM_head, headerStringToObject } from '../requests'
   import { text } from 'svelte/internal'
   import App from './App.svelte'
   import { Buffer } from 'buffer'
@@ -63,7 +63,7 @@
       if (!type) return
     } else {
       let head = headerStringToObject(await GM_head(thumb, undefined))
-      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() }
+      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() as any }
     }
     ftype = type.mime
     isVideo = type.mime.startsWith('video/')
@@ -126,7 +126,7 @@
       url = file.data
       furl = file.data
       let head = headerStringToObject(await GM_head(file.data, undefined))
-      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() }
+      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() as any }
     }
     if (!type) return
     isVideo = type.mime.startsWith('video/')

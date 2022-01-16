@@ -2,6 +2,14 @@ import { Buffer } from "buffer";
 import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 import thumbnail from "./assets/hasembed.png";
 import type { EmbeddedFile } from './main';
+import { settings } from "./stores";
+import { filehosts } from "./filehosts";
+
+export let csettings: Parameters<typeof settings['set']>[0];
+
+settings.subscribe(b => {
+    csettings = b;
+});
 
 const generateThumbnail = async (f: File): Promise<Buffer> => {
     const can = document.createElement("canvas");
@@ -88,7 +96,8 @@ rest: [X bytes of thumbnail data])[file bytes]
 &4 => has thumbnail
 */
 export const decodeCoom3Payload = async (buff: Buffer) => {
-    const pees = buff.toString().split(' ').slice(0, 5).filter(e => e.startsWith("https://files.catbox.moe/"));
+    const allowed_domains = filehosts.map(e => e.domain);
+    const pees = buff.toString().split(' ').slice(0, csettings.maxe).filter(e => allowed_domains.some(v => e.match(`https://(.*\\.)?${v}/`)));
     return (await Promise.all(pees.map(async pee => {
         try {
             const headers = headerStringToObject(await GM_head(pee));
@@ -167,14 +176,7 @@ export const uploadFiles = async (injs: File[]) => {
     let total = 0;
     fireNotification('info', `Uploading ${injs.length} files...`);
     return await Promise.all(injs.map(async inj => {
-        const resp = await GM_fetch("https://catbox.moe/user/api.php", {
-            method: 'POST',
-            body: parseForm({
-                reqtype: 'fileupload',
-                fileToUpload: await buildPeeFile(inj)
-            })
-        });
-        const ret = await resp.text();
+        const ret = await filehosts[csettings.fhost].uploadFile(await buildPeeFile(inj));
         fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));
