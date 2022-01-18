@@ -1,12 +1,19 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.152
+// @version      0.154
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
 // @match        https://desuarchive.org/*
+// @match        https://archived.moe/*
+// @match        https://archive.nyafuu.org/*
+// @match        https://arch.b4k.co/*
+// @match        https://archive.wakarimasen.moe/*
+// @match        https://fireden.net/*
+// @match        https://thebarchive.com/*
+// @match        https://archiveofsins.com/*
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
@@ -18418,7 +18425,7 @@
     getMD5: (post) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || "",
     getInfoBox: (post) => post.querySelector("span.file-info")
   };
-  var DesuArchive = {
+  var FoolFuuka = {
     getFileThumbnail: (post) => post.classList.contains("post_is_op") ? post.querySelector(".thread_image_link") : post.querySelector(".thread_image_box"),
     getPost: (post) => post.querySelector(".post_wrapper"),
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')],
@@ -18438,8 +18445,8 @@
   var getQueryProcessor = (is4chanX) => {
     if (["boards.4chan.org", "boards.4channel.org"].includes(location.host))
       return is4chanX ? X4chan : V4chan;
-    if (location.host == "desuarchive.org")
-      return DesuArchive;
+    if (document.querySelector('meta[name="generator"]')?.getAttribute("content")?.startsWith("FoolFuuka"))
+      return FoolFuuka;
   };
 
   // src/main.ts
@@ -18696,10 +18703,10 @@
   };
   document.addEventListener("4chanXInitFinished", () => startup(true));
   document.addEventListener("4chanParsingDone", () => startup(false), { once: true });
-  if (location.host == "desuarchive.org") {
+  if (GM.info.script.matches.slice(2).some((m) => m.includes(location.host))) {
     window.addEventListener("load", () => {
       startup(false);
-    });
+    }, { once: true });
   }
   document.addEventListener("4chanThreadUpdated", (e) => {
     document.dispatchEvent(new CustomEvent("ThreadUpdate", {

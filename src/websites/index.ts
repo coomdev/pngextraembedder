@@ -43,7 +43,7 @@ export const X4chan: QueryProcessor = {
     getInfoBox: post => post.querySelector("span.file-info")!
 };
 
-export const DesuArchive: QueryProcessor = {
+export const FoolFuuka: QueryProcessor = {
     getFileThumbnail: post => post.classList.contains('post_is_op') ? post.querySelector('.thread_image_link')! : post.querySelector('.thread_image_box')!,
     getPost: (post) => post.querySelector('.post_wrapper')!,
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')] as HTMLElement[],
@@ -64,6 +64,6 @@ export const DesuArchive: QueryProcessor = {
 export const getQueryProcessor = (is4chanX: boolean) => {
     if (['boards.4chan.org', 'boards.4channel.org'].includes(location.host))
         return is4chanX ? X4chan : V4chan;
-    if (location.host == "desuarchive.org")
-        return DesuArchive;
+    if (document.querySelector('meta[name="generator"]')?.getAttribute("content")?.startsWith("FoolFuuka"))
+        return FoolFuuka;
 };

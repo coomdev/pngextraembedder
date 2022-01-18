@@ -1,12 +1,19 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.152
+// @version      0.154
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
 // @match        https://desuarchive.org/*
+// @match        https://archived.moe/*
+// @match        https://archive.nyafuu.org/*
+// @match        https://arch.b4k.co/*
+// @match        https://archive.wakarimasen.moe/*
+// @match        https://fireden.net/*
+// @match        https://thebarchive.com/*
+// @match        https://archiveofsins.com/*
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest

@@ -359,10 +359,10 @@ const startup = async (is4chanX = true) => {
 
 document.addEventListener('4chanXInitFinished', () => startup(true));
 document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
-if (location.host == "desuarchive.org") {
+if (GM.info.script.matches.slice(2).some(m => m.includes(location.host))) {
     window.addEventListener('load', () => {
         startup(false);
-    });
+    }, { once: true });
 }
 
 document.addEventListener('4chanThreadUpdated', ((e: CustomEvent<{ count: number }>) => {
