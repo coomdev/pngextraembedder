@@ -5,9 +5,10 @@ import thumbnail from "./assets/hasembed.png";
 import { settings } from "./stores";
 
 const sources = [
-    { host: 'Catbox', prefix: 'https://files.catbox.moe/' },
-    { host: 'Litter', prefix: 'https://litter.catbox.moe/' },
-    { host: 'Pomf', prefix: 'https://a.pomf.cat/' },
+    { host: 'Catbox', prefix: 'files.catbox.moe/' },
+    { host: 'Litter', prefix: 'litter.catbox.moe/' },
+    { host: 'Zzzz', prefix: 'z.zz.fo/' },
+    { host: 'Pomf', prefix: 'a.pomf.cat/' },
 ];
 
 export let csettings: Parameters<typeof settings['set']>[0];
@@ -20,28 +21,39 @@ const getExt = (fn: string) => {
     const isB64 = fn!.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn!.match(/\[.*=(.*)\]/);
     let ext;
+    let source: string | undefined;
     try {
         if (isDum) {
             ext = fn.split('.').slice(0, -1).join('.');
         } else if (isB64) {
             ext = atob(isB64[1]);
         } else if (isExt) {
-            ext = isExt[1];
+            ext = decodeURIComponent(isExt[1]);
+            if (ext.startsWith('https://'))
+                ext = ext.slice('https://'.length);
+            for (const cs of sources)
+                if (ext.startsWith(cs.prefix)) {
+                    source = cs.prefix;
+                    ext = ext.slice(cs.prefix.length);
+                    break;
+                }
         }
     } catch {
         /**/
     }
-    return ext;
+    return { ext, source };
 };
 
 const extract = async (b: Buffer, fn?: string) => {
-    const ext = getExt(fn!);
+    const { ext, source } = getExt(fn!);
 
     let rsource: string;
-    for (const source of sources) {
+    for (const cs of sources) {
+        if (source && cs.prefix != source)
+            continue;
         try {
-            await GM_head(source.prefix + ext);
-            rsource = source.prefix + ext;
+            await GM_head('https://' + cs.prefix + ext);
+            rsource = 'https://' + cs.prefix + ext;
             break;
         } catch {
             // 404
@@ -62,12 +74,14 @@ const extract = async (b: Buffer, fn?: string) => {
 };
 
 const has_embed = async (b: Buffer, fn?: string) => {
-    const ext = getExt(fn!);
+    const { ext, source } = getExt(fn!);
     if (!ext)
         return false;
-    for (const source of sources) {
+    for (const cs of sources) {
+        if (source && cs.prefix != source)
+            continue;
         try {
-            const e = await GM_head(source.prefix + ext);
+            const e = await GM_head('https://' + cs.prefix + ext);
             return true;
         } catch {
             // 404
