@@ -11,7 +11,7 @@ export type QueryProcessor = {
 };
 
 export const V4chan: QueryProcessor = {
-    getFileThumbnail: post =>  post.querySelector('div.file')!,
+    getFileThumbnail: post => post.querySelector('div.file')!,
     getPost: (post) => post.querySelector('.post')!,
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.file')].map(e => e.closest('.postContainer')) as any,
     settingsHost: () => document.getElementById("navtopright") as any,
@@ -28,7 +28,7 @@ export const V4chan: QueryProcessor = {
 };
 
 export const X4chan: QueryProcessor = {
-    getFileThumbnail: post =>  post.querySelector('div.file')!,
+    getFileThumbnail: post => post.querySelector('div.file')!,
     getPost: (post) => post.querySelector('.post')!,
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.postContainer:not([class*="noFile"])')] as HTMLElement[],
     settingsHost: () => document.getElementById("shortcuts") as any,
@@ -44,13 +44,16 @@ export const X4chan: QueryProcessor = {
 };
 
 export const DesuArchive: QueryProcessor = {
-    getFileThumbnail: post =>  post.querySelector('.thread_image_box')!,
+    getFileThumbnail: post => post.classList.contains('post_is_op') ? post.querySelector('.thread_image_link')! : post.querySelector('.thread_image_box')!,
     getPost: (post) => post.querySelector('.post_wrapper')!,
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')] as HTMLElement[],
     settingsHost: () => document.querySelector(".letters") as any,
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
     getImageLink: (post: HTMLElement) => post.querySelector('a[rel]')?.getAttribute('href') || '',
     getFilename: (post: HTMLElement) => {
+        const opfn = post.querySelector('a.post_file_filename')?.textContent;
+        if (opfn)
+            return opfn;
         const a = post.querySelector('a[rel]') as (HTMLAnchorElement | null);
         return a?.title || '';
     },

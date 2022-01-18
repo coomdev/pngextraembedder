@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.151
+// @version      0.152
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -18419,13 +18419,16 @@
     getInfoBox: (post) => post.querySelector("span.file-info")
   };
   var DesuArchive = {
-    getFileThumbnail: (post) => post.querySelector(".thread_image_box"),
+    getFileThumbnail: (post) => post.classList.contains("post_is_op") ? post.querySelector(".thread_image_link") : post.querySelector(".thread_image_box"),
     getPost: (post) => post.querySelector(".post_wrapper"),
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')],
     settingsHost: () => document.querySelector(".letters"),
     catalogControlHost: () => document.getElementById("index-options"),
     getImageLink: (post) => post.querySelector("a[rel]")?.getAttribute("href") || "",
     getFilename: (post) => {
+      const opfn = post.querySelector("a.post_file_filename")?.textContent;
+      if (opfn)
+        return opfn;
       const a = post.querySelector("a[rel]");
       return a?.title || "";
     },
