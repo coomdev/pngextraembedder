@@ -11,6 +11,7 @@ export const extheader = `// ==UserScript==
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
+// @match        https://desuarchive.org/*
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest

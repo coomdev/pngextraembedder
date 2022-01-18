@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.148
+// @version      0.150
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
+// @match        https://desuarchive.org/*
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
@@ -11262,7 +11263,7 @@
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
 
   // src/pngv3.ts
   init_esbuild_inject();
@@ -12159,9 +12160,10 @@
   // src/pomf.ts
   init_esbuild_inject();
   var sources = [
-    { host: "Catbox", prefix: "https://files.catbox.moe/" },
-    { host: "Litter", prefix: "https://litter.catbox.moe/" },
-    { host: "Pomf", prefix: "https://a.pomf.cat/" }
+    { host: "Catbox", prefix: "files.catbox.moe/" },
+    { host: "Litter", prefix: "litter.catbox.moe/" },
+    { host: "Zzzz", prefix: "z.zz.fo/" },
+    { host: "Pomf", prefix: "a.pomf.cat/" }
   ];
   var csettings4;
   settings.subscribe((b) => {
@@ -12172,25 +12174,36 @@
     const isB64 = fn.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn.match(/\[.*=(.*)\]/);
     let ext;
+    let source;
     try {
       if (isDum) {
         ext = fn.split(".").slice(0, -1).join(".");
       } else if (isB64) {
         ext = atob(isB64[1]);
       } else if (isExt) {
-        ext = isExt[1];
+        ext = decodeURIComponent(isExt[1]);
+        if (ext.startsWith("https://"))
+          ext = ext.slice("https://".length);
+        for (const cs of sources)
+          if (ext.startsWith(cs.prefix)) {
+            source = cs.prefix;
+            ext = ext.slice(cs.prefix.length);
+            break;
+          }
       }
     } catch {
     }
-    return ext;
+    return { ext, source };
   };
   var extract5 = async (b, fn) => {
-    const ext = getExt(fn);
+    const { ext, source } = getExt(fn);
     let rsource;
-    for (const source of sources) {
+    for (const cs of sources) {
+      if (source && cs.prefix != source)
+        continue;
       try {
-        await GM_head(source.prefix + ext);
-        rsource = source.prefix + ext;
+        await GM_head("https://" + cs.prefix + ext);
+        rsource = "https://" + cs.prefix + ext;
         break;
       } catch {
       }
@@ -12207,12 +12220,14 @@
     }];
   };
   var has_embed5 = async (b, fn) => {
-    const ext = getExt(fn);
+    const { ext, source } = getExt(fn);
     if (!ext)
       return false;
-    for (const source of sources) {
+    for (const cs of sources) {
+      if (source && cs.prefix != source)
+        continue;
       try {
-        const e = await GM_head(source.prefix + ext);
+        const e = await GM_head("https://" + cs.prefix + ext);
         return true;
       } catch {
       }
@@ -18373,13 +18388,9 @@
   // src/websites/index.ts
   init_esbuild_inject();
   var V4chan = {
-    thumbnailSelector: "",
-    md5Selector: "",
-    filenameSelector: "",
-    linkSelector: "",
+    getFileThumbnail: (post) => post.querySelector("div.file"),
+    getPost: (post) => post.querySelector(".post"),
     postsWithFiles: (h) => [...(h || document).querySelectorAll(".file")].map((e) => e.closest(".postContainer")),
-    postContainerSelector: ".postContainer",
-    controlHostSelector: "",
     settingsHost: () => document.getElementById("navtopright"),
     catalogControlHost: () => document.getElementById("settings"),
     getImageLink: (post) => post.querySelector('a[target="_blank"]')?.getAttribute("href") || "",
@@ -18393,13 +18404,9 @@
     getInfoBox: (post) => post.querySelector("div.fileText")
   };
   var X4chan = {
-    thumbnailSelector: "",
-    md5Selector: "",
-    filenameSelector: "",
-    linkSelector: "",
+    getFileThumbnail: (post) => post.querySelector("div.file"),
+    getPost: (post) => post.querySelector(".post"),
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.postContainer:not([class*="noFile"])')],
-    postContainerSelector: ".postContainer",
-    controlHostSelector: "",
     settingsHost: () => document.getElementById("shortcuts"),
     catalogControlHost: () => document.getElementById("index-options"),
     getImageLink: (post) => post.querySelector('a[target="_blank"]')?.getAttribute("href") || "",
@@ -18411,9 +18418,25 @@
     getMD5: (post) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || "",
     getInfoBox: (post) => post.querySelector("span.file-info")
   };
+  var DesuArchive = {
+    getFileThumbnail: (post) => post.querySelector(".thread_image_box"),
+    getPost: (post) => post,
+    postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')],
+    settingsHost: () => document.querySelector(".letters"),
+    catalogControlHost: () => document.getElementById("index-options"),
+    getImageLink: (post) => post.querySelector("a[rel]")?.getAttribute("href") || "",
+    getFilename: (post) => {
+      const a = post.querySelector("a[rel]");
+      return a?.title || "";
+    },
+    getMD5: (post) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || "",
+    getInfoBox: (post) => post.querySelector("span.post_controls")
+  };
   var getQueryProcessor = (is4chanX) => {
     if (["boards.4chan.org", "boards.4channel.org"].includes(location.host))
       return is4chanX ? X4chan : V4chan;
+    if (location.host == "desuarchive.org")
+      return DesuArchive;
   };
 
   // src/main.ts
@@ -18496,9 +18519,8 @@
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var processPost = async (post) => {
-    const thumb = post.querySelector("a.fileThumb");
     const origlink = qp.getImageLink(post);
-    if (!thumb || !origlink)
+    if (!origlink)
       return;
     let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), () => {
       post.querySelector(".post")?.classList.add("embedfound");
@@ -18591,7 +18613,7 @@
       qp = lqp;
     if (csettings5.vercheck)
       versionCheck();
-    if (!is4chanX) {
+    if (!is4chanX && location.host.startsWith("boards.4chan")) {
       const qr = QR;
       const show = qr.show.bind(qr);
       qr.show = (...args) => {
@@ -18671,6 +18693,11 @@
   };
   document.addEventListener("4chanXInitFinished", () => startup(true));
   document.addEventListener("4chanParsingDone", () => startup(false), { once: true });
+  if (location.host == "desuarchive.org") {
+    window.addEventListener("load", () => {
+      startup(false);
+    });
+  }
   document.addEventListener("4chanThreadUpdated", (e) => {
     document.dispatchEvent(new CustomEvent("ThreadUpdate", {
       detail: {
@@ -18707,7 +18734,7 @@
   function processAttachments(post, ress) {
     if (ress.length == 0)
       return;
-    const replyBox = post.querySelector(".post");
+    const replyBox = qp.getPost(post);
     const external = ress[0][1];
     if (external)
       replyBox?.classList.add("hasext");
@@ -18720,7 +18747,7 @@
     appState.set(cappState);
     const isCatalog = replyBox?.classList.contains("catalog-post");
     if (!isCatalog) {
-      const ft = post.querySelector("div.file");
+      const ft = qp.getFileThumbnail(post);
       const info = qp.getInfoBox(post);
       const filehost = ft.querySelector(".filehost");
       const eyehost = info.querySelector(".eyehost");

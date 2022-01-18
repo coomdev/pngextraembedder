@@ -81,3 +81,11 @@ div.hasmultiple .catalog-host img {
 #qr > form {
     overflow: visible !important;
 }
+
+.theme_default .post_wrapper > .thread_image_box {
+    display: flex;
+}
+
+.theme_default .post_wrapper > .thread_image_box > a {
+    margin-right: 20px;
+}

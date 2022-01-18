@@ -138,9 +138,8 @@ const textToElement = <T = HTMLElement>(s: string) =>
     document.createRange().createContextualFragment(s).children[0] as any as T;
 
 const processPost = async (post: HTMLDivElement) => {
-    const thumb = post.querySelector("a.fileThumb") as HTMLAnchorElement;
     const origlink = qp.getImageLink(post);
-    if (!thumb || !origlink)
+    if (!origlink)
         return;
     let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post),
         () => {
@@ -263,7 +262,7 @@ const startup = async (is4chanX = true) => {
     if (csettings.vercheck)
         versionCheck();
 
-    if (!is4chanX) {
+    if (!is4chanX && location.host.startsWith('boards.4chan')) {
         const qr = QR;
         const show = qr.show.bind(qr);
         qr.show = (...args: any[]) => {
@@ -360,6 +359,11 @@ const startup = async (is4chanX = true) => {
 
 document.addEventListener('4chanXInitFinished', () => startup(true));
 document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
+if (location.host == "desuarchive.org") {
+    window.addEventListener('load', () => {
+        startup(false);
+    });
+}
 
 document.addEventListener('4chanThreadUpdated', ((e: CustomEvent<{ count: number }>) => {
     document.dispatchEvent(new CustomEvent("ThreadUpdate", {
@@ -399,15 +403,13 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
 }), { once: !cappState!.is4chanX }); // 4chan's normal extension destroys the QR form everytime
 
 const customStyles = document.createElement('style');
-
 customStyles.appendChild(document.createTextNode(globalCss));
-
 document.documentElement.insertBefore(customStyles, null);
 
 function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][]) {
     if (ress.length == 0)
         return;
-    const replyBox = post.querySelector('.post');
+    const replyBox = qp.getPost(post);
     const external = ress[0][1];
     if (external)
         replyBox?.classList.add('hasext');
@@ -423,7 +425,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
     if (!isCatalog) {
-        const ft = post.querySelector('div.file') as HTMLDivElement;
+        const ft = qp.getFileThumbnail(post);
         const info = qp.getInfoBox(post);
         const filehost: HTMLElement | null = ft.querySelector('.filehost');
         const eyehost: HTMLElement | null = info.querySelector('.eyehost');
