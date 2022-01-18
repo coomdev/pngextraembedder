@@ -30,6 +30,21 @@
     border-right: 3px dashed cornflowerblue !important;
 }
 
+.post_wrapper.embedfound {
+    border-right: 3px dashed green !important;
+}
+
+.post_wrapper.hasembed {
+    border-right: 3px dashed deeppink !important;
+}
+
+.post_wrapper.hasext {
+    border-right: 3px dashed goldenrod !important;
+}
+
+.post_wrapper.hasmultiple {
+    border-right: 3px dashed cornflowerblue !important;
+}
 
 .hasext.catalog-post {
     border: 3px dashed goldenrod !important;

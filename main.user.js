@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.150
+// @version      0.151
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -11263,7 +11263,7 @@
   });
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.post_wrapper.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n.post_wrapper.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.post_wrapper.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.post_wrapper.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
 
   // src/pngv3.ts
   init_esbuild_inject();
@@ -18420,7 +18420,7 @@
   };
   var DesuArchive = {
     getFileThumbnail: (post) => post.querySelector(".thread_image_box"),
-    getPost: (post) => post,
+    getPost: (post) => post.querySelector(".post_wrapper"),
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')],
     settingsHost: () => document.querySelector(".letters"),
     catalogControlHost: () => document.getElementById("index-options"),

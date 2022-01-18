@@ -45,7 +45,7 @@ export const X4chan: QueryProcessor = {
 
 export const DesuArchive: QueryProcessor = {
     getFileThumbnail: post =>  post.querySelector('.thread_image_box')!,
-    getPost: (post) => post,
+    getPost: (post) => post.querySelector('.post_wrapper')!,
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')] as HTMLElement[],
     settingsHost: () => document.querySelector(".letters") as any,
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
