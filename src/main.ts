@@ -164,6 +164,17 @@ const versionCheck = async () => {
     }
 };
 
+// Not using the clipboard API because it needs focus
+function copyTextToClipboard(text: string) {
+    const copyFrom = document.createElement("textarea");
+    copyFrom.textContent = text;
+    document.body.appendChild(copyFrom);
+    copyFrom.select();
+    document.execCommand('copy');
+    copyFrom.blur();
+    document.body.removeChild(copyFrom);
+}
+
 const scrapeBoard = async (self: HTMLButtonElement) => {
     self.disabled = true;
     self.textContent = "Searching...";
@@ -172,7 +183,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     const pages = await res.json() as Page[];
     type Page = { threads: Thread[] }
     type Thread = { no: number; posts: Post[] };
-    type BasePost = { resto: number, tim: number };
+    type BasePost = { no: number, resto: number, tim: number };
     type PostWithFile = BasePost & { tim: number, ext: string, md5: string, filename: string };
     type PostWithoutFile = BasePost & Record<string, unknown>;
     type Post = (PostWithoutFile | PostWithFile);
@@ -184,7 +195,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     const filenames = threads
         .reduce((a, b) => [...a, ...b.posts.filter(p => p.ext)
             .map(p => p as PostWithFile)], [] as PostWithFile[]).filter(p => p.ext != '.webm' && p.ext != '.gif')
-        .map(p => [p.resto, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext] as [number, string, string, string]);
+        .map(p => [p.resto || p.no, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext,] as [number, string, string, string]);
 
     console.log(filenames);
     fireNotification("info", "Analyzing images...");
@@ -248,7 +259,10 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     for (const k of hasEmbed)
         counters[k[0]] = k[0] in counters ? counters[k[0]] + 1 : 1;
     console.log(counters);
-    fireNotification("success", "Processing finished!");
+    fireNotification("success", "Processing finished! Results pasted in the clipboard");
+    const text = Object.entries(counters).sort((a, b) => b[1] - a[1]).map(e => `>>${e[0]} (${e[1]})`).join('\n');
+    console.log(text);
+    copyTextToClipboard(text);
 };
 
 const startup = async (is4chanX = true) => {

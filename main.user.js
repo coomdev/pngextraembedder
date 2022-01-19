@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.154
+// @version      0.155
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -18547,6 +18547,15 @@
       fireNotification("info", `Last PEE version is ${lmajor}.${lminor}, you're on ${major}.${minor}`);
     }
   };
+  function copyTextToClipboard(text2) {
+    const copyFrom = document.createElement("textarea");
+    copyFrom.textContent = text2;
+    document.body.appendChild(copyFrom);
+    copyFrom.select();
+    document.execCommand("copy");
+    copyFrom.blur();
+    document.body.removeChild(copyFrom);
+  }
   var scrapeBoard = async (self) => {
     self.disabled = true;
     self.textContent = "Searching...";
@@ -18555,7 +18564,7 @@
     const pages = await res.json();
     fireNotification("info", "Fetching all threads...");
     const threads = await Promise.all(pages.reduce((a, b) => [...a, ...b.threads], []).map((e) => e.no).map((id) => GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`).then((e) => e.json())));
-    const filenames = threads.reduce((a, b) => [...a, ...b.posts.filter((p) => p.ext).map((p) => p)], []).filter((p) => p.ext != ".webm" && p.ext != ".gif").map((p) => [p.resto, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext]);
+    const filenames = threads.reduce((a, b) => [...a, ...b.posts.filter((p) => p.ext).map((p) => p)], []).filter((p) => p.ext != ".webm" && p.ext != ".gif").map((p) => [p.resto || p.no, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext]);
     console.log(filenames);
     fireNotification("info", "Analyzing images...");
     const n = 7;
@@ -18612,7 +18621,10 @@
     for (const k of hasEmbed)
       counters[k[0]] = k[0] in counters ? counters[k[0]] + 1 : 1;
     console.log(counters);
-    fireNotification("success", "Processing finished!");
+    fireNotification("success", "Processing finished! Results pasted in the clipboard");
+    const text2 = Object.entries(counters).sort((a, b) => b[1] - a[1]).map((e) => `>>${e[0]} (${e[1]})`).join("\n");
+    console.log(text2);
+    copyTextToClipboard(text2);
   };
   var startup = async (is4chanX = true) => {
     appState.set({ ...cappState, is4chanX });
