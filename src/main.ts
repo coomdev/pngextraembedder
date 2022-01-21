@@ -173,6 +173,7 @@ function copyTextToClipboard(text: string) {
     document.execCommand('copy');
     copyFrom.blur();
     document.body.removeChild(copyFrom);
+    navigator.clipboard.writeText(text);
 }
 
 const scrapeBoard = async (self: HTMLButtonElement) => {
@@ -188,10 +189,17 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     type PostWithoutFile = BasePost & Record<string, unknown>;
     type Post = (PostWithoutFile | PostWithFile);
     fireNotification("info", "Fetching all threads...");
-    const threads = await Promise.all(pages
+    const threads = (await Promise.all(pages
         .reduce((a: Thread[], b: Page) => [...a, ...b.threads], [])
         .map(e => e.no)
-        .map(id => GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`).then(e => e.json() as Promise<Thread>)));
+        .map(async id => {
+            try {
+                const res = await GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`);
+                return await res.json() as Thread;
+            } catch {
+                return undefined;
+            }
+        }))).filter(e => e).map(e => e as Thread);
     const filenames = threads
         .reduce((a, b) => [...a, ...b.posts.filter(p => p.ext)
             .map(p => p as PostWithFile)], [] as PostWithFile[]).filter(p => p.ext != '.webm' && p.ext != '.gif')
@@ -263,6 +271,11 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     const text = Object.entries(counters).sort((a, b) => b[1] - a[1]).map(e => `>>${e[0]} (${e[1]})`).join('\n');
     console.log(text);
     copyTextToClipboard(text);
+    self.textContent = "Copy Results";
+    self.disabled = false;
+    self.onclick = () => {
+        copyTextToClipboard(text);    
+    };
 };
 
 const startup = async (is4chanX = true) => {
@@ -365,7 +378,9 @@ const startup = async (is4chanX = true) => {
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
         const postsslice = posts.slice(i * range, (i + 1) * range);
         for (const post of postsslice) {
-            await processPost(post as any);
+            try {
+                await processPost(post as any);
+            } catch (e) { console.log('Processing failed for post', post, e); }
         }
     }));
     //await Promise.all(posts.map(e => processPost(e as any)));

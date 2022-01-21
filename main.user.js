@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.155
+// @version      0.156
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -18555,6 +18555,7 @@
     document.execCommand("copy");
     copyFrom.blur();
     document.body.removeChild(copyFrom);
+    navigator.clipboard.writeText(text2);
   }
   var scrapeBoard = async (self) => {
     self.disabled = true;
@@ -18563,7 +18564,14 @@
     const res = await GM_fetch(`https://a.4cdn.org/${boardname}/threads.json`);
     const pages = await res.json();
     fireNotification("info", "Fetching all threads...");
-    const threads = await Promise.all(pages.reduce((a, b) => [...a, ...b.threads], []).map((e) => e.no).map((id) => GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`).then((e) => e.json())));
+    const threads = (await Promise.all(pages.reduce((a, b) => [...a, ...b.threads], []).map((e) => e.no).map(async (id) => {
+      try {
+        const res2 = await GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`);
+        return await res2.json();
+      } catch {
+        return void 0;
+      }
+    }))).filter((e) => e).map((e) => e);
     const filenames = threads.reduce((a, b) => [...a, ...b.posts.filter((p) => p.ext).map((p) => p)], []).filter((p) => p.ext != ".webm" && p.ext != ".gif").map((p) => [p.resto || p.no, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext]);
     console.log(filenames);
     fireNotification("info", "Analyzing images...");
@@ -18625,6 +18633,11 @@
     const text2 = Object.entries(counters).sort((a, b) => b[1] - a[1]).map((e) => `>>${e[0]} (${e[1]})`).join("\n");
     console.log(text2);
     copyTextToClipboard(text2);
+    self.textContent = "Copy Results";
+    self.disabled = false;
+    self.onclick = () => {
+      copyTextToClipboard(text2);
+    };
   };
   var startup = async (is4chanX = true) => {
     appState.set({ ...cappState, is4chanX });
@@ -18709,7 +18722,11 @@
     await Promise.all([...new Array(n + 1)].map(async (e, i) => {
       const postsslice = posts.slice(i * range, (i + 1) * range);
       for (const post of postsslice) {
-        await processPost(post);
+        try {
+          await processPost(post);
+        } catch (e2) {
+          console.log("Processing failed for post", post, e2);
+        }
       }
     }));
   };
