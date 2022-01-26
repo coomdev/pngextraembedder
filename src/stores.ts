@@ -23,6 +23,8 @@ export const settings = writable(localLoad('settingsv2', {
     sh: false,
     ep: false,
     expte: false,
+    mdist: -1,
+    phash: false,
     hotlink: false,
     vercheck: false,
     fhost: 0,

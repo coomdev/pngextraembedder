@@ -14,10 +14,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "blockhash": "^0.2.0",
     "buffer": "^6.0.3",
     "crc-32": "^1.2.0",
     "events": "^3.3.0",
     "file-type": "^17.0.2",
+    "image-hash": "^5.0.1",
+    "jpeg-js": "^0.4.3",
+    "png-js": "^1.0.0",
     "readable-stream": "^3.6.0",
     "ts-ebml": "^2.0.2"
   },

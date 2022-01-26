@@ -27,7 +27,7 @@ import { lolisafe } from "./filehosts";
 export interface ImageProcessor {
     skip?: true;
     match(fn: string): boolean;
-    has_embed(b: Buffer, fn?: string): boolean | Promise<boolean>;
+    has_embed(b: Buffer, fn?: string, prevurl?: string): boolean | Promise<boolean>;
     extract(b: Buffer, fn?: string): EmbeddedFile[] | Promise<EmbeddedFile[]>;
     inject?(b: File, c: File[]): Buffer | Promise<Buffer>;
 }
@@ -95,13 +95,13 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string, hex: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
+const processImage = async (src: string, fn: string, hex: string, prevurl: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
     return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
         if (proc.skip) {
             // skip file downloading, file is referenced from the filename
             // basically does things like filtering out blacklisted tags
             const md5 = Buffer.from(hex, 'base64');
-            if (await proc.has_embed(md5, fn) === true) {
+            if (await proc.has_embed(md5, fn, prevurl) === true) {
                 onfound();
                 return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
             } return;
@@ -141,7 +141,10 @@ const processPost = async (post: HTMLDivElement) => {
     const origlink = qp.getImageLink(post);
     if (!origlink)
         return;
-    let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post),
+    const thumbLink = qp.getThumbnailLink(post);
+    if (!thumbLink)
+        return;
+    let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink,
         () => {
             post.querySelector('.post')?.classList.add("embedfound");
         });
@@ -274,7 +277,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     self.textContent = "Copy Results";
     self.disabled = false;
     self.onclick = () => {
-        copyTextToClipboard(text);    
+        copyTextToClipboard(text);
     };
 };
 

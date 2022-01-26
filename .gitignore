@@ -16,3 +16,8 @@ ext
 yarn.lock
 out
 *.data
+ext.js
+core.js
+fag
+rollup.config.js
+.vscode/settings.json

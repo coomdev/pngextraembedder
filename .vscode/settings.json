@@ -1,3 +1,23 @@
 {
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "files.exclude": {
+        "**/dist": true,
+        "**/node_modules": true,
+        "**/*.png": true,
+        "**/*.html": true,
+        "**/*.c": true,
+        "**/*~": true,
+        "**/*.jpg": true,
+        "**/*.gif": true,
+        "**/*.exe": true,
+        "**/*.cs": true,
+        "**/*.out": true,
+        "**/*.zip": true,
+        "**/ext": true,
+        "**/*.mp4": true,
+        "**/*.webm": true,
+        "**/yarn.lock": true,
+        "**/out": true,
+        "**/*.data": true
+    }
 }

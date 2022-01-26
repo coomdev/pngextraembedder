@@ -2,6 +2,8 @@ import type { EmbeddedFile, ImageProcessor } from "./main";
 import { GM_fetch } from "./requests";
 import { localLoad, settings } from "./stores";
 import { Buffer } from "buffer";
+import jpeg from 'jpeg-js';
+import { bmvbhash_even } from "./phash";
 
 export let csettings: Parameters<typeof settings['set']>[0];
 settings.subscribe(b => {
@@ -50,25 +52,26 @@ const gelquirk: (s: string) => tran = prefix => (a =>
     } as BooruMatch)) || []);
 
 let experimentalApi = false;
+let black = new Set<string>();
+let phashEn = false;
+let mindist = 5;
 settings.subscribe(s => {
     experimentalApi = s.expte;
     boorus = s.rsources.map(e => ({
         ...e,
         quirks: gelquirk(e.view)
     }));
+    black = new Set(s.blacklist);
+    mindist = s.mdist || 5;
+    phashEn = s.phash;
 });
+
 export let boorus: Booru[] =
     localLoad('settingsv2', { rsources: [] as (Omit<Booru, 'quirks'> & { view: string, disabled?: boolean })[] })
         .rsources.map(e => ({
             ...e,
             quirks: gelquirk(e.view)
         }));
-
-let black = new Set<string>();
-
-settings.subscribe(s => {
-    black = new Set(s.blacklist);
-});
 
 const bufferingTime = 2000;
 let expired: number | undefined = undefined;
@@ -157,18 +160,37 @@ const extract = async (b: Buffer, fn?: string) => {
     const full = result[0].full_url;
     return [{
         source: result[0].source,
-        page: { title: booru, url: result[0].page },
+        page: {
+            title: booru,
+            url: result[0].page
+        },
         filename: fn!.substring(0, 33) + result[0].ext,
-        thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()), // prefer preview
-        data: csettings.hotlink ? (full || prev) : async (lsn) => {
+        thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()),
+        data: csettings.hotlink ? (full || prev) : (async (lsn) => {
             if (!cachedFile)
-                cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer()); // prefer full
+                cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer());
             return cachedFile;
-        }
+        })
     } as EmbeddedFile];
 };
 
-const has_embed = async (b: Buffer, fn?: string) => {
+const phash = (b: Buffer) => {
+    const res = jpeg.decode(b);
+    return bmvbhash_even(res, 8);
+};
+
+// a & b are hex strings
+const hammingDist = (a: string, b: string) => {
+    let res = BigInt('0x' + a) ^ BigInt('0x' + b);
+    let acc = 0;
+    while (res != 0n) {
+        acc += Number(res & 1n);
+        res >>= 1n;
+    }
+    return acc;
+};
+
+const has_embed = async (b: Buffer, fn?: string, prevlink?: string) => {
     // It's not worth to bother skipping images with filenames that match their md5 because 
     // 4chan reencodes jpegs, which is well over half the files posted
 
@@ -185,6 +207,22 @@ const has_embed = async (b: Buffer, fn?: string) => {
         if (result.length)
             break;
     }
+
+    if ((result && result.length != 0) && phashEn && prevlink) {
+        const getHash = async (l: string) => {
+            const ogreq = await GM_fetch(l);
+            const origPreview = await ogreq.arrayBuffer();
+            return await phash(Buffer.from(origPreview));
+        };
+        const [orighash, tehash] = await Promise.all([
+            getHash(prevlink),
+            getHash(result[0].preview_url)
+        ]);
+        const d = hammingDist(orighash, tehash);
+        console.log(d, prevlink);
+        return d > mindist;
+    }
+
     return result && result.length != 0;
 };
 

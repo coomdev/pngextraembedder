@@ -5,6 +5,7 @@ export type QueryProcessor = {
     settingsHost: () => HTMLSpanElement;
     catalogControlHost: () => HTMLDivElement;
     getImageLink: (post: HTMLElement) => string;
+    getThumbnailLink: (post: HTMLElement) => string;
     getFilename: (post: HTMLElement) => string;
     getMD5: (post: HTMLElement) => string;
     getInfoBox: (post: HTMLElement) => HTMLElement;
@@ -24,6 +25,7 @@ export const V4chan: QueryProcessor = {
         return a?.textContent || '';
     },
     getMD5: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || '',
+    getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
     getInfoBox: post => post.querySelector("div.fileText")!
 };
 
@@ -40,6 +42,7 @@ export const X4chan: QueryProcessor = {
         return (origlink.querySelector('.fnfull') || origlink)?.textContent || '';
     },
     getMD5: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || '',
+    getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
     getInfoBox: post => post.querySelector("span.file-info")!
 };
 
@@ -58,6 +61,7 @@ export const FoolFuuka: QueryProcessor = {
         return a?.title || '';
     },
     getMD5: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || '',
+    getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
     getInfoBox: post => post.querySelector("span.post_controls")!
 };
 

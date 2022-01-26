@@ -2,7 +2,6 @@
   import { hasContext, onDestroy } from 'svelte'
   import Dialog from './Dialog.svelte'
 
-  
   import Tag from './Tag.svelte'
   import type { Booru } from '../thirdeye'
   import Tabs from './Tabs.svelte'
@@ -129,6 +128,21 @@
           Disable third-eye.
         </label>
         {#if !$settings.te}
+          <label>
+            <input type="checkbox" bind:checked={$settings.phash} />
+            Enable perceptual hash-based filtering
+          </label>
+          {#if $settings.phash}
+            <label>
+              <input type="number" bind:value={$settings.mdist} />
+              Minimum distance required (5 recommended)
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <a
+                title="Higher will filter more potentially different images, lower will let more identical images through"
+                >?</a
+              >
+            </label>
+          {/if}
           <h3>Booru sources</h3>
           <div class="tagcont">
             {#each $settings.rsources as source, i}
