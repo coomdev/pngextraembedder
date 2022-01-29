@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.161
+// @version      0.162
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 161];
+      define_BUILD_VERSION_default = [0, 162];
     }
   });
 
@@ -14525,11 +14525,11 @@
         url: result[0].page
       },
       filename: fn.substring(0, 33) + result[0].ext,
-      thumbnail: csettings3.hotlink ? prev || full : await (await ifetch(prev || full)).arrayBuffer(),
+      thumbnail: csettings3.hotlink ? prev || full : import_buffer7.Buffer.from(await (await ifetch(prev || full)).arrayBuffer()),
       data: csettings3.hotlink ? full || prev : async (lsn) => {
         if (!cachedFile)
           cachedFile = await (await ifetch(full || prev, void 0, lsn)).arrayBuffer();
-        return cachedFile;
+        return import_buffer7.Buffer.from(cachedFile);
       }
     }];
   };

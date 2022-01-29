@@ -165,11 +165,11 @@ const extract = async (b: Buffer, fn?: string) => {
             url: result[0].page
         },
         filename: fn!.substring(0, 33) + result[0].ext,
-        thumbnail: csettings.hotlink ? (prev || full) : (await (await ifetch(prev || full)).arrayBuffer()),
+        thumbnail: csettings.hotlink ? (prev || full) : Buffer.from(await (await ifetch(prev || full)).arrayBuffer()),
         data: csettings.hotlink ? (full || prev) : (async (lsn) => {
             if (!cachedFile)
                 cachedFile = (await (await ifetch(full || prev, undefined, lsn)).arrayBuffer());
-            return cachedFile;
+            return Buffer.from(cachedFile);
         })
     } as EmbeddedFile];
 };
