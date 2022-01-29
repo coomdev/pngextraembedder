@@ -61,7 +61,10 @@ export const FoolFuuka: QueryProcessor = {
         return a?.title || '';
     },
     getMD5: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("data-md5") || '',
-    getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
+    getThumbnailLink: (post: HTMLElement) => {
+        const e = post.querySelector("img[data-md5]");
+        return e?.getAttribute("src") || e?.getAttribute("data-src") || '';
+    },
     getInfoBox: post => post.querySelector("span.post_controls")!
 };
 
