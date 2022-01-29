@@ -1,4 +1,4 @@
-import { GM_fetch } from "./requests";
+import { ifetch } from "./platform";
 
 function parseForm(data: object) {
     const form = new FormData();
@@ -14,7 +14,7 @@ export const lolisafe = (domain: string, serving = domain) => ({
     domain,
     serving,
     async uploadFile(f: Blob) {
-        const resp = await GM_fetch(`https://${domain}/api/upload`, {
+        const resp = await ifetch(`https://${domain}/api/upload`, {
             headers: {
                 accept: "application/json",
             },
@@ -33,7 +33,7 @@ export const catbox = (domain: string, serving: string) => ({
     domain,
     serving,
     async uploadFile(inj: Blob) {
-        const resp = await GM_fetch(`https://${domain}/user/api.php`, {
+        const resp = await ifetch(`https://${domain}/user/api.php`, {
             method: 'POST',
             body: parseForm({
                 reqtype: 'fileupload',

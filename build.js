@@ -20,7 +20,10 @@ let rev = +res.stdout;
       bundle: true,
       outfile: "./dist/main.js",
       define: {
-        global: 'window'
+        global: 'window',
+        execution_mode: JSON.stringify(process.argv[2] || 'userscript'),
+        isBackground: JSON.stringify('false'),
+        BUILD_VERSION: JSON.stringify([0, rev])
       },
       inject: ['./esbuild.inject.js'],
       plugins: [

@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import type { ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
 import { buildPeeFile, decodeCoom3Payload, fireNotification, uploadFiles } from "./utils";
-import { GM_fetch } from "./requests";
 
 const CUM3 = Buffer.from("doo\0" + "m");
 

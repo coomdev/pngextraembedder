@@ -1,8 +1,8 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
-import { GM_fetch, GM_head } from "./requests";
 import type { Buffer } from "buffer";
 import thumbnail from "./assets/hasembed.png";
 import { settings } from "./stores";
+import { getHeaders, ifetch, Platform } from "./platform";
 
 const sources = [
     { host: 'Catbox', prefix: 'files.catbox.moe/' },
@@ -52,7 +52,7 @@ const extract = async (b: Buffer, fn?: string) => {
         if (source && cs.prefix != source)
             continue;
         try {
-            await GM_head('https://' + cs.prefix + ext);
+            await getHeaders('https://' + cs.prefix + ext);
             rsource = 'https://' + cs.prefix + ext;
             break;
         } catch {
@@ -64,7 +64,7 @@ const extract = async (b: Buffer, fn?: string) => {
         filename: ext,
         data: csettings.hotlink ? rsource! : async (lsn) => {
             try {
-                return (await GM_fetch(rsource, undefined, lsn)).arrayBuffer();
+                return (await ifetch(rsource, undefined, lsn)).arrayBuffer();
             } catch (e) {
                 //404
             }
@@ -81,7 +81,7 @@ const has_embed = async (b: Buffer, fn?: string) => {
         if (source && cs.prefix != source)
             continue;
         try {
-            const e = await GM_head('https://' + cs.prefix + ext);
+            const e = await getHeaders('https://' + cs.prefix + ext);
             return true;
         } catch {
             // 404

@@ -4,10 +4,8 @@
   import { beforeUpdate, tick } from 'svelte'
   import type { EmbeddedFile } from '../main'
   import { createEventDispatcher } from 'svelte'
-  import { GM_head, headerStringToObject } from '../requests'
-  import { text } from 'svelte/internal'
-  import App from './App.svelte'
   import { Buffer } from 'buffer'
+  import { getHeaders, Platform } from '../platform'
 
   export const dispatch = createEventDispatcher()
 
@@ -49,8 +47,9 @@
 
     const thumb = file.thumbnail || file.data
     let type: FileTypeResult | undefined
-    if (typeof thumb != 'string') {
-      type = await fileTypeFromBuffer(thumb)
+    if (typeof thumb != "string") {
+      let buff = Buffer.isBuffer(thumb) ? thumb : await thumb();
+      type = await fileTypeFromBuffer(buff)
       if (
         !type &&
         file.filename.endsWith('.txt') &&
@@ -58,12 +57,15 @@
       ) {
         type = { ext: 'txt', mime: 'text/plain' } as any
       }
-      content = new Blob([thumb], { type: type?.mime })
+      content = new Blob([buff], { type: type?.mime })
       url = URL.createObjectURL(content)
       if (!type) return
     } else {
-      let head = headerStringToObject(await GM_head(thumb, undefined))
-      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() as any }
+      let head = await getHeaders(thumb)
+      type = {
+        ext: '' as any,
+        mime: head['content-type'].split(';')[0].trim() as any,
+      }
     }
     ftype = type.mime
     isVideo = type.mime.startsWith('video/')
@@ -125,8 +127,11 @@
     } else {
       url = file.data
       furl = file.data
-      let head = headerStringToObject(await GM_head(file.data, undefined))
-      type = { ext: '' as any, mime: head['content-type'].split(';')[0].trim() as any }
+      let head = await getHeaders(file.data)
+      type = {
+        ext: '' as any,
+        mime: head['content-type'].split(';')[0].trim() as any,
+      }
     }
     if (!type) return
     isVideo = type.mime.startsWith('video/')
@@ -191,7 +196,7 @@
       ev.preventDefault()
       if (isNotChrome) {
         window.open(src, '_blank')
-      } else await GM.openInTab(src, { active: false, insert: true })
+      } else await Platform.openInTab(src, { active: false, insert: true })
     }
   }
 

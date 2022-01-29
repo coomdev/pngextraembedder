@@ -17,3 +17,7 @@ declare module 'blockhash' {
 }
 
 declare const QR: any;
+declare const BUILD_VERSION: [number, number];
+declare const execution_mode: 'userscript' | 'chrome_api' | 'ff_api';
+declare const isBackground: boolean;
+declare const chrome: typeof browser;

@@ -9,8 +9,6 @@ import jpg, { convertToPng } from "./jpg";
 import thirdeye from "./thirdeye";
 import pomf from "./pomf";
 
-import { GM_fetch, GM_head, headerStringToObject } from "./requests";
-
 import App from "./Components/App.svelte";
 import ScrollHighlighter from "./Components/ScrollHighlighter.svelte";
 import PostOptions from "./Components/PostOptions.svelte";
@@ -23,6 +21,7 @@ import { buildPeeFile, fireNotification } from "./utils";
 import { fileTypeFromBuffer } from "file-type";
 import { getQueryProcessor, QueryProcessor } from "./websites";
 import { lolisafe } from "./filehosts";
+import { ifetch, Platform, streamRemote, supportedAltDomain } from "./platform";
 
 export interface ImageProcessor {
     skip?: true;
@@ -49,38 +48,10 @@ appState.subscribe(v => {
     cappState = v;
 });
 
-// most pngs are encoded with 65k idat chunks
-async function* streamRemote(url: string, chunkSize = 72 * 1024, fetchRestOnNonCanceled = true) {
-    const headers = await GM_head(url);
-    const h = headerStringToObject(headers);
-    const size = +h['content-length'];
-    let ptr = 0;
-    let fetchSize = chunkSize;
-    while (ptr != size) {
-        //console.log('doing a fetch of ', url, ptr, ptr + fetchSize - 1);
-        const res = await GM_fetch(url, { headers: { range: `bytes=${ptr}-${ptr + fetchSize - 1}` } }) as any as Tampermonkey.Response<any>;
-        const obj = headerStringToObject(res.responseHeaders);
-        if (!('content-length' in obj)) {
-            console.warn("no content lenght???", url);
-            break;
-        } const len = +obj['content-length'];
-        ptr += len;
-        if (fetchRestOnNonCanceled)
-            fetchSize = size;
-        const val = Buffer.from(await (res as any).arrayBuffer());
-        const e = (yield val) as boolean;
-        //console.log('yeieledd, a', e);
-        if (e) {
-            break;
-        }
-    }
-    //console.log("streaming ended, ", ptr, size);
-}
-
 type EmbeddedFileWithPreview = {
     page?: { title: string, url: string }; // can be a booru page
     source?: string; // can be like a twitter post this was posted in originally
-    thumbnail: Buffer;
+    thumbnail: string | Buffer;
     filename: string;
     data: EmbeddedFileWithoutPreview['data'] | ((lisn?: EventTarget) => Promise<Buffer>);
 };
@@ -88,7 +59,7 @@ type EmbeddedFileWithPreview = {
 type EmbeddedFileWithoutPreview = {
     page: undefined;
     source: undefined;
-    thumbnail: undefined;
+    thumbnail?: string;
     filename: string;
     data: string | Buffer;
 };
@@ -156,12 +127,12 @@ const processPost = async (post: HTMLDivElement) => {
 
 const versionCheck = async () => {
     const [lmajor, lminor] =
-        (await (await GM_fetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js"))
+        (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js"))
             .text())
             .split('\n')
             .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
             .map(e => +e);
-    const [major, minor] = GM.info.script.version.split('.').map(e => +e);
+    const [major, minor] = BUILD_VERSION;
     if (major < lmajor || (major == lmajor && minor < lminor)) {
         fireNotification("info", `Last PEE version is ${lmajor}.${lminor}, you're on ${major}.${minor}`);
     }
@@ -183,7 +154,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     self.disabled = true;
     self.textContent = "Searching...";
     const boardname = location.pathname.match(/\/(.*)\//)![1];
-    const res = await GM_fetch(`https://a.4cdn.org/${boardname}/threads.json`);
+    const res = await ifetch(`https://a.4cdn.org/${boardname}/threads.json`);
     const pages = await res.json() as Page[];
     type Page = { threads: Thread[] }
     type Thread = { no: number; posts: Post[] };
@@ -197,7 +168,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
         .map(e => e.no)
         .map(async id => {
             try {
-                const res = await GM_fetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`);
+                const res = await ifetch(`https://a.4cdn.org/${boardname}/thread/${id}.json`);
                 return await res.json() as Thread;
             } catch {
                 return undefined;
@@ -391,7 +362,7 @@ const startup = async (is4chanX = true) => {
 
 document.addEventListener('4chanXInitFinished', () => startup(true));
 document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
-if (GM.info.script.matches.slice(2).some(m => m.includes(location.host))) {
+if (supportedAltDomain(location.host)) {
     window.addEventListener('load', () => {
         startup(false);
     }, { once: true });

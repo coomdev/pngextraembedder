@@ -1,9 +1,9 @@
 import { Buffer } from "buffer";
-import { GM_fetch, GM_head, headerStringToObject } from "./requests";
 import thumbnail from "./assets/hasembed.png";
 import type { EmbeddedFile } from './main';
 import { settings } from "./stores";
 import { filehosts } from "./filehosts";
+import { getHeaders, ifetch, Platform } from "./platform";
 
 export let csettings: Parameters<typeof settings['set']>[0];
 
@@ -106,8 +106,12 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
 
     return (await Promise.all(pees.map(async pee => {
         try {
-            const headers = headerStringToObject(await GM_head(pee));
-            const res = await GM_fetch(pee, {
+            const m = pee.match(/(?<protocol>https?):\/\/(?<domain>.*?)(?<file>\/.*)/);
+            if (!m)
+                return;
+            const { domain, file } = m.groups!;
+            const headers = await getHeaders(pee);
+            const res = await ifetch(pee, {
                 headers: { ranges: 'bytes=0-2048', 'user-agent': '' },
                 mode: 'cors',
                 referrerPolicy: 'no-referrer',
@@ -142,15 +146,24 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             if (hasThumbnail) {
                 thumbsize = header.readInt32LE(ptr);
                 ptr += 4;
-                thumb = Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
+                if (execution_mode == 'userscript')
+                    thumb = Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
+                else
+                    thumb = `https://loli.piss/${domain}${file}/${ptr}/${ptr + thumbsize}`;
                 ptr += thumbsize;
             }
             const unzip = async (lsn?: EventTarget) =>
-                Buffer.from(await (await GM_fetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
+                Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
+            let data;
+            if (execution_mode == 'userscript') {
+                data = size < 3072 ? await unzip() : unzip;
+            } else {
+                data = `https://loli.piss/${domain}${file}/${ptr}/${size - 1}`;
+            }
             return {
                 filename: fn,
                 // if file is small, then just get it fully
-                data: size < 3072 ? await unzip() : unzip,
+                data,
                 thumbnail: thumb,
             } as EmbeddedFile;
         } catch (e) {

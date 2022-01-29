@@ -1,9 +1,9 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
-import { GM_fetch } from "./requests";
 import { localLoad, settings } from "./stores";
 import { Buffer } from "buffer";
 import jpeg from 'jpeg-js';
 import { bmvbhash_even } from "./phash";
+import { ifetch, Platform } from "./platform";
 
 export let csettings: Parameters<typeof settings['set']>[0];
 settings.subscribe(b => {
@@ -129,7 +129,7 @@ const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
                 }*/
         if (b.domain in cache && hex in cache[b.domain])
             return cache[b.domain][hex] as BooruMatch[];
-        const res = await GM_fetch(`https://${b.domain}${b.endpoint}${hex}`);
+        const res = await ifetch(`https://${b.domain}${b.endpoint}${hex}`);
         // might throw because some endpoint respond with invalid json when an error occurs
         const pres = await res.json();
         const tran = b.quirks(pres).filter(e => !e.tags.some(e => black.has(e)));
@@ -165,10 +165,10 @@ const extract = async (b: Buffer, fn?: string) => {
             url: result[0].page
         },
         filename: fn!.substring(0, 33) + result[0].ext,
-        thumbnail: (await (await GM_fetch(prev || full)).arrayBuffer()),
+        thumbnail: csettings.hotlink ? (prev || full) : (await (await ifetch(prev || full)).arrayBuffer()),
         data: csettings.hotlink ? (full || prev) : (async (lsn) => {
             if (!cachedFile)
-                cachedFile = (await (await GM_fetch(full || prev, undefined, lsn)).arrayBuffer());
+                cachedFile = (await (await ifetch(full || prev, undefined, lsn)).arrayBuffer());
             return cachedFile;
         })
     } as EmbeddedFile];
@@ -210,9 +210,9 @@ const has_embed = async (b: Buffer, fn?: string, prevlink?: string) => {
 
     if ((result && result.length != 0) && phashEn && prevlink) {
         const getHash = async (l: string) => {
-            const ogreq = await GM_fetch(l);
+            const ogreq = await ifetch(l);
             const origPreview = await ogreq.arrayBuffer();
-            return await phash(Buffer.from(origPreview));
+            return phash(Buffer.from(origPreview));
         };
         const [orighash, tehash] = await Promise.all([
             getHash(prevlink),
