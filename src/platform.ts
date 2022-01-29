@@ -1,5 +1,4 @@
 import { Buffer } from 'ts-ebml/lib/tools';
-import 'web-ext-types';
 import { GM_fetch, GM_head, headerStringToObject } from './requests';
 
 let port: browser.runtime.Port;
