@@ -112,7 +112,7 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             const { domain, file } = m.groups!;
             const headers = await getHeaders(pee);
             const res = await ifetch(pee, {
-                headers: { ranges: 'bytes=0-2048', 'user-agent': '' },
+                headers: { range: 'bytes=0-2048', 'user-agent': '' },
                 mode: 'cors',
                 referrerPolicy: 'no-referrer',
             });

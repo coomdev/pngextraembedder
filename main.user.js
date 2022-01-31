@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.162
+// @version      0.163
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 162];
+      define_BUILD_VERSION_default = [0, 163];
     }
   });
 
@@ -13903,7 +13903,7 @@
         const { domain, file } = m.groups;
         const headers = await getHeaders(pee);
         const res = await ifetch(pee, {
-          headers: { ranges: "bytes=0-2048", "user-agent": "" },
+          headers: { range: "bytes=0-2048", "user-agent": "" },
           mode: "cors",
           referrerPolicy: "no-referrer"
         });
