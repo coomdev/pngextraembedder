@@ -69,7 +69,7 @@ const extract = async (b: Buffer, fn?: string) => {
                 //404
             }
         },
-        thumbnail
+        thumbnail: Buffer.from(thumbnail)
     } as EmbeddedFile];
 };
 
