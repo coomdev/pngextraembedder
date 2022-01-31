@@ -1,5 +1,5 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
-import type { Buffer } from "buffer";
+import { Buffer } from "buffer";
 import thumbnail from "./assets/hasembed.png";
 import { settings } from "./stores";
 import { getHeaders, ifetch, Platform } from "./platform";
@@ -64,7 +64,7 @@ const extract = async (b: Buffer, fn?: string) => {
         filename: ext,
         data: csettings.hotlink ? rsource! : async (lsn) => {
             try {
-                return (await ifetch(rsource, undefined, lsn)).arrayBuffer();
+                return Buffer.from(await (await ifetch(rsource, undefined, lsn)).arrayBuffer());
             } catch (e) {
                 //404
             }
