@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.165
+// @version      0.166
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 165];
+      define_BUILD_VERSION_default = [0, 166];
     }
   });
 
@@ -14642,7 +14642,7 @@
         } catch (e) {
         }
       },
-      thumbnail: hasembed_default
+      thumbnail: import_buffer8.Buffer.from(hasembed_default)
     }];
   };
   var has_embed5 = async (b, fn) => {
