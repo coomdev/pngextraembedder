@@ -62,6 +62,7 @@
       if (!type) return
     } else {
       let head = await getHeaders(thumb)
+      url = thumb;
       type = {
         ext: '' as any,
         mime: head['content-type'].split(';')[0].trim() as any,
