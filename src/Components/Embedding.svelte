@@ -135,6 +135,7 @@
       }
     }
     if (!type) return
+    ftype = type.mime;
     isVideo = type.mime.startsWith('video/')
     isAudio = type.mime.startsWith('audio/')
     isImage = type.mime.startsWith('image/')
@@ -301,8 +302,8 @@
   <div
     class:contract={contracted}
     class="place"
-    on:click={(e) => e.preventDefault()}
-    on:auxclick={(e) => e.preventDefault()}
+    on:click={e => e.preventDefault()}
+    on:auxclick={e => e.preventDefault()}
     on:mousedown={bepis}
     on:mouseover={hoverStart}
     on:mouseout={hoverStop}
@@ -337,8 +338,9 @@
         referrerpolicy="no-referrer"
         loop={$settings.loop}
         bind:this={videoElem}
-        src={furl || url}
-      />
+      >
+        <source referrerpolicy="no-referrer" src={furl || url} />
+      </video>
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
     {#if isText}
@@ -362,16 +364,13 @@
       >{/if}
 
     {#if isImage}
-      <img referrerpolicy="no-referrer" alt={file.filename} src={furl || url} />
+      <img alt={file.filename} src={furl || url} />
     {/if}
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
-      <video
-        referrerpolicy="no-referrer"
-        loop={$settings.loop}
-        bind:this={hoverVideo}
-        src={furl || url}
-      />
+      <video loop={$settings.loop} bind:this={hoverVideo}>
+        <source src={furl || url} />
+      </video>
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
   </div>

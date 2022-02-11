@@ -408,6 +408,9 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
 const customStyles = document.createElement('style');
 customStyles.appendChild(document.createTextNode(globalCss));
 document.documentElement.insertBefore(customStyles, null);
+const meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
+meta.setAttribute('name', 'referrer');
+meta.setAttribute('content', 'no-referrer');
 
 function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][]) {
     if (ress.length == 0)

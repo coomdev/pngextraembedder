@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.167
+// @version      0.168
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 167];
+      define_BUILD_VERSION_default = [0, 168];
     }
   });
 
@@ -19596,27 +19596,31 @@
   }
   function create_if_block_5(ctx) {
     let video;
+    let source;
+    let source_src_value;
     let video_loop_value;
-    let video_src_value;
     return {
       c() {
         video = element("video");
+        source = element("source");
+        attr(source, "referrerpolicy", "no-referrer");
+        if (!src_url_equal(source.src, source_src_value = ctx[15] || ctx[6]))
+          attr(source, "src", source_src_value);
         attr(video, "referrerpolicy", "no-referrer");
         video.loop = video_loop_value = ctx[20].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[15] || ctx[6]))
-          attr(video, "src", video_src_value);
         attr(video, "class", "svelte-1uaoklw");
       },
       m(target, anchor) {
         insert(target, video, anchor);
+        append(video, source);
         ctx[30](video);
       },
       p(ctx2, dirty) {
+        if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
+          attr(source, "src", source_src_value);
+        }
         if (dirty[0] & 1048576 && video_loop_value !== (video_loop_value = ctx2[20].loop)) {
           video.loop = video_loop_value;
-        }
-        if (dirty[0] & 32832 && !src_url_equal(video.src, video_src_value = ctx2[15] || ctx2[6])) {
-          attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
@@ -19759,7 +19763,6 @@
     return {
       c() {
         img = element("img");
-        attr(img, "referrerpolicy", "no-referrer");
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[15] || ctx[6]))
           attr(img, "src", img_src_value);
@@ -19784,27 +19787,29 @@
   }
   function create_if_block_12(ctx) {
     let video;
+    let source;
+    let source_src_value;
     let video_loop_value;
-    let video_src_value;
     return {
       c() {
         video = element("video");
-        attr(video, "referrerpolicy", "no-referrer");
+        source = element("source");
+        if (!src_url_equal(source.src, source_src_value = ctx[15] || ctx[6]))
+          attr(source, "src", source_src_value);
         video.loop = video_loop_value = ctx[20].loop;
-        if (!src_url_equal(video.src, video_src_value = ctx[15] || ctx[6]))
-          attr(video, "src", video_src_value);
         attr(video, "class", "svelte-1uaoklw");
       },
       m(target, anchor) {
         insert(target, video, anchor);
+        append(video, source);
         ctx[32](video);
       },
       p(ctx2, dirty) {
+        if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
+          attr(source, "src", source_src_value);
+        }
         if (dirty[0] & 1048576 && video_loop_value !== (video_loop_value = ctx2[20].loop)) {
           video.loop = video_loop_value;
-        }
-        if (dirty[0] & 32832 && !src_url_equal(video.src, video_src_value = ctx2[15] || ctx2[6])) {
-          attr(video, "src", video_src_value);
         }
       },
       d(detaching) {
@@ -19980,6 +19985,7 @@
       }
       if (!type)
         return;
+      $$invalidate(9, ftype = type.mime);
       $$invalidate(2, isVideo = type.mime.startsWith("video/"));
       $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(3, isImage = type.mime.startsWith("image/"));
@@ -21302,6 +21308,9 @@
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
+  var meta = document.querySelector('meta[name="referrer"]');
+  meta.setAttribute("name", "referrer");
+  meta.setAttribute("content", "no-referrer");
   function processAttachments(post, ress) {
     if (ress.length == 0)
       return;
