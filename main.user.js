@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.169
+// @version      0.170
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 169];
+      define_BUILD_VERSION_default = [0, 170];
     }
   });
 
@@ -21308,6 +21308,9 @@
   var customStyles = document.createElement("style");
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
+  var meta = document.querySelector('meta[name="referrer"]');
+  meta.setAttribute("name", "referrer");
+  meta.setAttribute("content", "no-referrer");
   function processAttachments(post, ress) {
     if (ress.length == 0)
       return;
