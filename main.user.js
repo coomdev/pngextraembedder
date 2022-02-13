@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.170
+// @version      0.171
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 170];
+      define_BUILD_VERSION_default = [0, 171];
     }
   });
 
@@ -19606,6 +19606,7 @@
         attr(source, "referrerpolicy", "no-referrer");
         if (!src_url_equal(source.src, source_src_value = ctx[15] || ctx[6]))
           attr(source, "src", source_src_value);
+        attr(video, "type", ctx[9]);
         attr(video, "referrerpolicy", "no-referrer");
         video.loop = video_loop_value = ctx[20].loop;
         attr(video, "class", "svelte-1uaoklw");
@@ -19618,6 +19619,9 @@
       p(ctx2, dirty) {
         if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
           attr(source, "src", source_src_value);
+        }
+        if (dirty[0] & 512) {
+          attr(video, "type", ctx2[9]);
         }
         if (dirty[0] & 1048576 && video_loop_value !== (video_loop_value = ctx2[20].loop)) {
           video.loop = video_loop_value;
@@ -19794,8 +19798,10 @@
       c() {
         video = element("video");
         source = element("source");
+        attr(source, "type", ctx[9]);
         if (!src_url_equal(source.src, source_src_value = ctx[15] || ctx[6]))
           attr(source, "src", source_src_value);
+        attr(source, "data-test", "");
         video.loop = video_loop_value = ctx[20].loop;
         attr(video, "class", "svelte-1uaoklw");
       },
@@ -19805,6 +19811,9 @@
         ctx[32](video);
       },
       p(ctx2, dirty) {
+        if (dirty[0] & 512) {
+          attr(source, "type", ctx2[9]);
+        }
         if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
           attr(source, "src", source_src_value);
         }
@@ -21178,6 +21187,11 @@
     };
   };
   var startup = async (is4chanX = true) => {
+    const meta2 = document.querySelector('meta[name="referrer"]');
+    if (meta2) {
+      meta2.setAttribute("name", "referrer");
+      meta2.setAttribute("content", "no-referrer");
+    }
     appState.set({ ...cappState, is4chanX });
     const lqp = getQueryProcessor(is4chanX);
     if (!lqp)
@@ -21309,8 +21323,10 @@
   customStyles.appendChild(document.createTextNode(global_default));
   document.documentElement.insertBefore(customStyles, null);
   var meta = document.querySelector('meta[name="referrer"]');
-  meta.setAttribute("name", "referrer");
-  meta.setAttribute("content", "no-referrer");
+  if (meta) {
+    meta.setAttribute("name", "referrer");
+    meta.setAttribute("content", "no-referrer");
+  }
   function processAttachments(post, ress) {
     if (ress.length == 0)
       return;

@@ -2,10 +2,10 @@ import { Buffer } from "buffer";
 import { appState, settings } from "./stores";
 import globalCss from './global.css';
 
-import pngv3, { inject_data } from "./pngv3";
+import pngv3 from "./pngv3";
 import webm from "./webm";
 import gif from "./gif";
-import jpg, { convertToPng } from "./jpg";
+import jpg from "./jpg";
 import thirdeye from "./thirdeye";
 import pomf from "./pomf";
 
@@ -17,11 +17,9 @@ import SettingsButton from './Components/SettingsButton.svelte';
 import Embeddings from './Components/Embeddings.svelte';
 import EyeButton from './Components/EyeButton.svelte';
 import NotificationsHandler from './Components/NotificationsHandler.svelte';
-import { buildPeeFile, fireNotification } from "./utils";
-import { fileTypeFromBuffer } from "file-type";
+import { fireNotification } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
-import { lolisafe } from "./filehosts";
-import { ifetch, Platform, streamRemote, supportedAltDomain } from "./platform";
+import { ifetch, streamRemote, supportedAltDomain } from "./platform";
 
 export interface ImageProcessor {
     skip?: true;
@@ -253,6 +251,13 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
 };
 
 const startup = async (is4chanX = true) => {
+    const meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
+
+    if (meta) {
+        meta.setAttribute('name', 'referrer');
+        meta.setAttribute('content', 'no-referrer');
+    }
+
     appState.set({ ...cappState, is4chanX });
     const lqp = getQueryProcessor(is4chanX);
     if (!lqp)
@@ -409,8 +414,11 @@ const customStyles = document.createElement('style');
 customStyles.appendChild(document.createTextNode(globalCss));
 document.documentElement.insertBefore(customStyles, null);
 const meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
-meta.setAttribute('name', 'referrer');
-meta.setAttribute('content', 'no-referrer');
+
+if (meta) {
+    meta.setAttribute('name', 'referrer');
+    meta.setAttribute('content', 'no-referrer');
+}
 
 function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][]) {
     if (ress.length == 0)

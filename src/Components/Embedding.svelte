@@ -335,6 +335,7 @@
       <!-- svelte-ignore a11y-media-has-caption -->
       <!-- svelte-ignore a11y-missing-attribute -->
       <video
+        type={ftype}
         referrerpolicy="no-referrer"
         loop={$settings.loop}
         bind:this={videoElem}
@@ -369,7 +370,7 @@
     {#if isVideo}
       <!-- svelte-ignore a11y-media-has-caption -->
       <video loop={$settings.loop} bind:this={hoverVideo}>
-        <source src={furl || url} />
+        <source type={ftype} src={furl || url} data-test />
       </video>
       <!-- assoom videos will never be loaded from thumbnails -->
     {/if}
