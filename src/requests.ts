@@ -35,8 +35,11 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
 
 export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) => {
     function blobTo(to: string, blob: Blob) {
-        if (to == "arrayBuffer" && blob.arrayBuffer)
-            return blob.arrayBuffer();
+        if (to == "arrayBuffer" && blob.arrayBuffer) {
+            const ret = blob.arrayBuffer(); // Fuck TM
+            if (ret)
+                return ret;
+        }
         return new Promise((resolve, reject) => {
             const fileReader = new FileReader();
             fileReader.onload = function (event) {

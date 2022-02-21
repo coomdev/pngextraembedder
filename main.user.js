@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.171
+// @version      0.172
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 171];
+      define_BUILD_VERSION_default = [0, 172];
     }
   });
 
@@ -13579,8 +13579,11 @@
   }
   var GM_fetch = (...[url, opt, lisn]) => {
     function blobTo(to, blob) {
-      if (to == "arrayBuffer" && blob.arrayBuffer)
-        return blob.arrayBuffer();
+      if (to == "arrayBuffer" && blob.arrayBuffer) {
+        const ret = blob.arrayBuffer();
+        if (ret)
+          return ret;
+      }
       return new Promise((resolve, reject) => {
         const fileReader = new FileReader();
         fileReader.onload = function(event) {
@@ -14460,14 +14463,20 @@
   settings.subscribe((b) => {
     csettings3 = b;
   });
-  var gelquirk = (prefix) => (a) => (a.post || a.data || a).map((e) => ({
-    full_url: e.file_url,
-    preview_url: e.preview_url || e.preview_url,
-    source: e.source,
-    ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
-    page: `${prefix}${e.id || e.parent_id}`,
-    tags: (e.tag_string || (e.tags && (Array.isArray(e.tags) && (typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" "))) || e.tags) || "").split(" ")
-  })) || [];
+  var gelquirk = (prefix) => (a) => {
+    let base = a.post || a.data || a;
+    if (!Array.isArray(base))
+      return [];
+    base = base.filter((e) => e.file_url);
+    return base.map((e) => ({
+      full_url: e.file_url,
+      preview_url: e.preview_url || e.preview_url,
+      source: e.source,
+      ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf(".") + 1),
+      page: `${prefix}${e.id || e.parent_id}`,
+      tags: (e.tag_string || (e.tags && (Array.isArray(e.tags) && (typeof e.tags[0] == "string" ? e.tags.join(" ") : e.tags.map((e2) => e2.name_en).join(" "))) || e.tags) || "").split(" ")
+    })) || [];
+  };
   var experimentalApi = false;
   var black = /* @__PURE__ */ new Set();
   var phashEn = false;
@@ -14499,7 +14508,9 @@
         cache[b.domain] = {};
       cache[b.domain][hex] = tran;
       return tran;
-    } catch {
+    } catch (e) {
+      console.error("The following error might be expected");
+      console.error(e);
       return [];
     }
   };

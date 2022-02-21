@@ -38,18 +38,22 @@ function firstThatFor<T>(promises: Promise<T>[], pred: (v: T) => boolean) {
     }));
 }
 
-const gelquirk: (s: string) => tran = prefix => (a =>
-    (a.post || a.data || a).map((e: any) => ({
+const gelquirk: (s: string) => tran = prefix => (a => {
+    let base = (a.post || a.data || a);
+    if (!Array.isArray(base))
+        return [];
+    base = base.filter(e => e.file_url);
+    return base.map((e: any) => ({
         full_url: e.file_url,
         preview_url: e.preview_url || e.preview_url,
         source: e.source,
-
         ext: e.file_ext || e.file_url.substr(e.file_url.lastIndexOf('.') + 1),
         page: `${prefix}${(e.id || e.parent_id)}`,
         tags: (e.tag_string || (e.tags
             && (Array.isArray(e.tags)
                 && (typeof e.tags[0] == "string" ? e.tags.join(' ') : e.tags.map((e: any) => e.name_en).join(' '))) || e.tags) || '').split(' ')
-    } as BooruMatch)) || []);
+    } as BooruMatch)) || [];
+});
 
 let experimentalApi = false;
 let black = new Set<string>();
@@ -137,7 +141,9 @@ const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
             cache[b.domain] = {};
         cache[b.domain][hex] = tran;
         return tran;
-    } catch {
+    } catch(e) {
+        console.error('The following error might be expected');
+        console.error(e);
         return [];
     }
 };
