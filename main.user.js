@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.172
+// @version      0.173
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 172];
+      define_BUILD_VERSION_default = [0, 173];
     }
   });
 
@@ -14599,8 +14599,7 @@
   var sources = [
     { host: "Catbox", prefix: "files.catbox.moe/" },
     { host: "Litter", prefix: "litter.catbox.moe/" },
-    { host: "Zzzz", prefix: "z.zz.fo/" },
-    { host: "Pomf", prefix: "a.pomf.cat/" }
+    { host: "Zzzz", prefix: "z.zz.fo/" }
   ];
   var csettings4;
   settings.subscribe((b) => {

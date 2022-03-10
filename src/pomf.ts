@@ -7,8 +7,7 @@ import { getHeaders, ifetch, Platform } from "./platform";
 const sources = [
     { host: 'Catbox', prefix: 'files.catbox.moe/' },
     { host: 'Litter', prefix: 'litter.catbox.moe/' },
-    { host: 'Zzzz', prefix: 'z.zz.fo/' },
-    { host: 'Pomf', prefix: 'a.pomf.cat/' },
+    { host: 'Zzzz', prefix: 'z.zz.fo/' }
 ];
 
 export let csettings: Parameters<typeof settings['set']>[0];
