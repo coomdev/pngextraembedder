@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import type { ImageProcessor } from "./main";
+import type { EmbeddedFile, ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
 import { buildPeeFile, decodeCoom3Payload, fireNotification, uploadFiles } from "./utils";
 
@@ -18,6 +18,8 @@ const BufferReadStream = (b: Buffer) => {
 const extract = async (png: Buffer) => {
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
+    const ret: EmbeddedFile[] = [];
+
     try {
         for await (const [name, chunk, crc, offset] of sneed.chunks()) {
             let buff: Buffer;
@@ -26,13 +28,14 @@ const extract = async (png: Buffer) => {
                 case 'tEXt':
                     buff = await chunk();
                     if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
-                        return await decodeCoom3Payload(buff.slice(4 + CUM3.length));
+                        const k = await decodeCoom3Payload(buff.slice(4 + CUM3.length));
+                        ret.push(...k.filter(e => e).map(e => e as EmbeddedFile));
                     }
                     break;
                 case 'IDAT':
                 // eslint-disable-next-line no-fallthrough
                 case 'IEND':
-                    return;
+                    return ret;
                 // eslint-disable-next-line no-fallthrough
                 default:
                     break;

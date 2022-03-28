@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.173
+// @version      0.174
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 173];
+      define_BUILD_VERSION_default = [0, 174];
     }
   });
 
@@ -14002,6 +14002,7 @@
   var extract = async (png) => {
     const reader = BufferReadStream(png).getReader();
     const sneed = new PNGDecoder(reader);
+    const ret = [];
     try {
       for await (const [name, chunk, crc, offset] of sneed.chunks()) {
         let buff;
@@ -14009,12 +14010,13 @@
           case "tEXt":
             buff = await chunk();
             if (buff.slice(4, 4 + CUM3.length).equals(CUM3)) {
-              return await decodeCoom3Payload(buff.slice(4 + CUM3.length));
+              const k = await decodeCoom3Payload(buff.slice(4 + CUM3.length));
+              ret.push(...k.filter((e) => e).map((e) => e));
             }
             break;
           case "IDAT":
           case "IEND":
-            return;
+            return ret;
           default:
             break;
         }
