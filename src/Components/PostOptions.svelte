@@ -7,7 +7,7 @@
   export let processors: ImageProcessor[] = []
   export let textinput: HTMLTextAreaElement
 
-  let files: File[] = []
+  export let files: File[] = []
 
   const addContent = (...newfiles: File[]) => {
     files = [...files, ...newfiles]
@@ -51,6 +51,7 @@
           detail: { file: new Blob([buff], { type }), name: file.name },
         }),
       )
+      files = [];
       fireNotification(
         'success',
         `File${files.length > 1 ? 's' : ''} successfully embedded!`,

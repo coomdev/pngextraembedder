@@ -392,10 +392,26 @@ document.addEventListener('ThreadUpdate', <any>(async (e: CustomEvent<any>) => {
 document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>) => {
     const a = document.createElement('span');
 
-    new PostOptions({
+    const po = new PostOptions({
         target: a,
         props: { processors, textinput: (e.detail || e.target).querySelector('textarea')! }
     });
+
+    const checkEvent = (e: Event) => {
+        if ((po as any).files.length > 0) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            fireNotification("error", "You have files you forgot to embed!");
+            return false;
+        }
+    };
+
+    document.addEventListener("keydown", (e) => {
+        if (e.ctrlKey && (e.key == "Enter" || e.keyCode == 13)) {
+            return checkEvent(e);
+        }
+    }, true);
 
     let target;
     if (!cappState.is4chanX) {
@@ -406,6 +422,23 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
     else {
         target = e.target as HTMLDivElement;
         target.querySelector('#qr-filename-container')?.appendChild(a);
+        const sub = target.querySelector("input[type=submit]") as HTMLElement;
+
+        sub.addEventListener("click", checkEvent, true);
+
+        const obs = new MutationObserver((m) => {
+            for (const r of m) {
+                switch (r.type) {
+                    case "attributes":
+                        break;
+                    case "characterData":
+                        break;
+                }
+            }
+        });
+        obs.observe(sub, {
+            attributes: true
+        });
     }
 
 }), { once: !cappState!.is4chanX }); // 4chan's normal extension destroys the QR form everytime

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.174
+// @version      0.175
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 174];
+      define_BUILD_VERSION_default = [0, 175];
     }
   });
 
@@ -17312,7 +17312,7 @@
     component_subscribe($$self, appState, ($$value) => $$invalidate(1, $appState = $$value));
     let { processors: processors2 = [] } = $$props;
     let { textinput } = $$props;
-    let files = [];
+    let { files = [] } = $$props;
     const addContent = (...newfiles) => {
       $$invalidate(0, files = [...files, ...newfiles]);
       if (files.length > $settings.maxe) {
@@ -17346,6 +17346,7 @@
             name: file.name
           }
         }));
+        $$invalidate(0, files = []);
         fireNotification("success", `File${files.length > 1 ? "s" : ""} successfully embedded!`);
       } catch (err) {
         const e2 = err;
@@ -17369,6 +17370,8 @@
         $$invalidate(6, processors2 = $$props2.processors);
       if ("textinput" in $$props2)
         $$invalidate(5, textinput = $$props2.textinput);
+      if ("files" in $$props2)
+        $$invalidate(0, files = $$props2.files);
     };
     return [
       files,
@@ -17384,7 +17387,7 @@
   var PostOptions = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance9, create_fragment9, safe_not_equal, { processors: 6, textinput: 5 }, add_css8);
+      init(this, options, instance9, create_fragment9, safe_not_equal, { processors: 6, textinput: 5, files: 0 }, add_css8);
     }
     get processors() {
       return this.$$.ctx[6];
@@ -17398,6 +17401,13 @@
     }
     set textinput(textinput) {
       this.$$set({ textinput });
+      flush();
+    }
+    get files() {
+      return this.$$.ctx[0];
+    }
+    set files(files) {
+      this.$$set({ files });
       flush();
     }
   };
@@ -21317,10 +21327,21 @@
   });
   document.addEventListener("QRDialogCreation", (e) => {
     const a = document.createElement("span");
-    new PostOptions_default({
+    const po = new PostOptions_default({
       target: a,
       props: { processors, textinput: (e.detail || e.target).querySelector("textarea") }
     });
+    document.addEventListener("keydown", (e2) => {
+      if (e2.ctrlKey && (e2.key == "Enter" || e2.keyCode == 13)) {
+        if (po.files.length > 0) {
+          e2.preventDefault();
+          e2.stopImmediatePropagation();
+          e2.stopPropagation();
+          fireNotification("error", "You have files you forgot to embed!", 3e3);
+          return false;
+        }
+      }
+    }, true);
     let target;
     if (!cappState.is4chanX) {
       target = e.detail;
@@ -21329,6 +21350,29 @@
     } else {
       target = e.target;
       target.querySelector("#qr-filename-container")?.appendChild(a);
+      const sub = target.querySelector("input[type=submit]");
+      sub.addEventListener("click", (e2) => {
+        if (po.files.length > 0) {
+          e2.preventDefault();
+          e2.stopImmediatePropagation();
+          e2.stopPropagation();
+          fireNotification("error", "You have files you forgot to embed!", 3e3);
+          return false;
+        }
+      }, true);
+      const obs = new MutationObserver((m) => {
+        for (const r of m) {
+          switch (r.type) {
+            case "attributes":
+              break;
+            case "characterData":
+              break;
+          }
+        }
+      });
+      obs.observe(sub, {
+        attributes: true
+      });
     }
   }, { once: !cappState.is4chanX });
   var customStyles = document.createElement("style");
