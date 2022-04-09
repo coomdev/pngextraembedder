@@ -1,6 +1,8 @@
 PNG Extra Embedder (PEE)
 ========================
 
+❗🔴🔥⚠️**Aussies: catbox is being censored by your ISP/Government, switch DNS or hang your politicians**⚠️🔥🔴❗
+
 *Subsequently 'lolipiss' (**LOL** **I** **p**Want **i**To **s**Kill **s**Jannies)*
 
 Can embed any file in a PNG/WebM/GIF and upload it to a third-party host through 4chan.
