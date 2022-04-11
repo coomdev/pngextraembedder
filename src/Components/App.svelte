@@ -1,55 +1,71 @@
 <script lang="ts">
-  import { hasContext, onDestroy } from 'svelte'
-  import Dialog from './Dialog.svelte'
+  import { hasContext, onDestroy } from "svelte";
+  import Dialog from "./Dialog.svelte";
 
-  import Tag from './Tag.svelte'
-  import type { Booru } from '../thirdeye'
-  import Tabs from './Tabs.svelte'
-  import TabList from './TabList.svelte'
-  import Tab from './Tab.svelte'
-  import TabPanel from './TabPanel.svelte'
+  import Tag from "./Tag.svelte";
+  import type { Booru } from "../thirdeye";
+  import Tabs from "./Tabs.svelte";
+  import TabList from "./TabList.svelte";
+  import Tab from "./Tab.svelte";
+  import TabPanel from "./TabPanel.svelte";
 
-  import { settings } from '../stores'
-  import { filehosts } from '../filehosts'
+  import { settings } from "../stores";
+  import { filehosts } from "../filehosts";
+  import { appState } from "../../dist/stores";
 
-  let newbooru: Partial<Omit<Booru, 'quirks'> & { view: string }> = {}
-  let dial: Dialog
+  let newbooru: Partial<Omit<Booru, "quirks"> & { view: string }> = {};
+  let dial: Dialog;
 
   function appendBooru() {
-    $settings.rsources = [...$settings.rsources, newbooru as any]
-    dial.toggle()
-    newbooru = {}
+    $settings.rsources = [...$settings.rsources, newbooru as any];
+    dial.toggle();
+    newbooru = {};
   }
 
-  let visible = false
+  let visible = false;
   let penisEvent = () => {
-    console.log('bepis')
-    visible = !visible
-  }
-  document.addEventListener('penis', penisEvent)
-  console.log('app loaded')
+    visible = !visible;
+  };
+  document.addEventListener("penis", penisEvent);
+  console.log("app loaded");
 
   function removeTag(t: string) {
-    $settings.blacklist = $settings.blacklist.filter((e: any) => e != t)
+    $settings.blacklist = $settings.blacklist.filter((e: any) => e != t);
   }
 
   function removeBooru(t: string) {
-    const idx = $settings.rsources.findIndex((e) => e.domain == t)
-    const rep = prompt("You DO know what you're doing, right? (type 'y')")
-    if (!rep || rep != 'y') return
-    if (idx >= 0) $settings.rsources.splice(idx, 1)
-    $settings.rsources = $settings.rsources
+    const idx = $settings.rsources.findIndex((e) => e.domain == t);
+    const rep = prompt("You DO know what you're doing, right? (type 'y')");
+    if (!rep || rep != "y") return;
+    if (idx >= 0) $settings.rsources.splice(idx, 1);
+    $settings.rsources = $settings.rsources;
+  }
+
+  const boardname = location.pathname.match(/\/([^/]*)\//)![1];
+  let updating = false;
+  let threads: { id: number; cnt: number }[] = [];
+  async function updateThreads() {
+    updating = true;
+    let params = "";
+    if ($settings.phash) {
+      params = "?mdist" + $settings.mdist;
+    }
+    let res = await fetch(
+      "https://shoujo.coom.tech/listing/" + boardname + params
+    );
+    threads = await res.json();
+    updating = false;
   }
 
   function toggleBooru(t: string) {
-    const elem = $settings.rsources.find((e) => e.domain == t)
-    if (elem) elem.disabled = !elem.disabled
-    $settings.rsources = $settings.rsources
+    const elem = $settings.rsources.find((e) => e.domain == t);
+    if (elem) elem.disabled = !elem.disabled;
+    $settings.rsources = $settings.rsources;
   }
 
   onDestroy(() => {
-    document.removeEventListener('penis', penisEvent)
-  })
+    document.removeEventListener("penis", penisEvent);
+  });
 </script>
 
 <div class="backpanel" class:enabled={visible} class:disabled={!visible}>
@@ -61,6 +77,7 @@
         <Tab>General</Tab>
         <Tab>External</Tab>
         <Tab>File Host</Tab>
+        <Tab>Thread Watcher</Tab>
       </TabList>
       <TabPanel>
         <label>
@@ -152,15 +169,15 @@
                 on:toggle={() => toggleBooru(source.domain)}
                 toggleable={true}
                 toggled={!$settings.rsources.find(
-                  (e) => e.domain == source.domain,
+                  (e) => e.domain == source.domain
                 )?.disabled}
               />
             {/each}
           </div>
           <button
             on:click={(ev) => {
-              dial.setPos([ev.clientX, ev.clientY])
-              dial.toggle()
+              dial.setPos([ev.clientX, ev.clientY]);
+              dial.toggle();
             }}>Add a source</button
           >
           <Dialog bind:this={dial}>
@@ -211,12 +228,12 @@
           <input
             placeholder="Press enter after typing your tag"
             on:keydown={(ev) => {
-              if (ev.key == 'Enter') {
+              if (ev.key == "Enter") {
                 $settings.blacklist = [
                   ...$settings.blacklist,
                   ev.currentTarget.value,
-                ]
-                ev.currentTarget.value = ''
+                ];
+                ev.currentTarget.value = "";
               }
             }}
           />
@@ -234,11 +251,46 @@
           <input type="number" bind:value={$settings.maxe} />
         </label>
       </TabPanel>
+      <TabPanel>
+        <label>
+          <input type="checkbox" bind:checked={$settings.tm} />
+          <!-- svelte-ignore a11y-missing-attribute -->
+          Contribute to help keep this list up to date. [<a
+            title="This will make PEE automatically send the
+           post number of posts you find with embedded content">?</a
+          >]
+        </label>
+
+        <button on:click={updateThreads} disabled={updating}>Refresh</button>
+
+        {#if !updating}
+          <div class="bepis">
+            {#each threads as thread}
+              <div class="mbepis">
+                <a
+                  href={"https://boards.4chan.org/" +
+                    boardname +
+                    "/thread/" +
+                    thread.id}>>>{thread.id}</a
+                >
+                ({thread.cnt} embeds)
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <p>Loading...</p>
+        {/if}
+      </TabPanel>
     </Tabs>
   </div>
 </div>
 
 <style scoped>
+  .bepis {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
   .tagcont {
     display: flex;
     gap: 5px;

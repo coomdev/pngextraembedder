@@ -22,6 +22,7 @@ export const settings = writable(localLoad('settingsv2', {
     prev: false,
     sh: false,
     ep: false,
+    tm: false,
     expte: false,
     mdist: -1,
     phash: false,

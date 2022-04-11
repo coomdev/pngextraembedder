@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import { appState, settings } from "./stores";
+import _ from 'lodash';
 import globalCss from './global.css';
 
 import pngv3 from "./pngv3";
@@ -106,6 +107,33 @@ const processImage = async (src: string, fn: string, hex: string, prevurl: strin
 const textToElement = <T = HTMLElement>(s: string) =>
     document.createRange().createContextualFragment(s).children[0] as any as T;
 
+let pendingPosts: { id: number, op: number }[] = [];
+
+const signalNewEmbeds = _.debounce(async () => {
+    // ensure user explicitely enabled telemetry
+    if (!csettings.tm)
+        return;
+    try {
+        const boardname = location.pathname.match(/\/([^/]*)\//)![1];
+        // restructure to minimize redundancy
+        const reshaped = Object.fromEntries([...new Set(pendingPosts.map(e => e.op))].map(e => [e, pendingPosts.filter(p => p.op == e).map(e => e.id)]));
+        console.log(reshaped);
+        
+        const res = await fetch("https://shoujo.coom.tech/listing/" + boardname, {
+            method: "POST",
+            body: JSON.stringify(reshaped),
+            headers: {
+                'content-type': 'application/json'
+            }
+        });
+        await res.json();
+        pendingPosts = [];
+    } catch (e) {
+        // silently fail
+        console.error(e);
+    }
+}, 5000, { trailing: true });
+
 const processPost = async (post: HTMLDivElement) => {
     const origlink = qp.getImageLink(post);
     if (!origlink)
@@ -115,6 +143,17 @@ const processPost = async (post: HTMLDivElement) => {
         return;
     let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink,
         () => {
+            if (csettings.tm) {
+                // dont report results from archive, only live threads
+                if (['boards.4chan.org', 'boards.4channel.org'].includes(location.host)) {
+                    if (!cappState.isCatalog) { // only save from within threads
+                        // we must be in a thread, thus the following is valid
+                        const op = +location.pathname.match(/\/thread\/(.*)/)![1];
+                        pendingPosts.push({id: +(post.id.match(/([0-9]+)/)![1]), op});
+                        signalNewEmbeds(); // let it run async
+                    }
+                }
+            }
             post.querySelector('.post')?.classList.add("embedfound");
         });
     res2 = res2?.filter(e => e);
@@ -149,9 +188,12 @@ function copyTextToClipboard(text: string) {
 }
 
 const scrapeBoard = async (self: HTMLButtonElement) => {
+    if (csettings.tm) {
+        fireNotification("success", "Scrapping board with telemetry on! Thank you for your service, selfless stranger ;_;7");
+    }
     self.disabled = true;
     self.textContent = "Searching...";
-    const boardname = location.pathname.match(/\/(.*)\//)![1];
+    const boardname = location.pathname.match(/\/([^/]*)\//)![1];
     const res = await ifetch(`https://a.4cdn.org/${boardname}/threads.json`);
     const pages = await res.json() as Page[];
     type Page = { threads: Thread[] }
@@ -175,7 +217,7 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     const filenames = threads
         .reduce((a, b) => [...a, ...b.posts.filter(p => p.ext)
             .map(p => p as PostWithFile)], [] as PostWithFile[]).filter(p => p.ext != '.webm' && p.ext != '.gif')
-        .map(p => [p.resto || p.no, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext,] as [number, string, string, string]);
+        .map(p => [p.resto || p.no, `https://i.4cdn.org/${boardname}/${p.tim}${p.ext}`, p.md5, p.filename + p.ext, p.no] as [number, string, string, string, number]);
 
     console.log(filenames);
     fireNotification("info", "Analyzing images...");
@@ -226,6 +268,11 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
                 processed++;
                 if (res.some(e => e)) {
                     hasEmbed.push(post);
+                    // dont report results from archive, only live threads
+                    if (['boards.4chan.org', 'boards.4channel.org'].includes(location.host)) {
+                        pendingPosts.push({ id: post[4], op: post[0] });
+                        signalNewEmbeds(); // let it run async
+                    }
                 }
             } catch (e) {
                 console.log(e);
@@ -528,82 +575,3 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
 
     post.setAttribute('data-processed', "true");
 }
-
-//if ((window as any)['pagemode']) {
-//    onload = () => {
-//        const resbuf = async (s: EmbeddedFile['data']) => typeof s != "string" && (Buffer.isBuffer(s) ? s : await s());
-//        const container = document.getElementById("container") as HTMLInputElement;
-//        container.onchange = async () => {
-//            const api = lolisafe('zz.ht', 'z.zz.fo');
-//            const file = container.files![0];
-//            const blo = new Blob([file], {type: 'application/octet-stream'});
-//            const link = await api.uploadFile(blo);
-//            console.log(link);
-//        };
-//    };
-//}
-//
-////if ((window as any)['pagemode']) {
-//    onload = () => {
-//        const extraction = document.getElementById("extraction") as HTMLInputElement;
-//        extraction.onchange = async () => {
-//            const pee = await convertToPng(extraction.files![0]);
-//            const result = document.getElementById("result") as HTMLImageElement;
-//            const data = await inject_data(new File([pee!], 'image.png', { type: "image/png" }), Buffer.from("coom"));
-//            result.src = URL.createObjectURL(new Blob([data]));
-//        };
-//    };
-//}
-
-//         document.addEventListener("CreateNotification", (e: any) => console.log(e.detail));
-//         console.log("loaded");
-//         //const resbuf = async (s: any) => ((Buffer.isBuffer(s) ? s : await s()));
-//         const container = document.getElementById("container") as HTMLInputElement;
-//         const injection = document.getElementById("injection") as HTMLInputElement;
-//         injection.multiple = true;
-//         extraction.onchange = async () => {
-//             const embedded = await pngv3.extract(Buffer.from(await extraction.files![0].arrayBuffer()));
-//             const d = document.createElement('div');
-//             new Embeddings({
-//                 target: d,
-//                 props: { files: embedded }
-//             });
-//             document.body.append(d);
-//         };
-
-//         container.onchange = injection.onchange = async () => {
-//             console.log('eval changed');
-//             if (container.files?.length && injection.files?.length) {
-//                 const dlr = document.getElementById("dlr") as HTMLAnchorElement;
-//                 //const dle = document.getElementById("dle") as HTMLAnchorElement;
-//                 const res = await pngv3.inject!(container.files[0], [...injection.files]);
-//                 const result = document.getElementById("result") as HTMLImageElement;
-//                 //const extracted = document.getElementById("extracted") as HTMLImageElement;
-//                 const res2 = new Blob([res], { type: (await fileTypeFromBuffer(res))?.mime });
-//                 result.src = URL.createObjectURL(res2);
-//                 dlr.href = result.src;
-//                 console.log('url created');
-//                 //const embedded = await pngv3.extract(res);
-//                 //if (!embedded) {
-//                 //    debugger;
-//                 return;
-//                 //}
-//                 //extracted.src = URL.createObjectURL(new Blob([await resbuf(embedded.data!)]));
-//                 //dle.href = extracted.src;
-//             }
-//         };
-//     };
-// }
-
-// if ((window as any)['pagemode']) {
-//     onload = () => {
-//         document.body.innerHTML = '';
-
-//         new App({
-//             target: document.body
-//         });
-//         setTimeout(() => {
-//             document.dispatchEvent(new CustomEvent("penis"));
-//         }, 30);
-//     };
-// }
