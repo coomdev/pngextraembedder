@@ -49,7 +49,7 @@ export const convertToPng = async (f: File): Promise<Blob | undefined> => {
 const inject = async (b: File, c: File[]) => {
     const pngfile = await convertToPng(b);
     if (!pngfile || pngfile.size > 3000 * 1024) {
-        throw "Couldn't convert file to PNG: resulting filesize too big.";
+        throw new Error("Couldn't convert file to PNG: resulting filesize too big.");
     }
     return pngv3.inject!(new File([pngfile], b.name), c);
 };

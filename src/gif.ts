@@ -48,7 +48,7 @@ const extractBuff = (gif: Buffer) => {
         }
         end = sec.end;
     }
-    throw "Shouldn't happen";
+    throw new Error("Shouldn't happen");
     // metadata ended, nothing...
 };
 
