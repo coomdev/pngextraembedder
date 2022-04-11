@@ -48,7 +48,7 @@
     updating = true;
     let params = "";
     if ($settings.phash) {
-      params = "?mdist" + $settings.mdist;
+      params = "?mdist=" + $settings.mdist;
     }
     let res = await fetch(
       "https://shoujo.coom.tech/listing/" + boardname + params
