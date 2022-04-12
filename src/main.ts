@@ -21,6 +21,7 @@ import NotificationsHandler from './Components/NotificationsHandler.svelte';
 import { fireNotification } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
 import { ifetch, streamRemote, supportedAltDomain } from "./platform";
+import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
 
 export interface ImageProcessor {
     skip?: true;
@@ -118,7 +119,7 @@ const signalNewEmbeds = _.debounce(async () => {
         // restructure to minimize redundancy
         const reshaped = Object.fromEntries([...new Set(pendingPosts.map(e => e.op))].map(e => [e, pendingPosts.filter(p => p.op == e).map(e => e.id)]));
         console.log(reshaped);
-        
+
         const res = await fetch("https://shoujo.coom.tech/listing/" + boardname, {
             method: "POST",
             body: JSON.stringify(reshaped),
@@ -149,7 +150,7 @@ const processPost = async (post: HTMLDivElement) => {
                     if (!cappState.isCatalog) { // only save from within threads
                         // we must be in a thread, thus the following is valid
                         const op = +location.pathname.match(/\/thread\/(.*)/)![1];
-                        pendingPosts.push({id: +(post.id.match(/([0-9]+)/)![1]), op});
+                        pendingPosts.push({ id: +(post.id.match(/([0-9]+)/)![1]), op });
                         signalNewEmbeds(); // let it run async
                     }
                 }
@@ -521,6 +522,9 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     if (!isCatalog) {
         const ft = qp.getFileThumbnail(post);
         const info = qp.getInfoBox(post);
+        const quot = post.querySelector('blockquote');
+        const textInsertCursor = document.createElement('div');
+        quot?.appendChild(textInsertCursor);
         const filehost: HTMLElement | null = ft.querySelector('.filehost');
         const eyehost: HTMLElement | null = info.querySelector('.eyehost');
         const imgcont = filehost || document.createElement('div');
@@ -540,6 +544,15 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
             eyecont.innerHTML = '';
         }
         const id = ~~(Math.random() * 20000000);
+        const text = new TextEmbeddingsSvelte({
+            target: textInsertCursor,
+            props: {
+                files: ress.map(e => e[0]).filter(e =>
+                    Buffer.isBuffer(e.data) && e.filename.endsWith('.txt') && e.filename.startsWith('message')
+                ),
+                id: '' + id
+            }
+        });
         const emb = new Embeddings({
             target: imgcont,
             props: {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.182
+// @version      0.183
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 182];
+      define_BUILD_VERSION_default = [0, 183];
     }
   });
 
@@ -15294,8 +15294,8 @@
         }
         return obj;
       }
-      function _classCallCheck(instance15, Constructor) {
-        if (!(instance15 instanceof Constructor)) {
+      function _classCallCheck(instance16, Constructor) {
+        if (!(instance16 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -18099,9 +18099,6 @@
       tar[k] = src[k];
     return tar;
   }
-  function is_promise(value) {
-    return value && typeof value === "object" && typeof value.then === "function";
-  }
   function run(fn) {
     return fn();
   }
@@ -18429,90 +18426,12 @@
       block.o(local);
     }
   }
-  function handle_promise(promise, info) {
-    const token = info.token = {};
-    function update2(type, index, key, value) {
-      if (info.token !== token)
-        return;
-      info.resolved = value;
-      let child_ctx = info.ctx;
-      if (key !== void 0) {
-        child_ctx = child_ctx.slice();
-        child_ctx[key] = value;
-      }
-      const block = type && (info.current = type)(child_ctx);
-      let needs_flush = false;
-      if (info.block) {
-        if (info.blocks) {
-          info.blocks.forEach((block2, i) => {
-            if (i !== index && block2) {
-              group_outros();
-              transition_out(block2, 1, 1, () => {
-                if (info.blocks[i] === block2) {
-                  info.blocks[i] = null;
-                }
-              });
-              check_outros();
-            }
-          });
-        } else {
-          info.block.d(1);
-        }
-        block.c();
-        transition_in(block, 1);
-        block.m(info.mount(), info.anchor);
-        needs_flush = true;
-      }
-      info.block = block;
-      if (info.blocks)
-        info.blocks[index] = block;
-      if (needs_flush) {
-        flush();
-      }
-    }
-    if (is_promise(promise)) {
-      const current_component2 = get_current_component();
-      promise.then((value) => {
-        set_current_component(current_component2);
-        update2(info.then, 1, info.value, value);
-        set_current_component(null);
-      }, (error) => {
-        set_current_component(current_component2);
-        update2(info.catch, 2, info.error, error);
-        set_current_component(null);
-        if (!info.hasCatch) {
-          throw error;
-        }
-      });
-      if (info.current !== info.pending) {
-        update2(info.pending, 0);
-        return true;
-      }
-    } else {
-      if (info.current !== info.then) {
-        update2(info.then, 1, info.value, promise);
-        return true;
-      }
-      info.resolved = promise;
-    }
-  }
-  function update_await_block_branch(info, ctx, dirty) {
-    const child_ctx = ctx.slice();
-    const { resolved } = info;
-    if (info.current === info.then) {
-      child_ctx[info.value] = resolved;
-    }
-    if (info.current === info.catch) {
-      child_ctx[info.error] = resolved;
-    }
-    info.block.p(child_ctx, dirty);
-  }
   var globals = typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : window;
   function destroy_block(block, lookup) {
     block.d(1);
     lookup.delete(block.key);
   }
-  function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block6, next, get_context) {
+  function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block7, next, get_context) {
     let o = old_blocks.length;
     let n = list.length;
     let i = o;
@@ -18528,7 +18447,7 @@
       const key = get_key(child_ctx);
       let block = lookup.get(key);
       if (!block) {
-        block = create_each_block6(key, child_ctx);
+        block = create_each_block7(key, child_ctx);
         block.c();
       } else if (dynamic) {
         block.p(child_ctx, dirty);
@@ -18615,7 +18534,7 @@
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance15, create_fragment15, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance16, create_fragment16, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -18638,7 +18557,7 @@
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance15 ? instance15(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance16 ? instance16(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -18651,7 +18570,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment15 ? create_fragment15($$.ctx) : false;
+    $$.fragment = create_fragment16 ? create_fragment16($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -19366,7 +19285,10 @@
         const unzip = async (lsn) => import_buffer2.Buffer.from(await (await ifetch(pee, { headers: { "user-agent": "", range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
         let data;
         if (true) {
-          data = size < 3072 ? await unzip() : unzip;
+          data = unzip;
+          if (size < 3072) {
+            thumb = data = await unzip();
+          }
         } else {
           data = `https://loli.piss/${domain}${file}/${ptr}/${size - 1}`;
         }
@@ -25068,26 +24990,60 @@
   // src/Components/Embedding.svelte
   var import_buffer9 = __toESM(require_buffer(), 1);
   function add_css10(target) {
-    append_styles(target, "svelte-1uaoklw", ".place.svelte-1uaoklw.svelte-1uaoklw{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-1uaoklw>img.svelte-1uaoklw{filter:brightness(0.5) blur(10px)}.progress.svelte-1uaoklw.svelte-1uaoklw{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-1uaoklw.svelte-1uaoklw{display:none;position:fixed;pointer-events:none}.visible.svelte-1uaoklw.svelte-1uaoklw{display:block;z-index:9}pre.svelte-1uaoklw.svelte-1uaoklw{padding:10px}.contract.svelte-1uaoklw pre.svelte-1uaoklw{max-width:20ch;text-overflow:ellipsis;overflow:hidden}.contract.svelte-1uaoklw img.svelte-1uaoklw,.contract.svelte-1uaoklw video.svelte-1uaoklw{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-1uaoklw:not(.contract) video.svelte-1uaoklw,.place.svelte-1uaoklw:not(.contract) img.svelte-1uaoklw,.hoverer.svelte-1uaoklw>video.svelte-1uaoklw,.hoverer.svelte-1uaoklw>img.svelte-1uaoklw{max-width:100vw;max-height:100vh}");
+    append_styles(target, "svelte-yvh28x", ".place.svelte-yvh28x.svelte-yvh28x{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-yvh28x>img.svelte-yvh28x{filter:brightness(0.5) blur(10px)}.progress.svelte-yvh28x.svelte-yvh28x{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-yvh28x.svelte-yvh28x{display:none;position:fixed;pointer-events:none}.visible.svelte-yvh28x.svelte-yvh28x{display:block;z-index:9}.contract.svelte-yvh28x img.svelte-yvh28x,.contract.svelte-yvh28x video.svelte-yvh28x{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-yvh28x:not(.contract) video.svelte-yvh28x,.place.svelte-yvh28x:not(.contract) img.svelte-yvh28x,.hoverer.svelte-yvh28x>video.svelte-yvh28x,.hoverer.svelte-yvh28x>img.svelte-yvh28x{max-width:100vw;max-height:100vh}");
   }
   function create_if_block7(ctx) {
+    let if_block_anchor;
+    let if_block = (!ctx[19].eye || ctx[16]) && create_if_block_12(ctx);
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
+      },
+      p(ctx2, dirty) {
+        if (!ctx2[19].eye || ctx2[16]) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block_12(ctx2);
+            if_block.c();
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+      },
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(if_block_anchor);
+      }
+    };
+  }
+  function create_if_block_12(ctx) {
     let div0;
     let t0;
     let t1;
     let t2;
-    let t3;
     let div1;
+    let t3;
     let t4;
-    let t5;
     let mounted;
     let dispose;
     let if_block0 = ctx[3] && create_if_block_7(ctx);
     let if_block1 = ctx[4] && create_if_block_6(ctx);
     let if_block2 = ctx[2] && create_if_block_5(ctx);
-    let if_block3 = ctx[5] && create_if_block_4(ctx);
-    let if_block4 = ctx[18] && create_if_block_32(ctx);
-    let if_block5 = ctx[3] && create_if_block_22(ctx);
-    let if_block6 = ctx[2] && create_if_block_12(ctx);
+    let if_block3 = ctx[17] && create_if_block_4(ctx);
+    let if_block4 = ctx[3] && create_if_block_32(ctx);
+    let if_block5 = ctx[2] && create_if_block_22(ctx);
     return {
       c() {
         div0 = element("div");
@@ -25100,23 +25056,20 @@
         if (if_block2)
           if_block2.c();
         t2 = space();
+        div1 = element("div");
         if (if_block3)
           if_block3.c();
         t3 = space();
-        div1 = element("div");
         if (if_block4)
           if_block4.c();
         t4 = space();
         if (if_block5)
           if_block5.c();
-        t5 = space();
-        if (if_block6)
-          if_block6.c();
-        attr(div0, "class", "place svelte-1uaoklw");
+        attr(div0, "class", "place svelte-yvh28x");
         toggle_class(div0, "contract", ctx[7]);
-        attr(div1, "class", "hoverer svelte-1uaoklw");
+        attr(div1, "class", "hoverer svelte-yvh28x");
         toggle_class(div1, "visible", ctx[8] && ctx[7]);
-        toggle_class(div1, "unzipping", ctx[18]);
+        toggle_class(div1, "unzipping", ctx[17]);
       },
       m(target, anchor) {
         insert(target, div0, anchor);
@@ -25128,30 +25081,27 @@
         append(div0, t1);
         if (if_block2)
           if_block2.m(div0, null);
-        append(div0, t2);
-        if (if_block3)
-          if_block3.m(div0, null);
-        ctx[31](div0);
-        insert(target, t3, anchor);
+        ctx[30](div0);
+        insert(target, t2, anchor);
         insert(target, div1, anchor);
+        if (if_block3)
+          if_block3.m(div1, null);
+        append(div1, t3);
         if (if_block4)
           if_block4.m(div1, null);
         append(div1, t4);
         if (if_block5)
           if_block5.m(div1, null);
-        append(div1, t5);
-        if (if_block6)
-          if_block6.m(div1, null);
-        ctx[33](div1);
+        ctx[32](div1);
         if (!mounted) {
           dispose = [
             listen(div0, "click", click_handler),
             listen(div0, "auxclick", auxclick_handler),
             listen(div0, "mousedown", ctx[1]),
-            listen(div0, "mouseover", ctx[21]),
-            listen(div0, "mouseout", ctx[22]),
-            listen(div0, "mousemove", ctx[23]),
-            listen(div0, "wheel", ctx[24])
+            listen(div0, "mouseover", ctx[20]),
+            listen(div0, "mouseout", ctx[21]),
+            listen(div0, "mousemove", ctx[22]),
+            listen(div0, "wheel", ctx[23])
           ];
           mounted = true;
         }
@@ -25187,28 +25137,28 @@
           } else {
             if_block2 = create_if_block_5(ctx2);
             if_block2.c();
-            if_block2.m(div0, t2);
+            if_block2.m(div0, null);
           }
         } else if (if_block2) {
           if_block2.d(1);
           if_block2 = null;
         }
-        if (ctx2[5]) {
+        if (dirty[0] & 128) {
+          toggle_class(div0, "contract", ctx2[7]);
+        }
+        if (ctx2[17]) {
           if (if_block3) {
             if_block3.p(ctx2, dirty);
           } else {
             if_block3 = create_if_block_4(ctx2);
             if_block3.c();
-            if_block3.m(div0, null);
+            if_block3.m(div1, t3);
           }
         } else if (if_block3) {
           if_block3.d(1);
           if_block3 = null;
         }
-        if (dirty[0] & 128) {
-          toggle_class(div0, "contract", ctx2[7]);
-        }
-        if (ctx2[18]) {
+        if (ctx2[3]) {
           if (if_block4) {
             if_block4.p(ctx2, dirty);
           } else {
@@ -25220,35 +25170,23 @@
           if_block4.d(1);
           if_block4 = null;
         }
-        if (ctx2[3]) {
+        if (ctx2[2]) {
           if (if_block5) {
             if_block5.p(ctx2, dirty);
           } else {
             if_block5 = create_if_block_22(ctx2);
             if_block5.c();
-            if_block5.m(div1, t5);
+            if_block5.m(div1, null);
           }
         } else if (if_block5) {
           if_block5.d(1);
           if_block5 = null;
         }
-        if (ctx2[2]) {
-          if (if_block6) {
-            if_block6.p(ctx2, dirty);
-          } else {
-            if_block6 = create_if_block_12(ctx2);
-            if_block6.c();
-            if_block6.m(div1, null);
-          }
-        } else if (if_block6) {
-          if_block6.d(1);
-          if_block6 = null;
-        }
         if (dirty[0] & 384) {
           toggle_class(div1, "visible", ctx2[8] && ctx2[7]);
         }
-        if (dirty[0] & 262144) {
-          toggle_class(div1, "unzipping", ctx2[18]);
+        if (dirty[0] & 131072) {
+          toggle_class(div1, "unzipping", ctx2[17]);
         }
       },
       d(detaching) {
@@ -25260,20 +25198,18 @@
           if_block1.d();
         if (if_block2)
           if_block2.d();
-        if (if_block3)
-          if_block3.d();
-        ctx[31](null);
+        ctx[30](null);
         if (detaching)
-          detach(t3);
+          detach(t2);
         if (detaching)
           detach(div1);
+        if (if_block3)
+          if_block3.d();
         if (if_block4)
           if_block4.d();
         if (if_block5)
           if_block5.d();
-        if (if_block6)
-          if_block6.d();
-        ctx[33](null);
+        ctx[32](null);
         mounted = false;
         run_all(dispose);
       }
@@ -25290,11 +25226,11 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[15] || ctx[6]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-1uaoklw");
+        attr(img, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, img, anchor);
-        ctx[29](img);
+        ctx[28](img);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 1 && img_alt_value !== (img_alt_value = ctx2[0].filename)) {
@@ -25307,7 +25243,7 @@
       d(detaching) {
         if (detaching)
           detach(img);
-        ctx[29](null);
+        ctx[28](null);
       }
     };
   }
@@ -25329,7 +25265,7 @@
         audio.controls = true;
         if (!src_url_equal(audio.src, audio_src_value = ctx[15] || ctx[6]))
           attr(audio, "src", audio_src_value);
-        audio.loop = audio_loop_value = ctx[20].loop;
+        audio.loop = audio_loop_value = ctx[19].loop;
         attr(audio, "alt", audio_alt_value = ctx[0].filename);
       },
       m(target, anchor) {
@@ -25346,7 +25282,7 @@
         if (dirty[0] & 32832 && !src_url_equal(audio.src, audio_src_value = ctx2[15] || ctx2[6])) {
           attr(audio, "src", audio_src_value);
         }
-        if (dirty[0] & 1048576 && audio_loop_value !== (audio_loop_value = ctx2[20].loop)) {
+        if (dirty[0] & 524288 && audio_loop_value !== (audio_loop_value = ctx2[19].loop)) {
           audio.loop = audio_loop_value;
         }
         if (dirty[0] & 1 && audio_alt_value !== (audio_alt_value = ctx2[0].filename)) {
@@ -25373,13 +25309,13 @@
           attr(source, "src", source_src_value);
         attr(video, "type", ctx[9]);
         attr(video, "referrerpolicy", "no-referrer");
-        video.loop = video_loop_value = ctx[20].loop;
-        attr(video, "class", "svelte-1uaoklw");
+        video.loop = video_loop_value = ctx[19].loop;
+        attr(video, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, video, anchor);
         append(video, source);
-        ctx[30](video);
+        ctx[29](video);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
@@ -25388,111 +25324,24 @@
         if (dirty[0] & 512) {
           attr(video, "type", ctx2[9]);
         }
-        if (dirty[0] & 1048576 && video_loop_value !== (video_loop_value = ctx2[20].loop)) {
+        if (dirty[0] & 524288 && video_loop_value !== (video_loop_value = ctx2[19].loop)) {
           video.loop = video_loop_value;
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[30](null);
+        ctx[29](null);
       }
     };
   }
   function create_if_block_4(ctx) {
-    let await_block_anchor;
-    let promise;
-    let info = {
-      ctx,
-      current: null,
-      token: null,
-      hasCatch: false,
-      pending: create_pending_block,
-      then: create_then_block,
-      catch: create_catch_block,
-      value: 41
-    };
-    handle_promise(promise = ctx[17].text(), info);
-    return {
-      c() {
-        await_block_anchor = empty();
-        info.block.c();
-      },
-      m(target, anchor) {
-        insert(target, await_block_anchor, anchor);
-        info.block.m(target, info.anchor = anchor);
-        info.mount = () => await_block_anchor.parentNode;
-        info.anchor = await_block_anchor;
-      },
-      p(new_ctx, dirty) {
-        ctx = new_ctx;
-        info.ctx = ctx;
-        if (dirty[0] & 131072 && promise !== (promise = ctx[17].text()) && handle_promise(promise, info)) {
-        } else {
-          update_await_block_branch(info, ctx, dirty);
-        }
-      },
-      d(detaching) {
-        if (detaching)
-          detach(await_block_anchor);
-        info.block.d(detaching);
-        info.token = null;
-        info = null;
-      }
-    };
-  }
-  function create_catch_block(ctx) {
-    return { c: noop, m: noop, p: noop, d: noop };
-  }
-  function create_then_block(ctx) {
-    let pre;
-    let t_value = ctx[41] + "";
-    let t;
-    return {
-      c() {
-        pre = element("pre");
-        t = text(t_value);
-        attr(pre, "class", "svelte-1uaoklw");
-      },
-      m(target, anchor) {
-        insert(target, pre, anchor);
-        append(pre, t);
-      },
-      p(ctx2, dirty) {
-        if (dirty[0] & 131072 && t_value !== (t_value = ctx2[41] + ""))
-          set_data(t, t_value);
-      },
-      d(detaching) {
-        if (detaching)
-          detach(pre);
-      }
-    };
-  }
-  function create_pending_block(ctx) {
-    let pre;
-    return {
-      c() {
-        pre = element("pre");
-        pre.textContent = "Loading...";
-        attr(pre, "class", "svelte-1uaoklw");
-      },
-      m(target, anchor) {
-        insert(target, pre, anchor);
-      },
-      p: noop,
-      d(detaching) {
-        if (detaching)
-          detach(pre);
-      }
-    };
-  }
-  function create_if_block_32(ctx) {
     let span;
     let t0;
-    let t1_value = ctx[19][0] + "";
+    let t1_value = ctx[18][0] + "";
     let t1;
     let t2;
-    let t3_value = ctx[19][1] + "";
+    let t3_value = ctx[18][1] + "";
     let t3;
     let t4;
     return {
@@ -25503,7 +25352,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-1uaoklw");
+        attr(span, "class", "progress svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -25514,9 +25363,9 @@
         append(span, t4);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 524288 && t1_value !== (t1_value = ctx2[19][0] + ""))
+        if (dirty[0] & 262144 && t1_value !== (t1_value = ctx2[18][0] + ""))
           set_data(t1, t1_value);
-        if (dirty[0] & 524288 && t3_value !== (t3_value = ctx2[19][1] + ""))
+        if (dirty[0] & 262144 && t3_value !== (t3_value = ctx2[18][1] + ""))
           set_data(t3, t3_value);
       },
       d(detaching) {
@@ -25525,7 +25374,7 @@
       }
     };
   }
-  function create_if_block_22(ctx) {
+  function create_if_block_32(ctx) {
     let img;
     let img_alt_value;
     let img_src_value;
@@ -25535,7 +25384,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[15] || ctx[6]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-1uaoklw");
+        attr(img, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -25554,7 +25403,7 @@
       }
     };
   }
-  function create_if_block_12(ctx) {
+  function create_if_block_22(ctx) {
     let video;
     let source;
     let source_src_value;
@@ -25567,13 +25416,13 @@
         if (!src_url_equal(source.src, source_src_value = ctx[15] || ctx[6]))
           attr(source, "src", source_src_value);
         attr(source, "data-test", "");
-        video.loop = video_loop_value = ctx[20].loop;
-        attr(video, "class", "svelte-1uaoklw");
+        video.loop = video_loop_value = ctx[19].loop;
+        attr(video, "class", "svelte-yvh28x");
       },
       m(target, anchor) {
         insert(target, video, anchor);
         append(video, source);
-        ctx[32](video);
+        ctx[31](video);
       },
       p(ctx2, dirty) {
         if (dirty[0] & 512) {
@@ -25582,20 +25431,20 @@
         if (dirty[0] & 32832 && !src_url_equal(source.src, source_src_value = ctx2[15] || ctx2[6])) {
           attr(source, "src", source_src_value);
         }
-        if (dirty[0] & 1048576 && video_loop_value !== (video_loop_value = ctx2[20].loop)) {
+        if (dirty[0] & 524288 && video_loop_value !== (video_loop_value = ctx2[19].loop)) {
           video.loop = video_loop_value;
         }
       },
       d(detaching) {
         if (detaching)
           detach(video);
-        ctx[32](null);
+        ctx[31](null);
       }
     };
   }
   function create_fragment11(ctx) {
     let if_block_anchor;
-    let if_block = (!ctx[20].eye || ctx[16]) && create_if_block7(ctx);
+    let if_block = !ctx[5] && create_if_block7(ctx);
     return {
       c() {
         if (if_block)
@@ -25608,7 +25457,7 @@
         insert(target, if_block_anchor, anchor);
       },
       p(ctx2, dirty) {
-        if (!ctx2[20].eye || ctx2[16]) {
+        if (!ctx2[5]) {
           if (if_block) {
             if_block.p(ctx2, dirty);
           } else {
@@ -25639,7 +25488,7 @@
   function instance11($$self, $$props, $$invalidate) {
     let $settings;
     let $appState;
-    component_subscribe($$self, settings, ($$value) => $$invalidate(20, $settings = $$value));
+    component_subscribe($$self, settings, ($$value) => $$invalidate(19, $settings = $$value));
     component_subscribe($$self, appState, ($$value) => $$invalidate(37, $appState = $$value));
     const dispatch = createEventDispatcher();
     let { file } = $$props;
@@ -25682,7 +25531,7 @@
         if (!type && file.filename.endsWith(".txt") && file.filename.startsWith("message")) {
           type = { ext: "txt", mime: "text/plain" };
         }
-        $$invalidate(17, content = new Blob([buff], { type: type?.mime }));
+        content = new Blob([buff], { type: type?.mime });
         $$invalidate(6, url = URL.createObjectURL(content));
         if (!type)
           return;
@@ -25736,17 +25585,17 @@
         return;
       let type;
       if (typeof file.data != "string") {
-        $$invalidate(18, unzipping = true);
+        $$invalidate(17, unzipping = true);
         let lisn = new EventTarget();
         lisn.addEventListener("progress", (e) => {
-          $$invalidate(19, progress = e.detail);
+          $$invalidate(18, progress = e.detail);
         });
         let full = import_buffer9.Buffer.isBuffer(file.data) ? file.data : await file.data(lisn);
         type = await fileTypeFromBuffer(full);
         if (!type && file.filename.endsWith(".txt") && file.filename.startsWith("message")) {
           type = { ext: "txt", mime: "text/plain" };
         }
-        $$invalidate(17, content = new Blob([full], { type: type?.mime }));
+        content = new Blob([full], { type: type?.mime });
         $$invalidate(15, furl = URL.createObjectURL(content));
       } else {
         $$invalidate(6, url = file.data);
@@ -25764,7 +25613,7 @@
       $$invalidate(4, isAudio = type.mime.startsWith("audio/"));
       $$invalidate(3, isImage = type.mime.startsWith("image/"));
       $$invalidate(5, isText = type.mime.startsWith("text/plain"));
-      $$invalidate(18, unzipping = false);
+      $$invalidate(17, unzipping = false);
       dispatch("fileinfo", { type });
       if (hovering) {
         setTimeout(async () => {
@@ -25817,10 +25666,8 @@
       const [sw, sh] = getViewport();
       let [iw, ih] = [0, 0];
       if (isImage) {
-        ;
         [iw, ih] = [imgElem.naturalWidth, imgElem.naturalHeight];
       } else if (isVideo) {
-        ;
         [iw, ih] = [videoElem.videoWidth, videoElem.videoHeight];
       }
       let scale = Math.min(1, sw / iw, sh / ih);
@@ -25936,7 +25783,7 @@
       if ("file" in $$props2)
         $$invalidate(0, file = $$props2.file);
       if ("id" in $$props2)
-        $$invalidate(27, id = $$props2.id);
+        $$invalidate(26, id = $$props2.id);
     };
     return [
       file,
@@ -25956,7 +25803,6 @@
       hoverVideo,
       furl,
       visible,
-      content,
       unzipping,
       progress,
       $settings,
@@ -25979,16 +25825,16 @@
     constructor(options) {
       super();
       init(this, options, instance11, create_fragment11, safe_not_equal, {
-        dispatch: 25,
+        dispatch: 24,
         file: 0,
-        isNotChrome: 26,
-        id: 27,
-        isContracted: 28,
+        isNotChrome: 25,
+        id: 26,
+        isContracted: 27,
         bepis: 1
       }, add_css10, [-1, -1]);
     }
     get dispatch() {
-      return this.$$.ctx[25];
+      return this.$$.ctx[24];
     }
     get file() {
       return this.$$.ctx[0];
@@ -25998,17 +25844,17 @@
       flush();
     }
     get isNotChrome() {
-      return this.$$.ctx[26];
+      return this.$$.ctx[25];
     }
     get id() {
-      return this.$$.ctx[27];
+      return this.$$.ctx[26];
     }
     set id(id) {
       this.$$set({ id });
       flush();
     }
     get isContracted() {
-      return this.$$.ctx[28];
+      return this.$$.ctx[27];
     }
     get bepis() {
       return this.$$.ctx[1];
@@ -26699,7 +26545,7 @@
     };
   }
   function instance14($$self, $$props, $$invalidate) {
-    let nots = [];
+    let { nots = [] } = $$props;
     const removeId = (id) => $$invalidate(0, nots = nots.filter((e) => e.id != id));
     let gid2 = 0;
     document.addEventListener("CreateNotification", (e) => {
@@ -26708,12 +26554,23 @@
       setTimeout(() => removeId(id), (e.detail.lifetime || 3) * 1e3);
     });
     const click_handler2 = (not) => removeId(not.id);
+    $$self.$$set = ($$props2) => {
+      if ("nots" in $$props2)
+        $$invalidate(0, nots = $$props2.nots);
+    };
     return [nots, removeId, click_handler2];
   }
   var NotificationsHandler = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance14, create_fragment14, safe_not_equal, {}, add_css12);
+      init(this, options, instance14, create_fragment14, safe_not_equal, { nots: 0 }, add_css12);
+    }
+    get nots() {
+      return this.$$.ctx[0];
+    }
+    set nots(nots) {
+      this.$$set({ nots });
+      flush();
     }
   };
   var NotificationsHandler_default = NotificationsHandler;
@@ -26781,6 +26638,114 @@
     if (document.querySelector('meta[name="generator"]')?.getAttribute("content")?.startsWith("FoolFuuka"))
       return FoolFuuka;
   };
+
+  // src/Components/TextEmbeddings.svelte
+  init_define_BUILD_VERSION();
+  init_esbuild_inject();
+  function add_css13(target) {
+    append_styles(target, "svelte-1yajkn2", ".additionnal.svelte-1yajkn2{border-top:2px dashed;clear:both;margin-top:10px;padding-top:10px}");
+  }
+  function get_each_context6(ctx, list, i) {
+    const child_ctx = ctx.slice();
+    child_ctx[2] = list[i];
+    return child_ctx;
+  }
+  function create_each_block6(ctx) {
+    let div;
+    let t0_value = ctx[2] + "";
+    let t0;
+    let t1;
+    return {
+      c() {
+        div = element("div");
+        t0 = text(t0_value);
+        t1 = space();
+        attr(div, "class", "additionnal svelte-1yajkn2");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+        append(div, t0);
+        append(div, t1);
+      },
+      p: noop,
+      d(detaching) {
+        if (detaching)
+          detach(div);
+      }
+    };
+  }
+  function create_fragment15(ctx) {
+    let each_1_anchor;
+    let each_value = ctx[0];
+    let each_blocks = [];
+    for (let i = 0; i < each_value.length; i += 1) {
+      each_blocks[i] = create_each_block6(get_each_context6(ctx, each_value, i));
+    }
+    return {
+      c() {
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].c();
+        }
+        each_1_anchor = empty();
+      },
+      m(target, anchor) {
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].m(target, anchor);
+        }
+        insert(target, each_1_anchor, anchor);
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & 1) {
+          each_value = ctx2[0];
+          let i;
+          for (i = 0; i < each_value.length; i += 1) {
+            const child_ctx = get_each_context6(ctx2, each_value, i);
+            if (each_blocks[i]) {
+              each_blocks[i].p(child_ctx, dirty);
+            } else {
+              each_blocks[i] = create_each_block6(child_ctx);
+              each_blocks[i].c();
+              each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+            }
+          }
+          for (; i < each_blocks.length; i += 1) {
+            each_blocks[i].d(1);
+          }
+          each_blocks.length = each_value.length;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        destroy_each(each_blocks, detaching);
+        if (detaching)
+          detach(each_1_anchor);
+      }
+    };
+  }
+  function instance15($$self, $$props, $$invalidate) {
+    let { files } = $$props;
+    let contents = files.map((e) => e.data.toString());
+    $$self.$$set = ($$props2) => {
+      if ("files" in $$props2)
+        $$invalidate(1, files = $$props2.files);
+    };
+    return [contents, files];
+  }
+  var TextEmbeddings = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance15, create_fragment15, safe_not_equal, { files: 1 }, add_css13);
+    }
+    get files() {
+      return this.$$.ctx[1];
+    }
+    set files(files) {
+      this.$$set({ files });
+      flush();
+    }
+  };
+  var TextEmbeddings_default = TextEmbeddings;
 
   // src/main.ts
   var qp;
@@ -27176,6 +27141,9 @@
     if (!isCatalog) {
       const ft = qp.getFileThumbnail(post);
       const info = qp.getInfoBox(post);
+      const quot = post.querySelector("blockquote");
+      const textInsertCursor = document.createElement("div");
+      quot?.appendChild(textInsertCursor);
       const filehost = ft.querySelector(".filehost");
       const eyehost = info.querySelector(".eyehost");
       const imgcont = filehost || document.createElement("div");
@@ -27194,6 +27162,13 @@
         eyecont.innerHTML = "";
       }
       const id = ~~(Math.random() * 2e7);
+      const text2 = new TextEmbeddings_default({
+        target: textInsertCursor,
+        props: {
+          files: ress.map((e) => e[0]).filter((e) => import_buffer11.Buffer.isBuffer(e.data) && e.filename.endsWith(".txt") && e.filename.startsWith("message")),
+          id: "" + id
+        }
+      });
       const emb = new Embeddings_default({
         target: imgcont,
         props: {

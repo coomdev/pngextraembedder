@@ -156,7 +156,10 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
                 Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
             let data;
             if (execution_mode == 'userscript') {
-                data = size < 3072 ? await unzip() : unzip;
+                data = unzip;
+                if (size < 3072) {
+                    thumb = data = await unzip();
+                }
             } else {
                 data = `https://loli.piss/${domain}${file}/${ptr}/${size - 1}`;
             }

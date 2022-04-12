@@ -8,7 +8,7 @@
     lifetime: t[2]
   }
 
-  let nots: (Notification & { id: number })[] = []
+  export let nots: (Notification & { id: number })[] = []
 
   const removeId = (id: number) => (nots = nots.filter((e) => e.id != id))
 
