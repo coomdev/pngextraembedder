@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.177
+// @version      0.182
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 177];
+      define_BUILD_VERSION_default = [0, 182];
     }
   });
 
@@ -20025,15 +20025,12 @@
     csettings4 = b;
   });
   var getExt = (fn) => {
-    const isDum = fn.match(/^[a-z0-9]{6}\./i);
     const isB64 = fn.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn.match(/\[.*=(.*)\]/);
     let ext;
     let source;
     try {
-      if (isDum) {
-        ext = fn.split(".").slice(0, -1).join(".");
-      } else if (isB64) {
+      if (isB64) {
         ext = atob(isB64[1]);
       } else if (isExt) {
         ext = decodeURIComponent(isExt[1]);
@@ -22483,7 +22480,7 @@
       $$invalidate(3, updating = true);
       let params = "";
       if ($settings.phash) {
-        params = "?mdist" + $settings.mdist;
+        params = "?mdist=" + $settings.mdist;
       }
       let res = await fetch("https://shoujo.coom.tech/listing/" + boardname + params);
       $$invalidate(4, threads = await res.json());
