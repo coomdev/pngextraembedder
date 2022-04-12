@@ -16,15 +16,13 @@ settings.subscribe(b => {
 });
 
 const getExt = (fn: string) => {
-    const isDum = fn!.match(/^[a-z0-9]{6}\./i);
+//    const isDum = fn!.match(/^[a-z0-9]{6}\./i);
     const isB64 = fn!.match(/^((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=))?\.(gif|jpe?g|png|webm)/);
     const isExt = fn!.match(/\[.*=(.*)\]/);
     let ext;
     let source: string | undefined;
     try {
-        if (isDum) {
-            ext = fn.split('.').slice(0, -1).join('.');
-        } else if (isB64) {
+        if (isB64) {
             ext = atob(isB64[1]);
         } else if (isExt) {
             ext = decodeURIComponent(isExt[1]);
