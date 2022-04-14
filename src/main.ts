@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { appState, settings } from "./stores";
+import { appState, settings, initial_settings } from "./stores";
 import _ from 'lodash';
 import globalCss from './global.css';
 
@@ -33,7 +33,7 @@ export interface ImageProcessor {
 }
 let qp: QueryProcessor;
 
-export let csettings: Parameters<typeof settings['set']>[0];
+export let csettings: Parameters<typeof settings['set']>[0] = initial_settings;
 let processors: ImageProcessor[] =
     [thirdeye, pomf, pngv3, jpg, webm, gif];
 

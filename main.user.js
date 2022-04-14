@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.184
+// @version      0.185
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 184];
+      define_BUILD_VERSION_default = [0, 185];
     }
   });
 
@@ -18705,7 +18705,7 @@
   // src/stores.ts
   var localLoad = (key, def) => "__pee__" + key in localStorage ? JSON.parse(localStorage.getItem("__pee__" + key)) : def;
   var localSet = (key, value) => localStorage.setItem("__pee__" + key, JSON.stringify(value));
-  var settings = writable(localLoad("settingsv2", {
+  var initial_settings = localLoad("settingsv2", {
     ...localLoad("settings", {}),
     loop: true,
     dh: false,
@@ -18778,7 +18778,8 @@
       }
     ],
     ...localLoad("settingsv2", {})
-  }));
+  });
+  var settings = writable(initial_settings);
   var appState = writable({
     isCatalog: false,
     is4chanX: false,
@@ -27653,7 +27654,7 @@
 
   // src/main.ts
   var qp;
-  var csettings5;
+  var csettings5 = initial_settings;
   var processors = [thirdeye_default, pomf_default, pngv3_default, jpg_default, webm_default, gif_default];
   var cappState;
   settings.subscribe(async (b) => {

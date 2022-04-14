@@ -10,7 +10,7 @@ export const localLoad = <T>(key: string, def: T) =>
 const localSet = (key: string, value: any) =>
     localStorage.setItem('__pee__' + key, JSON.stringify(value));
 
-export const settings = writable(localLoad('settingsv2', {
+export const initial_settings = localLoad('settingsv2', {
     ...localLoad('settings', {}),
     loop: true,
     dh: false,
@@ -82,7 +82,9 @@ export const settings = writable(localLoad('settingsv2', {
         view: 'https://booru.allthefallen.moe/posts/'
     }] as (Omit<Booru, 'quirks'> & {view: string, disabled?: boolean})[],
     ...localLoad('settingsv2', {}),
-}));
+});
+
+export const settings = writable(initial_settings);
 
 export const appState = writable({
     isCatalog: false,
