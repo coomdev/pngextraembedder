@@ -29,6 +29,6 @@
 
   .selected {
     border-bottom: 2px solid;
-    color: #333;
+    color: #f6ff76;
   }
 </style>

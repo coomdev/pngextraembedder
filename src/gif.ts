@@ -86,11 +86,10 @@ const write_embedding = async (writer: WritableStreamDefaultWriter<Buffer>, inj:
     }
 };
 
-const inject = async (container: File, injs: File[]) => {
+const inject = async (container: File, links: string[]) => {
     const [writestream, extract] = BufferWriteStream();
     const writer = writestream.getWriter();
 
-    const links = await uploadFiles(injs);
     const inj = Buffer.from(links.join(' '));
 
     const contbuff = Buffer.from(await container.arrayBuffer());

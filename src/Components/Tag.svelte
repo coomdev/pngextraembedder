@@ -1,23 +1,23 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher } from "svelte";
 
-  export let tag: string
-  export let toggleable = false
+  export let tag: string;
+  export let toggleable = false;
 
-  export let toggled = false
+  export let toggled = false;
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher();
 </script>
 
 <span
   class:toggle={toggleable}
   class:toggled={toggleable && toggled}
-  on:click={() => dispatch('toggle')}
+  on:click={() => dispatch("toggle")}
   class="tag"
 >
   {tag}
   {#if toggleable}
-    <span on:click={e => (e.preventDefault(), dispatch('remove'))}>x</span>
+    <span on:click={(e) => (e.preventDefault(), dispatch("remove"))}>x</span>
   {/if}
 </span>
 

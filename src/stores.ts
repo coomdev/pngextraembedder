@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { HydrusClient } from "./hydrus";
 import type { Booru } from "./thirdeye";
 
 export const localLoad = <T>(key: string, def: T) =>
@@ -15,6 +16,10 @@ export const settings = writable(localLoad('settingsv2', {
     dh: false,
     xpv: false,
     xpi: false,
+    hyd: false,
+    ak: '',
+    auto_embed: 0,
+    auto_tags: '',
     te: false,
     eye: false,
     ca: false,
@@ -82,6 +87,9 @@ export const settings = writable(localLoad('settingsv2', {
 export const appState = writable({
     isCatalog: false,
     is4chanX: false,
+    akValid: false,
+    herror: '' as string | undefined,
+    client: null as HydrusClient | null,
     foundPosts: [] as HTMLElement[]
 });
 

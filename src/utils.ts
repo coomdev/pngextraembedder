@@ -4,6 +4,9 @@ import type { EmbeddedFile } from './main';
 import { settings } from "./stores";
 import { filehosts } from "./filehosts";
 import { getHeaders, ifetch, Platform } from "./platform";
+import type { HydrusClient } from "./hydrus";
+import { GM_fetch } from "./requests";
+import { fileTypeFromBuffer } from "file-type";
 
 export let csettings: Parameters<typeof settings['set']>[0];
 
@@ -58,7 +61,7 @@ const generateThumbnail = async (f: File): Promise<Buffer> => {
     const blob = await new Promise<Blob | null>(_ => can.toBlob(_, "image/jpg"));
     if (!blob)
         return Buffer.alloc(0);
-    return new Buffer(await blob.arrayBuffer());
+    return Buffer.from(await blob.arrayBuffer());
 };
 
 export const buildPeeFile = async (f: File) => {
@@ -83,7 +86,7 @@ export const buildPeeFile = async (f: File) => {
         thumbnail.copy(ret, ptr);
         ptr += thumbnail.byteLength;
     }
-    new Buffer(await f.arrayBuffer()).copy(ret, ptr);
+    Buffer.from(await f.arrayBuffer()).copy(ret, ptr);
     return new Blob([ret]);
 };
 
@@ -210,3 +213,50 @@ export const getSelectedFile = () => {
         document.dispatchEvent(new CustomEvent('QRGetFile'));
     });
 };
+
+export async function embeddedToBlob(...efs: EmbeddedFile[]) {
+    return (await Promise.all(efs.map(async ef => {
+        let buff: Buffer;
+        if (typeof ef.data == "string") {
+            const req = await GM_fetch(ef.data);
+            buff = Buffer.from(await req.arrayBuffer());
+        } else if (!Buffer.isBuffer(ef.data))
+            buff = await ef.data();
+        else
+            buff = ef.data;
+        const mim = await fileTypeFromBuffer(buff);
+        const file = new File([buff], ef.filename, { type: mim?.mime });
+        return file;
+    }))).filter(e => e);
+}
+
+export async function addToEmbeds(...efs: EmbeddedFile[]) {
+    const files = await embeddedToBlob(...efs);
+    const links = await uploadFiles(files);
+    document.dispatchEvent(new CustomEvent("AddPEE", { detail: links }));
+}
+
+export async function getFileFromHydrus(client: HydrusClient,
+    tags: string[], args?: any) {
+    const results = (
+        await client.idsByTags(tags, args)
+    ).file_ids;
+    const metas = await client.getMetaDataByIds(results);
+    return await Promise.all(
+        results.map(async (id, idx) => {
+            return [
+                id,
+                {
+                    thumbnail: Buffer.from(
+                        await client.getThumbnail(id)!
+                    ),
+                    data: async () =>
+                        Buffer.from(
+                            await client.getFile(id)!
+                        ),
+                    filename: 'file' + metas.metadata[idx].ext,
+                },
+            ] as [number, EmbeddedFile];
+        })
+    );
+}

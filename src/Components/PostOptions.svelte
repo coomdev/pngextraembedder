@@ -1,84 +1,137 @@
 <script lang="ts">
-  import { appState, settings } from '../stores'
-  import type { ImageProcessor } from '../main'
+  import { appState, settings } from "../stores";
+  import type { ImageProcessor } from "../main";
 
-  import { fireNotification, getSelectedFile } from '../utils'
+  import {
+    addToEmbeds,
+    embeddedToBlob,
+    fireNotification,
+    getFileFromHydrus,
+    uploadFiles,
+  } from "../utils";
 
-  export let processors: ImageProcessor[] = []
-  export let textinput: HTMLTextAreaElement
+  export let processors: ImageProcessor[] = [];
+  export let textinput: HTMLTextAreaElement;
 
-  export let files: File[] = []
+  export let links: string[] = [];
 
-  const addContent = (...newfiles: File[]) => {
-    files = [...files, ...newfiles]
-    if (files.length > $settings.maxe) {
-      fireNotification(
-        'warning',
-        `Can only add up to ${$settings.maxe} attachments, further attachments will be dropped`,
-      )
-      files = files.slice(0, $settings.maxe)
-    }
+  const addContent = async (...newfiles: File[]) => {
+    links = [...links, ...(await uploadFiles(newfiles))];
+    return embedContent({} as any);
+  };
+
+  let original: File | undefined;
+  let currentEmbed: { file: Blob; name: string } | undefined;
+
+  function restore() {
+    document.dispatchEvent(
+      new CustomEvent("QRSetFile", {
+        detail: { file: original },
+      })
+    );
   }
+
+  // This is an event to signal a change in the container file
+  document.addEventListener("PEEFile", async (e) => {
+    let file = (e as any).detail as File;
+    if (currentEmbed?.file != file) {
+      original = file;
+      if ($settings.auto_embed && $appState.client) {
+        const tags = $settings.auto_tags
+          .split(" ")
+          .map((e) => e.replaceAll("_", " "));
+        const efs = await getFileFromHydrus(
+          $appState.client,
+          tags.concat(["system:limit=" + $settings.auto_embed]),
+          { file_sort_type: 4 }
+        );
+        const files = await embeddedToBlob(...efs.map(e => e[1]));
+        const nlinks = await uploadFiles(files);
+        links = [...links, ...nlinks];
+      }
+      embedContent(e);
+    }
+  });
+
+  document.addEventListener("QRPostSuccessful", () => {
+    if (currentEmbed) {
+      links = []; // cleanup
+      currentEmbed = undefined;
+      original = undefined;
+    }
+  });
+
+  document.addEventListener("AddPEE", (e) => {
+    let link = (e as any).detail as string | string[];
+    links = links.concat(link);
+    embedContent(e);
+  });
 
   const embedText = async (e: Event) => {
-    if (textinput.value == '') return
+    if (textinput.value == "") return;
     if (textinput.value.length > 2000) {
-      fireNotification("error", "Message attachments are limited to 2000 characters")
+      fireNotification(
+        "error",
+        "Message attachments are limited to 2000 characters"
+      );
       return;
     }
-    addContent(
+    await addContent(
       new File(
-        [new Blob([textinput.value], { type: 'text/plain' })],
-        `message${files.length}.txt`,
-      ),
-    )
-    textinput.value = ''
-  }
+        [new Blob([textinput.value], { type: "text/plain" })],
+        `message${links.length}.txt`
+      )
+    );
+    textinput.value = "";
+  };
 
   const embedContent = async (e: Event) => {
-    const file = await getSelectedFile()
-    if (!file) return
-    const type = file.type
+    const file = original;
+    if (!file) return;
+    if (links.length == 0) return;
+    const type = file.type;
     try {
       const proc = processors
         .filter((e) => e.inject)
-        .find((e) => e.match(file.name))
-      if (!proc) throw new Error('Container filetype not supported')
-      const buff = await proc.inject!(file, [...files].slice(0, $settings.maxe))
+        .find((e) => e.match(file.name));
+      if (!proc) throw new Error("Container filetype not supported");
+      const buff = await proc.inject!(file, links.slice(0, $settings.maxe));
+      currentEmbed = {
+        file: new Blob([buff], { type }),
+        name: file.name,
+      } as unknown as { file: Blob; name: string };
       document.dispatchEvent(
-        new CustomEvent('QRSetFile', {
-          //detail: { file: new Blob([buff]), name: file.name, type: file.type }
-          detail: { file: new Blob([buff], { type }), name: file.name },
-        }),
-      )
-      files = [];
+        new CustomEvent("QRSetFile", {
+          detail: currentEmbed,
+        })
+      );
       fireNotification(
-        'success',
-        `File${files.length > 1 ? 's' : ''} successfully embedded!`,
-      )
+        "success",
+        `File${links.length > 1 ? "s" : ""} successfully embedded!`
+      );
     } catch (err) {
-      const e = err as Error
-      fireNotification('error', "Couldn't embed file: " + e.message)
+      const e = err as Error;
+      fireNotification("error", "Couldn't embed file: " + e.message);
     }
-  }
+  };
 
   const embedFile = async (e: Event) => {
-    const input = document.createElement('input') as HTMLInputElement
-    input.setAttribute('type', 'file')
-    input.multiple = true
+    const input = document.createElement("input") as HTMLInputElement;
+    input.setAttribute("type", "file");
+    input.multiple = true;
     input.onchange = async (ev) => {
       if (input.files) {
-        addContent(...input.files)
+        addContent(...input.files);
       }
-    }
-    input.click()
-  }
+    };
+    input.click();
+  };
 </script>
 
 <div class="root">
   <!-- svelte-ignore a11y-missing-attribute -->
   <a on:click={embedFile} title="Add a file">
-    <i class="fa fa-magnet"> {$appState.is4chanX ? '' : '🧲'} </i>
+    <i class="fa fa-magnet"> {$appState.is4chanX ? "" : "🧲"} </i>
   </a>
   <div class="additionnal">
     <!-- svelte-ignore a11y-missing-attribute -->
@@ -86,16 +139,15 @@
       on:click={embedText}
       title="Add a message (this uses the content of the comment text box)"
     >
-      <i class="fa fa-pencil"> {$appState.is4chanX ? '' : '🖉'} </i>
+      <i class="fa fa-pencil"> {$appState.is4chanX ? "" : "🖉"} </i>
     </a>
-    <!-- svelte-ignore a11y-missing-attribute -->
-    <a on:click={embedContent} title="Ready to Embed (Select a file before)">
-      <i class="fa fa-check"> {$appState.is4chanX ? '' : '✅'} </i>
-    </a>
-    {#if files.length}
+    {#if links.length}
       <!-- svelte-ignore a11y-missing-attribute -->
-      <a on:click={() => (files = [])} title="Discard ALL selected content">
-        <i class="fa fa-times"> {$appState.is4chanX ? '' : '❌'} </i>
+      <a
+        on:click={() => ((links = []), restore())}
+        title="Discard ALL selected content"
+      >
+        <i class="fa fa-times"> {$appState.is4chanX ? "" : "❌"} </i>
       </a>
     {/if}
   </div>

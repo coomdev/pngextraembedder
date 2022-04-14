@@ -18,17 +18,18 @@ import SettingsButton from './Components/SettingsButton.svelte';
 import Embeddings from './Components/Embeddings.svelte';
 import EyeButton from './Components/EyeButton.svelte';
 import NotificationsHandler from './Components/NotificationsHandler.svelte';
-import { fireNotification } from "./utils";
+import { fireNotification, getSelectedFile } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
 import { ifetch, streamRemote, supportedAltDomain } from "./platform";
 import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
+import { HydrusClient } from "./hydrus";
 
 export interface ImageProcessor {
     skip?: true;
     match(fn: string): boolean;
     has_embed(b: Buffer, fn?: string, prevurl?: string): boolean | Promise<boolean>;
     extract(b: Buffer, fn?: string): EmbeddedFile[] | Promise<EmbeddedFile[]>;
-    inject?(b: File, c: File[]): Buffer | Promise<Buffer>;
+    inject?(b: File, c: string[]): Buffer | Promise<Buffer>;
 }
 let qp: QueryProcessor;
 
@@ -37,11 +38,29 @@ let processors: ImageProcessor[] =
     [thirdeye, pomf, pngv3, jpg, webm, gif];
 
 let cappState: Parameters<typeof appState['set']>[0];
-settings.subscribe(b => {
+settings.subscribe(async b => {
+    if (b.hyd) {
+        // transition from disable to enabled
+        if (b.ak) {
+            const hydCli = new HydrusClient(b.ak);
+            console.log(b.ak);
+            let herror: string | undefined;
+            try {
+                const valid = await hydCli.verify();
+                if (!valid)
+                    herror = "Hydrus appears to not be running or the key is wrong.";                
+                appState.set({ ...cappState, akValid: valid, client: hydCli, herror });
+            } catch {
+                herror = "Hydrus appears to not be running";
+                appState.set({ ...cappState, akValid: false, client: null, herror });
+            }
+        }
+    }
     csettings = b;
     processors = [...(!csettings.te ? [thirdeye] : []),
         pngv3, pomf, jpg, webm, gif
     ];
+
 });
 
 appState.subscribe(v => {
@@ -445,22 +464,6 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
         props: { processors, textinput: (e.detail || e.target).querySelector('textarea')! }
     });
 
-    const checkEvent = (e: Event) => {
-        if ((po as any).files.length > 0) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            e.stopPropagation();
-            fireNotification("error", "You have files you forgot to embed!");
-            return false;
-        }
-    };
-
-    document.addEventListener("keydown", (e) => {
-        if (e.ctrlKey && (e.key == "Enter" || e.keyCode == 13)) {
-            return checkEvent(e);
-        }
-    }, true);
-
     let target;
     if (!cappState.is4chanX) {
         target = e.detail;
@@ -470,23 +473,17 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
     else {
         target = e.target as HTMLDivElement;
         target.querySelector('#qr-filename-container')?.appendChild(a);
-        const sub = target.querySelector("input[type=submit]") as HTMLElement;
-
-        sub.addEventListener("click", checkEvent, true);
-
-        const obs = new MutationObserver((m) => {
-            for (const r of m) {
-                switch (r.type) {
-                    case "attributes":
-                        break;
-                    case "characterData":
-                        break;
-                }
+        const filesinp = target.querySelector('#file-n-submit') as HTMLInputElement;
+        let prevFile: File;
+        const obs = new MutationObserver(async (m) => {
+            // file possibly changed
+            const currentFile = await getSelectedFile();
+            if (prevFile != currentFile) {
+                prevFile = currentFile;
+                document.dispatchEvent(new CustomEvent("PEEFile", { detail: prevFile }));
             }
         });
-        obs.observe(sub, {
-            attributes: true
-        });
+        obs.observe(filesinp, { attributes: true });
     }
 
 }), { once: !cappState!.is4chanX }); // 4chan's normal extension destroys the QR form everytime
@@ -549,8 +546,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
             props: {
                 files: ress.map(e => e[0]).filter(e =>
                     Buffer.isBuffer(e.data) && e.filename.endsWith('.txt') && e.filename.startsWith('message')
-                ),
-                id: '' + id
+                )
             }
         });
         const emb = new Embeddings({

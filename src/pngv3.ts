@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
-import { buildPeeFile, decodeCoom3Payload, fireNotification, uploadFiles } from "./utils";
+import { decodeCoom3Payload } from "./utils";
 
 const CUM3 = Buffer.from("doo\0" + "m");
 
@@ -88,8 +88,7 @@ export const inject_data = async (container: File, injb: Buffer) => {
 
 };
 
-const inject = async (container: File, injs: File[]) => {
-    const links = await uploadFiles(injs);
+const inject = async (container: File, links: string[]) => {
     const injb = Buffer.from(links.join(' '));
     return inject_data(container, injb);
 };

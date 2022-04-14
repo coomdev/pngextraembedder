@@ -10,6 +10,7 @@
   export const dispatch = createEventDispatcher();
 
   export let file: EmbeddedFile;
+
   let isVideo = false;
   let isImage = false;
   let isAudio = false;
@@ -163,7 +164,11 @@
     );
   }
 
+  export let inhibitExpand: boolean = false;
+
   export async function bepis(ev: MouseEvent) {
+    dispatch("click");
+    if (inhibitExpand) return;
     if ($appState.isCatalog) return;
 
     if (ev.button == 0) {

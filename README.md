@@ -1,8 +1,6 @@
 PNG Extra Embedder (PEE)
 ========================
 
-❗🔴🔥⚠️**Aussies: catbox is being censored by your ISP/Government, switch DNS or hang your politicians**⚠️🔥🔴❗
-
 *Subsequently 'lolipiss' (**LOL** **I** **p**Want **i**To **s**Kill **s**Jannies)*
 
 Can embed any file in a PNG/WebM/GIF and upload it to a third-party host through 4chan.
@@ -17,6 +15,8 @@ How to Install
 - [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
 - Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
+
+Note: 4chanX isn't a hard requirement, just recommended because it's overall a nicer experience. If you don't want to use 4chanX, make sure the native 4chan extension is enabled in your settings.
 
 How to Build 
 ============
@@ -36,11 +36,20 @@ this screenshot is outdated, UI has changed a little but I'm too lazy.
 
 In the quick reply form, a magnet icon will appear.
 Clicking it will allow you to add files to attach to the file that will be uploaded and shown on 4chan.
-Hovering on the magnet will reveal a pencil icon, that will attach the content of your message box to the file, use it as a way to hide messages. And finally a checkmark that will do the uploading, make sure to have selected the file you'll post on 4chan beforehand.
+Hovering on the magnet will reveal a pencil icon, that will attach the content of your message box to the file, use it as a way to hide messages.
+
+Your embeds will be attached as you add them after you've selected a file, but can be prepared before selecting your main file.
 
 ![qr](screen.png)
 
 By default, you can add up to 5 attachments to a file. This limit can be raised, but keep in mind others using the default settings will only see your 5 first files, unless they themselves raised that limit in the settings.
+
+### Thread Watcher
+
+The "thread watcher" allows you to find threads that contain embeds.
+A lot of the results might be false positives from people posting directly files from boorus, so you can adjust the perceptual hash filter settings to reduce that. Setting it to a very high value ensures results will be exclusively made of direct link embeds.
+
+The "Contribute" checkbox makes your browser report posts with embeds you come accross during your regular browsing to [telepee](https://git.coom.tech/coomdev/telepee). It is recommended to enable it if you frequently post as it'll make your posts more visible to other extension users.
 
 # <a id="coom"></a> TroubleShooting
 
@@ -105,7 +114,7 @@ Just be discreet about it and you won't get into trouble.
 
 Their OPs are wrongfully being banned under the pretense of using proxies/VPNs, or evading bans that didn't exist in the first place.
 
-## Supports
+# Supports
 
 Third Eye
 ---------
@@ -120,4 +129,24 @@ Supports:
 - Base64 filenames
 - [\<host>=\<file>] filenames
 - [\<type>=\<URL>] filenames (URL must be one of the supported hosts (catbox, pomf, zzzz...))
-- <6char file>(.\<ext>) filenames
+    * \<type> is ignored and is inferred from the file content
+
+
+Hydrus
+------
+
+By setting an API Key, you can automatically embed random files (prefiltered by your tags) into your uploads. You can also directly search, pick and embed from your Hydrus database from within PEE.
+
+To generate an API Key, first enable the Hydrus Client API:
+
+- Services > Manage Services > Client API
+
+Leave the default port at 45869, enable CORS headers (required), and disable "allow non-local connections" (optional, but better security)
+
+Apply your changes, then:
+
+- Services > Review Services > Local > Client API > Add > Manually
+
+Take note of the Access Key, enable the "Search for files" permission, apply your changes.
+
+Then give this Access key to PEE where it's asked for.

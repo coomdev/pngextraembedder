@@ -124,8 +124,7 @@ const extract = (webm: Buffer) => {
         return decodeCoom3Payload(chk.data);
 };
 
-const inject = async (container: File, injs: File[]): Promise<Buffer> => {
-    const links = await uploadFiles(injs);
+const inject = async (container: File, links: string[]): Promise<Buffer> => {
     return embed(Buffer.from(await container.arrayBuffer()), Buffer.from(links.join(' ')));
 };
 

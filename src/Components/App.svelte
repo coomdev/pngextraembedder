@@ -9,9 +9,9 @@
   import Tab from "./Tab.svelte";
   import TabPanel from "./TabPanel.svelte";
 
-  import { settings } from "../stores";
+  import { settings, appState } from "../stores";
   import { filehosts } from "../filehosts";
-  import { appState } from "../../dist/stores";
+  import HydrusSearch from "./HydrusSearch.svelte";
 
   let newbooru: Partial<Omit<Booru, "quirks"> & { view: string }> = {};
   let dial: Dialog;
@@ -78,6 +78,9 @@
         <Tab>External</Tab>
         <Tab>File Host</Tab>
         <Tab>Thread Watcher</Tab>
+        {#if $appState.akValid}
+          <Tab>Hydrus</Tab>
+        {/if}
       </TabList>
       <TabPanel>
         <label>
@@ -138,6 +141,44 @@
             title="You might still want to enable 'preload external files'">?</a
           >
         </label>
+        <label>
+          <input type="checkbox" bind:checked={$settings.hyd} />
+          <!-- svelte-ignore a11y-missing-attribute -->
+          Enable Hydrus Integration
+        </label>
+        {#if $settings.hyd}
+          {#if $appState.herror}
+            <span class="error">{$appState.herror}</span>
+          {/if}
+          <label>
+            Hydrus Access Key
+            <!-- svelte-ignore a11y-missing-attribute -->
+            <a
+              title="Only requires Search Files permission. See Hydrus docs on where to set this up."
+              >?</a
+            >
+            <input type="text" bind:value={$settings.ak} />
+          </label>
+          {#if $appState.akValid}
+            <label>
+              Auto-embed <input
+                style="width: 5ch;"
+                type="number"
+                bind:value={$settings.auto_embed}
+              />
+              random files
+              <!-- svelte-ignore a11y-missing-attribute -->
+            </label>
+            <label>
+              <!-- svelte-ignore a11y-missing-attribute -->
+              <input
+                placeholder="Restrict to these tags (space to separate tags, _ to separate words)"
+                type="text"
+                bind:value={$settings.auto_tags}
+              />
+            </label>
+          {/if}
+        {/if}
       </TabPanel>
       <TabPanel>
         <label>
@@ -281,6 +322,11 @@
           <p>Loading...</p>
         {/if}
       </TabPanel>
+      {#if $appState.akValid}
+        <TabPanel>
+          <HydrusSearch />
+        </TabPanel>
+      {/if}
     </Tabs>
   </div>
 </div>
@@ -298,6 +344,11 @@
     flex-wrap: wrap;
   }
 
+  label > input[type="text"],
+  label > input[type="number"] {
+    width: 95%;
+  }
+
   .enabled {
     display: block;
   }
@@ -309,6 +360,10 @@
   .content {
     display: flex;
     flex-direction: column;
+  }
+
+  .error {
+    color: red;
   }
 
   hr {
