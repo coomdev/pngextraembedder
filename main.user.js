@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.185
+// @version      0.186
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 185];
+      define_BUILD_VERSION_default = [0, 186];
     }
   });
 
@@ -26910,28 +26910,34 @@
   }
   function get_each_context5(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[11] = list[i];
+    child_ctx[12] = list[i];
     return child_ctx;
   }
   function create_if_block_33(ctx) {
     let span;
+    let t_value = ctx[5].is4chanX ? "" : !ctx[3] ? "\u{1F441}" : "\u{1F926}";
+    let t;
     let mounted;
     let dispose;
     return {
       c() {
         span = element("span");
+        t = text(t_value);
         attr(span, "class", "fa clickable svelte-64lw6s");
         toggle_class(span, "fa-eye", !ctx[3]);
         toggle_class(span, "fa-eye-slash", ctx[3]);
       },
       m(target, anchor) {
         insert(target, span, anchor);
+        append(span, t);
         if (!mounted) {
-          dispose = listen(span, "click", ctx[5]);
+          dispose = listen(span, "click", ctx[6]);
           mounted = true;
         }
       },
       p(ctx2, dirty) {
+        if (dirty & 40 && t_value !== (t_value = ctx2[5].is4chanX ? "" : !ctx2[3] ? "\u{1F441}" : "\u{1F926}"))
+          set_data(t, t_value);
         if (dirty & 8) {
           toggle_class(span, "fa-eye", !ctx2[3]);
         }
@@ -26955,7 +26961,7 @@
       c() {
         a = element("a");
         t = text("Source");
-        attr(a, "href", a_href_value = ctx[11].source);
+        attr(a, "href", a_href_value = ctx[12].source);
         attr(a, "target", "_blank");
         attr(a, "class", "clickable svelte-64lw6s");
       },
@@ -26964,7 +26970,7 @@
         append(a, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[11].source)) {
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[12].source)) {
           attr(a, "href", a_href_value);
         }
       },
@@ -26976,14 +26982,14 @@
   }
   function create_if_block_13(ctx) {
     let a;
-    let t_value = ctx[11].page.title + "";
+    let t_value = ctx[12].page.title + "";
     let t;
     let a_href_value;
     return {
       c() {
         a = element("a");
         t = text(t_value);
-        attr(a, "href", a_href_value = ctx[11].page.url);
+        attr(a, "href", a_href_value = ctx[12].page.url);
         attr(a, "target", "_blank");
         attr(a, "class", "clickable svelte-64lw6s");
       },
@@ -26992,9 +26998,9 @@
         append(a, t);
       },
       p(ctx2, dirty) {
-        if (dirty & 1 && t_value !== (t_value = ctx2[11].page.title + ""))
+        if (dirty & 1 && t_value !== (t_value = ctx2[12].page.title + ""))
           set_data(t, t_value);
-        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[11].page.url)) {
+        if (dirty & 1 && a_href_value !== (a_href_value = ctx2[12].page.url)) {
           attr(a, "href", a_href_value);
         }
       },
@@ -27018,7 +27024,7 @@
       m(target, anchor) {
         insert(target, a, anchor);
         if (!mounted) {
-          dispose = listen(a, "click", ctx[10]);
+          dispose = listen(a, "click", ctx[11]);
           mounted = true;
         }
       },
@@ -27033,44 +27039,48 @@
   }
   function create_each_block5(ctx) {
     let span;
-    let span_title_value;
+    let t0_value = ctx[5].is4chanX ? "" : "\u{1F5AB}";
     let t0;
+    let span_title_value;
     let t1;
     let t2;
+    let t3;
     let if_block2_anchor;
     let mounted;
     let dispose;
     function click_handler2() {
-      return ctx[9](ctx[11]);
+      return ctx[10](ctx[12]);
     }
-    let if_block0 = ctx[11].source && create_if_block_23(ctx);
-    let if_block1 = ctx[11].page && create_if_block_13(ctx);
-    let if_block2 = ctx[6] && ctx[2] && create_if_block9(ctx);
+    let if_block0 = ctx[12].source && create_if_block_23(ctx);
+    let if_block1 = ctx[12].page && create_if_block_13(ctx);
+    let if_block2 = ctx[7] && ctx[2] && create_if_block9(ctx);
     return {
       c() {
         span = element("span");
-        t0 = space();
+        t0 = text(t0_value);
+        t1 = space();
         if (if_block0)
           if_block0.c();
-        t1 = space();
+        t2 = space();
         if (if_block1)
           if_block1.c();
-        t2 = space();
+        t3 = space();
         if (if_block2)
           if_block2.c();
         if_block2_anchor = empty();
-        attr(span, "title", span_title_value = ctx[11].filename);
+        attr(span, "title", span_title_value = ctx[12].filename);
         attr(span, "class", "fa fa-download clickable svelte-64lw6s");
       },
       m(target, anchor) {
         insert(target, span, anchor);
-        insert(target, t0, anchor);
+        append(span, t0);
+        insert(target, t1, anchor);
         if (if_block0)
           if_block0.m(target, anchor);
-        insert(target, t1, anchor);
+        insert(target, t2, anchor);
         if (if_block1)
           if_block1.m(target, anchor);
-        insert(target, t2, anchor);
+        insert(target, t3, anchor);
         if (if_block2)
           if_block2.m(target, anchor);
         insert(target, if_block2_anchor, anchor);
@@ -27081,34 +27091,36 @@
       },
       p(new_ctx, dirty) {
         ctx = new_ctx;
-        if (dirty & 1 && span_title_value !== (span_title_value = ctx[11].filename)) {
+        if (dirty & 32 && t0_value !== (t0_value = ctx[5].is4chanX ? "" : "\u{1F5AB}"))
+          set_data(t0, t0_value);
+        if (dirty & 1 && span_title_value !== (span_title_value = ctx[12].filename)) {
           attr(span, "title", span_title_value);
         }
-        if (ctx[11].source) {
+        if (ctx[12].source) {
           if (if_block0) {
             if_block0.p(ctx, dirty);
           } else {
             if_block0 = create_if_block_23(ctx);
             if_block0.c();
-            if_block0.m(t1.parentNode, t1);
+            if_block0.m(t2.parentNode, t2);
           }
         } else if (if_block0) {
           if_block0.d(1);
           if_block0 = null;
         }
-        if (ctx[11].page) {
+        if (ctx[12].page) {
           if (if_block1) {
             if_block1.p(ctx, dirty);
           } else {
             if_block1 = create_if_block_13(ctx);
             if_block1.c();
-            if_block1.m(t2.parentNode, t2);
+            if_block1.m(t3.parentNode, t3);
           }
         } else if (if_block1) {
           if_block1.d(1);
           if_block1 = null;
         }
-        if (ctx[6] && ctx[2]) {
+        if (ctx[7] && ctx[2]) {
           if (if_block2) {
             if_block2.p(ctx, dirty);
           } else {
@@ -27125,15 +27137,15 @@
         if (detaching)
           detach(span);
         if (detaching)
-          detach(t0);
+          detach(t1);
         if (if_block0)
           if_block0.d(detaching);
         if (detaching)
-          detach(t1);
+          detach(t2);
         if (if_block1)
           if_block1.d(detaching);
         if (detaching)
-          detach(t2);
+          detach(t3);
         if (if_block2)
           if_block2.d(detaching);
         if (detaching)
@@ -27184,7 +27196,7 @@
           if_block.d(1);
           if_block = null;
         }
-        if (dirty & 199) {
+        if (dirty & 423) {
           each_value = ctx2[0];
           let i;
           for (i = 0; i < each_value.length; i += 1) {
@@ -27218,7 +27230,9 @@
   }
   function instance14($$self, $$props, $$invalidate) {
     let $settings;
+    let $appState;
     component_subscribe($$self, settings, ($$value) => $$invalidate(4, $settings = $$value));
+    component_subscribe($$self, appState, ($$value) => $$invalidate(5, $appState = $$value));
     let { id = "" } = $$props;
     let { files } = $$props;
     let { inst } = $$props;
@@ -27254,7 +27268,7 @@
     };
     $$self.$$set = ($$props2) => {
       if ("id" in $$props2)
-        $$invalidate(8, id = $$props2.id);
+        $$invalidate(9, id = $$props2.id);
       if ("files" in $$props2)
         $$invalidate(0, files = $$props2.files);
       if ("inst" in $$props2)
@@ -27266,6 +27280,7 @@
       isVideo,
       visible,
       $settings,
+      $appState,
       reveal,
       isNotChrome,
       downloadFile,
@@ -27277,10 +27292,10 @@
   var EyeButton = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance14, create_fragment14, safe_not_equal, { id: 8, files: 0, inst: 1 }, add_css12);
+      init(this, options, instance14, create_fragment14, safe_not_equal, { id: 9, files: 0, inst: 1 }, add_css12);
     }
     get id() {
-      return this.$$.ctx[8];
+      return this.$$.ctx[9];
     }
     set id(id) {
       this.$$set({ id });
