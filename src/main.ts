@@ -463,26 +463,29 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
         target: a,
         props: { processors, textinput: (e.detail || e.target).querySelector('textarea')! }
     });
-
+    
+    let prevFile: File;
     let target;
+    const somethingChanged = async (m: any) => {
+        // file possibly changed
+        const currentFile = await getSelectedFile();
+        if (prevFile != currentFile) {
+            prevFile = currentFile;
+            document.dispatchEvent(new CustomEvent("PEEFile", { detail: prevFile }));
+        }
+    };
+    const obs = new MutationObserver(somethingChanged);
     if (!cappState.is4chanX) {
         target = e.detail;
         a.style.display = "inline-block";
         target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
+        const filesinp = target.querySelector('#qrFile') as HTMLInputElement;
+        filesinp.addEventListener("change", somethingChanged);
     }
     else {
         target = e.target as HTMLDivElement;
         target.querySelector('#qr-filename-container')?.appendChild(a);
         const filesinp = target.querySelector('#file-n-submit') as HTMLInputElement;
-        let prevFile: File;
-        const obs = new MutationObserver(async (m) => {
-            // file possibly changed
-            const currentFile = await getSelectedFile();
-            if (prevFile != currentFile) {
-                prevFile = currentFile;
-                document.dispatchEvent(new CustomEvent("PEEFile", { detail: prevFile }));
-            }
-        });
         obs.observe(filesinp, { attributes: true });
     }
 

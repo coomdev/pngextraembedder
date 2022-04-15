@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.186
+// @version      0.187
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 186];
+      define_BUILD_VERSION_default = [0, 187];
     }
   });
 
@@ -28012,23 +28012,26 @@
       target: a,
       props: { processors, textinput: (e.detail || e.target).querySelector("textarea") }
     });
+    let prevFile;
     let target;
+    const somethingChanged = async (m) => {
+      const currentFile = await getSelectedFile();
+      if (prevFile != currentFile) {
+        prevFile = currentFile;
+        document.dispatchEvent(new CustomEvent("PEEFile", { detail: prevFile }));
+      }
+    };
+    const obs = new MutationObserver(somethingChanged);
     if (!cappState.is4chanX) {
       target = e.detail;
       a.style.display = "inline-block";
       target.querySelector("input[type=submit]")?.insertAdjacentElement("beforebegin", a);
+      const filesinp = target.querySelector("#qrFile");
+      filesinp.addEventListener("change", somethingChanged);
     } else {
       target = e.target;
       target.querySelector("#qr-filename-container")?.appendChild(a);
       const filesinp = target.querySelector("#file-n-submit");
-      let prevFile;
-      const obs = new MutationObserver(async (m) => {
-        const currentFile = await getSelectedFile();
-        if (prevFile != currentFile) {
-          prevFile = currentFile;
-          document.dispatchEvent(new CustomEvent("PEEFile", { detail: prevFile }));
-        }
-      });
       obs.observe(filesinp, { attributes: true });
     }
   }, { once: !cappState.is4chanX });
