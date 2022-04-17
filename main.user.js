@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.189
+// @version      0.190
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 189];
+      define_BUILD_VERSION_default = [0, 190];
     }
   });
 
@@ -20019,6 +20019,7 @@
     let i;
     let t_value = ctx[1].is4chanX ? "" : "\u274C";
     let t;
+    let a_title_value;
     let mounted;
     let dispose;
     return {
@@ -20027,7 +20028,7 @@
         i = element("i");
         t = text(t_value);
         attr(i, "class", "fa fa-times svelte-bgqqj3");
-        attr(a, "title", "Discard ALL selected content");
+        attr(a, "title", a_title_value = "Discard ALL " + ctx[0].length + " files");
         attr(a, "class", "svelte-bgqqj3");
       },
       m(target, anchor) {
@@ -20042,6 +20043,9 @@
       p(ctx2, dirty) {
         if (dirty & 2 && t_value !== (t_value = ctx2[1].is4chanX ? "" : "\u274C"))
           set_data(t, t_value);
+        if (dirty & 1 && a_title_value !== (a_title_value = "Discard ALL " + ctx2[0].length + " files")) {
+          attr(a, "title", a_title_value);
+        }
       },
       d(detaching) {
         if (detaching)

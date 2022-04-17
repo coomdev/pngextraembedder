@@ -145,7 +145,7 @@
       <!-- svelte-ignore a11y-missing-attribute -->
       <a
         on:click={() => ((links = []), restore())}
-        title="Discard ALL selected content"
+        title="Discard ALL {links.length} files"
       >
         <i class="fa fa-times"> {$appState.is4chanX ? "" : "❌"} </i>
       </a>
