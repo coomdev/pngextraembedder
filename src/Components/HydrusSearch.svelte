@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { map } from "lodash";
-    import { each, onMount } from "svelte/internal";
+    import { onMount } from "svelte/internal";
 
     import type { EmbeddedFile } from "../main";
     import { appState } from "../stores";

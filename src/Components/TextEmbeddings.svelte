@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { EmbeddedFile } from "../main";
+  import sanLink from 'linkify-string'
 
   export let files: EmbeddedFile[];
 
@@ -8,7 +9,7 @@
 
 {#each contents as content}
   <div class="additionnal">
-    {content}
+    {@html sanLink(content)}
   </div>
 {/each}
 
@@ -18,5 +19,6 @@
     clear: both;
     margin-top: 10px;
     padding-top: 10px;
+    white-space: pre-wrap;
   }
 </style>

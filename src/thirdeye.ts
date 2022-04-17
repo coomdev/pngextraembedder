@@ -1,7 +1,7 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { localLoad, settings } from "./stores";
 import { Buffer } from "buffer";
-import jpeg from 'jpeg-js';
+import {decode} from 'jpeg-js/lib/decoder';
 import { bmvbhash_even } from "./phash";
 import { ifetch, Platform } from "./platform";
 
@@ -78,7 +78,7 @@ export let boorus: Booru[] =
         }));
 
 const bufferingTime = 2000;
-let expired: number | undefined = undefined;
+let expired: number | NodeJS.Timeout | undefined = undefined;
 type ApiResult = { [md5 in string]: { [domain in string]: BooruMatch[] } };
 let reqQueue: [string, (a: ApiResult) => void][] = [];
 let unlockQueue = Promise.resolve();
@@ -181,7 +181,7 @@ const extract = async (b: Buffer, fn?: string) => {
 };
 
 const phash = (b: Buffer) => {
-    const res = jpeg.decode(b);
+    const res = decode(b);
     return bmvbhash_even(res, 8);
 };
 

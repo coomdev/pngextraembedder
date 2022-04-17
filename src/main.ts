@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import { appState, settings, initial_settings } from "./stores";
-import _ from 'lodash';
+import { debounce } from './debounce';
 import globalCss from './global.css';
 
 import pngv3 from "./pngv3";
@@ -14,15 +14,16 @@ import App from "./Components/App.svelte";
 import ScrollHighlighter from "./Components/ScrollHighlighter.svelte";
 import PostOptions from "./Components/PostOptions.svelte";
 import SettingsButton from './Components/SettingsButton.svelte';
-//import Embedding from './Components/Embedding.svelte';
 import Embeddings from './Components/Embeddings.svelte';
 import EyeButton from './Components/EyeButton.svelte';
 import NotificationsHandler from './Components/NotificationsHandler.svelte';
+
 import { fireNotification, getSelectedFile } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
 import { ifetch, streamRemote, supportedAltDomain } from "./platform";
 import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
 import { HydrusClient } from "./hydrus";
+import { registerPlugin } from 'linkifyjs';
 
 export interface ImageProcessor {
     skip?: true;
@@ -48,7 +49,7 @@ settings.subscribe(async b => {
             try {
                 const valid = await hydCli.verify();
                 if (!valid)
-                    herror = "Hydrus appears to not be running or the key is wrong.";                
+                    herror = "Hydrus appears to not be running or the key is wrong.";
                 appState.set({ ...cappState, akValid: valid, client: hydCli, herror });
             } catch {
                 herror = "Hydrus appears to not be running";
@@ -129,7 +130,7 @@ const textToElement = <T = HTMLElement>(s: string) =>
 
 let pendingPosts: { id: number, op: number }[] = [];
 
-const signalNewEmbeds = _.debounce(async () => {
+const signalNewEmbeds = debounce(async () => {
     // ensure user explicitely enabled telemetry
     if (!csettings.tm)
         return;
@@ -335,6 +336,26 @@ const startup = async (is4chanX = true) => {
     if (csettings.vercheck)
         versionCheck();
 
+    const postQuote = ({ scanner, parser, utils }: any) => {
+        const { CLOSEANGLEBRACKET, NUM } = scanner.tokens;
+        const START_STATE = parser.start;
+
+        const pref = qp.getPostIdPrefix();
+        const endQuote = utils.createTokenClass('postQuote', {
+            isLink: true,
+            toHref() {
+                return `#${pref}${this.toString().substr(2)}`;
+            }
+        });
+
+        // A post quote (>>123456789) is made of
+        const MEMEARROW1 = START_STATE.tt(CLOSEANGLEBRACKET); // One meme arrow followed by
+        const MEMEARROW2 = MEMEARROW1.tt(CLOSEANGLEBRACKET); // another meme arrow, terminated by
+        const POSTNUM_STATE = MEMEARROW2.tt(NUM, endQuote); // a number
+    };
+
+    registerPlugin('quote', postQuote);
+
     if (!is4chanX && location.host.startsWith('boards.4chan')) {
         const qr = QR;
         const show = qr.show.bind(qr);
@@ -463,7 +484,7 @@ document.addEventListener('QRDialogCreation', <any>((e: CustomEvent<HTMLElement>
         target: a,
         props: { processors, textinput: (e.detail || e.target).querySelector('textarea')! }
     });
-    
+
     let prevFile: File;
     let target;
     const somethingChanged = async (m: any) => {
@@ -522,7 +543,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     if (!isCatalog) {
         const ft = qp.getFileThumbnail(post);
         const info = qp.getInfoBox(post);
-        const quot = post.querySelector('blockquote');
+        const quot = qp.getTextBox(post);
         const textInsertCursor = document.createElement('div');
         quot?.appendChild(textInsertCursor);
         const filehost: HTMLElement | null = ft.querySelector('.filehost');
