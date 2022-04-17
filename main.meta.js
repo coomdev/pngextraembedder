@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.188
+// @version      0.189
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*

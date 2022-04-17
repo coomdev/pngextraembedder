@@ -254,7 +254,7 @@ export async function getFileFromHydrus(client: HydrusClient,
                         Buffer.from(
                             await client.getFile(id)!
                         ),
-                    filename: 'file' + metas.metadata[idx].ext,
+                    filename: metas.metadata[idx].hash + metas.metadata[idx].ext,
                 },
             ] as [number, EmbeddedFile];
         })

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.188
+// @version      0.189
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 188];
+      define_BUILD_VERSION_default = [0, 189];
     }
   });
 
@@ -14827,7 +14827,7 @@
         {
           thumbnail: import_buffer2.Buffer.from(await client.getThumbnail(id)),
           data: async () => import_buffer2.Buffer.from(await client.getFile(id)),
-          filename: "file" + metas.metadata[idx].ext
+          filename: metas.metadata[idx].hash + metas.metadata[idx].ext
         }
       ];
     }));
