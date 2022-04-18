@@ -1,7 +1,7 @@
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { localLoad, settings } from "./stores";
 import { Buffer } from "buffer";
-import {decode} from 'jpeg-js/lib/decoder';
+import { decode } from 'jpeg-js';
 import { bmvbhash_even } from "./phash";
 import { ifetch, Platform } from "./platform";
 
@@ -141,7 +141,7 @@ const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
             cache[b.domain] = {};
         cache[b.domain][hex] = tran;
         return tran;
-    } catch(e) {
+    } catch (e) {
         console.error('The following error might be expected');
         console.error(e);
         return [];
