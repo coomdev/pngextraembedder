@@ -215,6 +215,8 @@ const has_embed = async (b: Buffer, fn?: string, prevlink?: string) => {
     }
 
     if ((result && result.length != 0) && phashEn && prevlink) {
+        if (!result[0].preview_url)
+            return true;
         const getHash = async (l: string) => {
             const ogreq = await ifetch(l);
             const origPreview = await ogreq.arrayBuffer();
