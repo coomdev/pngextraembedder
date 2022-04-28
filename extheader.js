@@ -33,14 +33,4 @@ export const extheader = `// ==UserScript==
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach(({ addedNodes }) => {
-      addedNodes.forEach((addedNode) => {
-        if (addedNode.textContent.includes('-0x')) {
-          addedNode.remove();
-        }
-      });
-    });
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
 `;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.201
+// @version      0.202
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -28,16 +28,6 @@
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach(({ addedNodes }) => {
-      addedNodes.forEach((addedNode) => {
-        if (addedNode.textContent.includes('-0x')) {
-          addedNode.remove();
-        }
-      });
-    });
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -93,7 +83,7 @@ const observer = new MutationObserver((mutations) => {
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 201];
+      define_BUILD_VERSION_default = [0, 202];
     }
   });
 
@@ -23440,6 +23430,20 @@ const observer = new MutationObserver((mutations) => {
     };
   };
   var startup = async (is4chanX = true) => {
+    const observer = new MutationObserver((mutations) => {
+      if (document.body.textContent.startsWith("Please disable")) {
+        (async () => {
+          const k = await GM_fetch(location.href);
+          const src = await k.text();
+          const ndom = new DOMParser().parseFromString(src, "text/html");
+          [...ndom.head.children].filter((e) => e.tagName == "SCRIPT" && e.textContent?.includes("-0x")).forEach((e) => e.remove());
+          unsafeWindow.document.documentElement.innerHTML = ndom.documentElement.innerHTML;
+          startup(is4chanX);
+        })();
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.head, { childList: true, subtree: true });
     const meta2 = document.querySelector('meta[name="referrer"]');
     if (meta2) {
       meta2.setAttribute("name", "referrer");

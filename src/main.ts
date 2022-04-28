@@ -24,6 +24,7 @@ import { ifetch, streamRemote, supportedAltDomain } from "./platform";
 import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
 import { HydrusClient } from "./hydrus";
 import { registerPlugin } from 'linkifyjs';
+import { GM_fetch } from "./requests";
 
 export interface ImageProcessor {
     skip?: true;
@@ -113,7 +114,7 @@ const processImage = async (src: string, fn: string, hex: string, prevurl: strin
                 cumul = Buffer.concat([cumul, value!]);
                 found = await proc.has_embed(cumul);
             }
-    } while (found !== false && !chunk.done /* Because we only embed links now, it's safe to assume we get everything we need in the first chunk */);
+        } while (found !== false && !chunk.done /* Because we only embed links now, it's safe to assume we get everything we need in the first chunk */);
         await iter.next(true);
         if (found === false) {
             //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
@@ -317,6 +318,21 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
 };
 
 const startup = async (is4chanX = true) => {
+    const observer = new MutationObserver((mutations) => {
+        if (document.body!.textContent!.startsWith("Please disable")) {
+            (async () => {
+                const k = await GM_fetch(location.href);
+                const src = await k.text();
+                const ndom = new DOMParser().parseFromString(src, "text/html");
+                [...ndom.head.children].filter(e => e.tagName == "SCRIPT" && e.textContent?.includes('-0x')).forEach(e => e.remove());
+                unsafeWindow.document.documentElement.innerHTML = ndom.documentElement.innerHTML;
+                startup(is4chanX);
+            })();
+        }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.head, { childList: true, subtree: true });
+
     const meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
 
     if (meta) {

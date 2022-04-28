@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.201
+// @version      0.202
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -28,13 +28,3 @@
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach(({ addedNodes }) => {
-      addedNodes.forEach((addedNode) => {
-        if (addedNode.textContent.includes('-0x')) {
-          addedNode.remove();
-        }
-      });
-    });
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
