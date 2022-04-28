@@ -34,10 +34,22 @@ export const extheader = `// ==UserScript==
 // ==/UserScript==
 
 const oldSetI = unsafeWindow.setInterval;
+const odocumentQS = unsafeWindow.document.querySelector;
+
+unsafeWindow.document.querySelector = (...args) => {
+  if (['.pee', '[src^="blob:"]'].some(e => args[0].includes(e)))
+    return null;
+  return odocumentQS.call(unsafeWindow.document, args);
+}
 
 unsafeWindow.setInterval = (...args) => {
-  if (args[0].toString().includes('_0x'))
+  if (args[0].toString().includes('-0x'))
     return;
   oldSetI(...args);
 }
+
+const toStr = () => 'function toString() { [native code] }';
+toStr.toString = toStr;
+unsafeWindow.setInterval.toString = toStr;
+unsafeWindow.document.querySelector.toString = toStr;
 `;
