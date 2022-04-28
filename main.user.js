@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.200
+// @version      0.201
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -28,19 +28,16 @@
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
 
-const oldSetI = unsafeWindow.setInterval;
-const odocumentQS = unsafeWindow.document.querySelector;
-
-unsafeWindow.document.querySelector = (...args) => {
-  if (['.pee', '[src^="blob:"]'].some(e => args[0].includes(e)))
-    return null;
-  return odocumentQS.call(unsafeWindow.document, args);
-}
-
-const toStr = () => 'function toString() { [native code] }';
-toStr.toString = toStr;
-unsafeWindow.setInterval.toString = toStr;
-unsafeWindow.document.querySelector.toString = toStr;
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach(({ addedNodes }) => {
+      addedNodes.forEach((addedNode) => {
+        if (addedNode.textContent.includes('-0x')) {
+          addedNode.remove();
+        }
+      });
+    });
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -96,7 +93,7 @@ unsafeWindow.document.querySelector.toString = toStr;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 200];
+      define_BUILD_VERSION_default = [0, 201];
     }
   });
 
