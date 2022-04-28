@@ -104,8 +104,8 @@ export async function* streamRemote(url: string, chunkSize = 72 * 1024, fetchRes
         stream?.releaseLock();
         return;
     }
-    const headers = await getHeaders(url);
-    const size = +headers['content-length'];
+    //const headers = await getHeaders(url);
+    let size = Number.POSITIVE_INFINITY;
     let ptr = 0;
     let fetchSize = chunkSize;
     while (ptr != size) {
@@ -115,7 +115,11 @@ export async function* streamRemote(url: string, chunkSize = 72 * 1024, fetchRes
         if (!('content-length' in obj)) {
             console.warn("no content lenght???", url);
             break;
-        } const len = +obj['content-length'];
+        }
+        if ('content-range' in obj) {
+            size = +obj['content-range'].split('/')[1];
+        }
+        const len = +obj['content-length'];
         ptr += len;
         if (fetchRestOnNonCanceled)
             fetchSize = size;

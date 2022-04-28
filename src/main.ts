@@ -105,16 +105,15 @@ const processImage = async (src: string, fn: string, hex: string, prevurl: strin
         let found: boolean | undefined;
         let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
         do {
-            const { value, done } = await iter.next(found === false);
+            const { value, done } = await iter.next(typeof found === "boolean");
             if (done) {
                 chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
             } else {
                 chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
-            }
-            if (!done)
                 cumul = Buffer.concat([cumul, value!]);
-            found = await proc.has_embed(cumul);
-        } while (found !== false && !chunk.done);
+                found = await proc.has_embed(cumul);
+            }
+    } while (found !== false && !chunk.done /* Because we only embed links now, it's safe to assume we get everything we need in the first chunk */);
         await iter.next(true);
         if (found === false) {
             //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
@@ -258,15 +257,14 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
             let found: boolean | undefined;
             let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
             do {
-                const { value, done } = await iter.next(found === false);
+                const { value, done } = await iter.next(typeof found === "boolean");
                 if (done) {
                     chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
                 } else {
                     chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
-                }
-                if (!done)
                     cumul = Buffer.concat([cumul, value!]);
-                found = await proc.has_embed(cumul);
+                    found = await proc.has_embed(cumul);
+                }
             } while (found !== false && !chunk.done);
             await iter.next(true);
             return found === true;
@@ -415,11 +413,11 @@ const startup = async (is4chanX = true) => {
     });
     scts?.appendChild(button);
 
-    const appHost = textToElement(`<div class="pee-settings"></div>`);
+    const appHost = textToElement(`<div class="peee-settings"></div>`);
     const appInstance = new App({ target: appHost });
     document.body.append(appHost);
 
-    const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
+    const scrollHost = textToElement(`<div></div>`);
     new ScrollHighlighter({ target: scrollHost });
     document.body.append(scrollHost);
 
@@ -546,8 +544,8 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
         const quot = qp.getTextBox(post);
         const textInsertCursor = document.createElement('div');
         quot?.appendChild(textInsertCursor);
-        const filehost: HTMLElement | null = ft.querySelector('.filehost');
-        const eyehost: HTMLElement | null = info.querySelector('.eyehost');
+        const filehost: HTMLElement | null = ft.querySelector('.fiilehost');
+        const eyehost: HTMLElement | null = info.querySelector('.eyeehost');
         const imgcont = filehost || document.createElement('div');
         const eyecont = eyehost || document.createElement('span');
 
@@ -560,7 +558,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
         }
         if (!eyehost) {
             info.append(eyecont);
-            eyecont.classList.add("eyehost");
+            eyecont.classList.add("eyeehost");
         } else {
             eyecont.innerHTML = '';
         }
