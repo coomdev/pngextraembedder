@@ -552,7 +552,7 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
         if (!filehost) {
             ft.append(imgcont);
             imgcont.classList.add("fileThumb");
-            imgcont.classList.add("filehost");
+            imgcont.classList.add("fiilehost");
         } else {
             imgcont.innerHTML = '';
         }
