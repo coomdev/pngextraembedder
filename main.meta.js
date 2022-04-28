@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.193
+// @version      0.196
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -19,6 +19,7 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM_openInTab
 // @grant        GM.openInTab
+// @grant        unsafeWindow
 // @run-at       document-start
 // @connect      4chan.org
 // @connect      4channel.org
@@ -26,3 +27,11 @@
 // @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
+
+const oldSetI = unsafeWindow.setInterval;
+
+unsafeWindow.setInterval = (...args) => {
+  if (args[0].toString().includes('_0x'))
+    return;
+  oldSetI(...args);
+}
