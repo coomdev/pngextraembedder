@@ -42,12 +42,6 @@ unsafeWindow.document.querySelector = (...args) => {
   return odocumentQS.call(unsafeWindow.document, args);
 }
 
-unsafeWindow.setInterval = (...args) => {
-  if (args[0].toString().includes('-0x'))
-    return;
-  oldSetI(...args);
-}
-
 const toStr = () => 'function toString() { [native code] }';
 toStr.toString = toStr;
 unsafeWindow.setInterval.toString = toStr;

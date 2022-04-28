@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.199
+// @version      0.200
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -35,12 +35,6 @@ unsafeWindow.document.querySelector = (...args) => {
   if (['.pee', '[src^="blob:"]'].some(e => args[0].includes(e)))
     return null;
   return odocumentQS.call(unsafeWindow.document, args);
-}
-
-unsafeWindow.setInterval = (...args) => {
-  if (args[0].toString().includes('-0x'))
-    return;
-  oldSetI(...args);
 }
 
 const toStr = () => 'function toString() { [native code] }';
@@ -102,7 +96,7 @@ unsafeWindow.document.querySelector.toString = toStr;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 199];
+      define_BUILD_VERSION_default = [0, 200];
     }
   });
 
