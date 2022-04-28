@@ -75,7 +75,7 @@ export const buildPeeFile = async (f: File) => {
         f.size /*Teh file*/);
     let ptr = 0;
     ret.write('PEE\0', 0);
-    ptr += 4;
+    ptr += 4;   
     ret[ptr++] = 1 | ((+(thumbnail.length != 0)) << 2);
     namebuf.copy(ret, ptr);
     ptr += namebuf.byteLength;

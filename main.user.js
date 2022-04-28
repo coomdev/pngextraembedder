@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.192
+// @version      0.193
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -81,7 +81,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 192];
+      define_BUILD_VERSION_default = [0, 193];
     }
   });
 
@@ -13497,7 +13497,7 @@
   }
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.post_wrapper.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n.post_wrapper.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.post_wrapper.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.post_wrapper.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.pee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.filehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.post_wrapper.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n.post_wrapper.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.post_wrapper.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.post_wrapper.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.peee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.fiilehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
 
   // src/pngv3.ts
   init_define_BUILD_VERSION();
@@ -13672,6 +13672,12 @@
             reject(new Error("Server Error: " + resp.status));
             return;
           }
+          if (resp.status == 429) {
+            setTimeout(() => {
+              GM_fetch(url, opt, lisn).then(resolve2);
+            }, 1e3 + ~~(Math.random() * 5e3));
+            return;
+          }
           const blob = resp.response;
           const ref = resp;
           ref.blob = () => Promise.resolve(blob);
@@ -13811,8 +13817,7 @@
       stream?.releaseLock();
       return;
     }
-    const headers = await getHeaders(url);
-    const size = +headers["content-length"];
+    let size = Number.POSITIVE_INFINITY;
     let ptr = 0;
     let fetchSize = chunkSize;
     while (ptr != size) {
@@ -13821,6 +13826,9 @@
       if (!("content-length" in obj)) {
         console.warn("no content lenght???", url);
         break;
+      }
+      if ("content-range" in obj) {
+        size = +obj["content-range"].split("/")[1];
       }
       const len = +obj["content-length"];
       ptr += len;
@@ -17280,7 +17288,7 @@
   init_esbuild_inject();
   var import_buffer9 = __toESM(require_buffer(), 1);
   function add_css6(target) {
-    append_styles(target, "svelte-yvh28x", ".place.svelte-yvh28x.svelte-yvh28x{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-yvh28x>img.svelte-yvh28x{filter:brightness(0.5) blur(10px)}.progress.svelte-yvh28x.svelte-yvh28x{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-yvh28x.svelte-yvh28x{display:none;position:fixed;pointer-events:none}.visible.svelte-yvh28x.svelte-yvh28x{display:block;z-index:9}.contract.svelte-yvh28x img.svelte-yvh28x,.contract.svelte-yvh28x video.svelte-yvh28x{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.place.svelte-yvh28x:not(.contract) video.svelte-yvh28x,.place.svelte-yvh28x:not(.contract) img.svelte-yvh28x,.hoverer.svelte-yvh28x>video.svelte-yvh28x,.hoverer.svelte-yvh28x>img.svelte-yvh28x{max-width:100vw;max-height:100vh}");
+    append_styles(target, "svelte-olzxr6", ".plaace.svelte-olzxr6.svelte-olzxr6{cursor:pointer;max-width:100vw;max-height:100vh}.unzipping.svelte-olzxr6>img.svelte-olzxr6{filter:brightness(0.5) blur(10px)}.progress.svelte-olzxr6.svelte-olzxr6{color:black;-webkit-text-stroke:0.7px white;font-weight:bold;left:50%;top:50%;font-size:larger;display:inline-block;position:absolute;z-index:10}.hoverer.svelte-olzxr6.svelte-olzxr6{display:none;position:fixed;pointer-events:none}.visible.svelte-olzxr6.svelte-olzxr6{display:block;z-index:9}.contract.svelte-olzxr6 img.svelte-olzxr6,.contract.svelte-olzxr6 video.svelte-olzxr6{max-width:125px !important;max-height:125px !important;width:auto;height:auto}.plaace.svelte-olzxr6:not(.contract) video.svelte-olzxr6,.plaace.svelte-olzxr6:not(.contract) img.svelte-olzxr6,.hoverer.svelte-olzxr6>video.svelte-olzxr6,.hoverer.svelte-olzxr6>img.svelte-olzxr6{max-width:100vw;max-height:100vh}");
   }
   function create_if_block4(ctx) {
     let if_block_anchor;
@@ -17355,9 +17363,9 @@
         t4 = space();
         if (if_block5)
           if_block5.c();
-        attr(div0, "class", "place svelte-yvh28x");
+        attr(div0, "class", "plaace svelte-olzxr6");
         toggle_class(div0, "contract", ctx[7]);
-        attr(div1, "class", "hoverer svelte-yvh28x");
+        attr(div1, "class", "hoverer svelte-olzxr6");
         toggle_class(div1, "visible", ctx[8] && ctx[7]);
         toggle_class(div1, "unzipping", ctx[17]);
       },
@@ -17516,7 +17524,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[15] || ctx[6]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-yvh28x");
+        attr(img, "class", "svelte-olzxr6");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -17600,7 +17608,7 @@
         attr(video, "type", ctx[9]);
         attr(video, "referrerpolicy", "no-referrer");
         video.loop = video_loop_value = ctx[19].loop;
-        attr(video, "class", "svelte-yvh28x");
+        attr(video, "class", "svelte-olzxr6");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -17642,7 +17650,7 @@
         t2 = text(" / ");
         t3 = text(t3_value);
         t4 = text("]");
-        attr(span, "class", "progress svelte-yvh28x");
+        attr(span, "class", "progress svelte-olzxr6");
       },
       m(target, anchor) {
         insert(target, span, anchor);
@@ -17674,7 +17682,7 @@
         attr(img, "alt", img_alt_value = ctx[0].filename);
         if (!src_url_equal(img.src, img_src_value = ctx[15] || ctx[6]))
           attr(img, "src", img_src_value);
-        attr(img, "class", "svelte-yvh28x");
+        attr(img, "class", "svelte-olzxr6");
       },
       m(target, anchor) {
         insert(target, img, anchor);
@@ -17707,7 +17715,7 @@
           attr(source, "src", source_src_value);
         attr(source, "data-test", "");
         video.loop = video_loop_value = ctx[19].loop;
-        attr(video, "class", "svelte-yvh28x");
+        attr(video, "class", "svelte-olzxr6");
       },
       m(target, anchor) {
         insert(target, video, anchor);
@@ -23251,15 +23259,14 @@
       let found;
       let chunk = { done: true };
       do {
-        const { value, done } = await iter.next(found === false);
+        const { value, done } = await iter.next(typeof found === "boolean");
         if (done) {
           chunk = { done: true };
         } else {
           chunk = { done: false, value };
-        }
-        if (!done)
           cumul = import_buffer11.Buffer.concat([cumul, value]);
-        found = await proc.has_embed(cumul);
+          found = await proc.has_embed(cumul);
+        }
       } while (found !== false && !chunk.done);
       await iter.next(true);
       if (found === false) {
@@ -23367,15 +23374,14 @@
         let found;
         let chunk = { done: true };
         do {
-          const { value, done } = await iter.next(found === false);
+          const { value, done } = await iter.next(typeof found === "boolean");
           if (done) {
             chunk = { done: true };
           } else {
             chunk = { done: false, value };
-          }
-          if (!done)
             cumul = import_buffer11.Buffer.concat([cumul, value]);
-          found = await proc.has_embed(cumul);
+            found = await proc.has_embed(cumul);
+          }
         } while (found !== false && !chunk.done);
         await iter.next(true);
         return found === true;
@@ -23500,10 +23506,10 @@
       target: button
     });
     scts?.appendChild(button);
-    const appHost = textToElement(`<div class="pee-settings"></div>`);
+    const appHost = textToElement(`<div class="peee-settings"></div>`);
     const appInstance = new App_default({ target: appHost });
     document.body.append(appHost);
-    const scrollHost = textToElement(`<div class="pee-scroll"></div>`);
+    const scrollHost = textToElement(`<div></div>`);
     new ScrollHighlighter_default({ target: scrollHost });
     document.body.append(scrollHost);
     appState.set({
@@ -23611,8 +23617,8 @@
       const quot = qp.getTextBox(post);
       const textInsertCursor = document.createElement("div");
       quot?.appendChild(textInsertCursor);
-      const filehost = ft.querySelector(".filehost");
-      const eyehost = info.querySelector(".eyehost");
+      const filehost = ft.querySelector(".fiilehost");
+      const eyehost = info.querySelector(".eyeehost");
       const imgcont = filehost || document.createElement("div");
       const eyecont = eyehost || document.createElement("span");
       if (!filehost) {
@@ -23624,7 +23630,7 @@
       }
       if (!eyehost) {
         info.append(eyecont);
-        eyecont.classList.add("eyehost");
+        eyecont.classList.add("eyeehost");
       } else {
         eyecont.innerHTML = "";
       }

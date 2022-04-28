@@ -307,7 +307,7 @@
     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
     <div
       class:contract={contracted}
-      class="place"
+      class="plaace"
       on:click={(e) => e.preventDefault()}
       on:auxclick={(e) => e.preventDefault()}
       on:mousedown={bepis}
@@ -376,7 +376,7 @@
 {/if}
 
 <style scoped>
-  .place {
+  .plaace {
     cursor: pointer;
     max-width: 100vw;
     max-height: 100vh;
@@ -417,8 +417,8 @@
     height: auto;
   }
 
-  .place:not(.contract) video,
-  .place:not(.contract) img,
+  .plaace:not(.contract) video,
+  .plaace:not(.contract) img,
   .hoverer > video,
   .hoverer > img {
     max-width: 100vw;
