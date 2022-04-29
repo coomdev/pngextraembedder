@@ -413,8 +413,8 @@ const earlystartup = async () => {
         document.querySelectorAll<HTMLImageElement>('img[data-src]').forEach(i => {
             i.src = i.getAttribute('data-src')!;
         });
-        return true;
     }
+    return true;
 };
 
 const startup = async (is4chanX = true) => {
