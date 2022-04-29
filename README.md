@@ -12,7 +12,7 @@ How to Install
 ==============
 
 - Make sure you're using a decent Webkit-based browser (Chromium derivatives) or Firefox.
-- [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit))
+- [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit)), use [ViolentMonkey Beta](https://violentmonkey.github.io/get-it/#beta-release) if you want to spite the b4kuck nigger admin (based & redpilled). Be sure to read the trouble shooting section to know how to set this up.
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
 - Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
 
@@ -52,6 +52,17 @@ A lot of the results might be false positives from people posting directly files
 The "Contribute" checkbox makes your browser report posts with embeds you come accross during your regular browsing to [telepee](https://git.coom.tech/coomdev/telepee). It is recommended to enable it if you frequently post as it'll make your posts more visible to other extension users.
 
 # <a id="coom"></a> TroubleShooting
+
+## [NEW] b4k
+
+b4k is a cuck, i disabled lazyloading of thumbnails, fuck you nigger.
+
+![ack](ACK.webp)
+
+If you want to use b4k, you will get warning prompts. I added a ton of warning screen so it should happen to you.
+Switch to the beta and enable this setting. If you're using TamperMonkey, it has something similar called "Instant Injection"
+
+![ack](spm.png)
 
 ## It doesn't work
 
