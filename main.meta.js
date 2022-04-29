@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.202
+// @version      0.203
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -17,6 +17,10 @@
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
+// @grant        GM_getValue
+// @grant        GM.getValue
+// @grant        GM_setValue
+// @grant        GM.setValue
 // @grant        GM_openInTab
 // @grant        GM.openInTab
 // @grant        unsafeWindow
@@ -27,4 +31,5 @@
 // @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
+const _DOMParser = DOMParser;
 

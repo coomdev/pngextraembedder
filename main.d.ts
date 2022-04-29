@@ -59,3 +59,4 @@ declare const BUILD_VERSION: [number, number];
 declare const execution_mode: 'userscript' | 'chrome_api' | 'ff_api';
 declare const isBackground: boolean;
 declare const chrome: typeof browser;
+declare const _DOMParser: typeof DOMParser;

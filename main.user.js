@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.202
+// @version      0.203
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -17,6 +17,10 @@
 // @require      https://unpkg.com/web-streams-polyfill/dist/polyfill.min.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
+// @grant        GM_getValue
+// @grant        GM.getValue
+// @grant        GM_setValue
+// @grant        GM.setValue
 // @grant        GM_openInTab
 // @grant        GM.openInTab
 // @grant        unsafeWindow
@@ -27,6 +31,7 @@
 // @connect      *
 // @icon         https://coom.tech/resources/assets/1449696017588.png
 // ==/UserScript==
+const _DOMParser = DOMParser;
 
 (() => {
   var __create = Object.create;
@@ -83,7 +88,7 @@
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 202];
+      define_BUILD_VERSION_default = [0, 203];
     }
   });
 
@@ -23429,25 +23434,90 @@
       copyTextToClipboard(text3);
     };
   };
-  var startup = async (is4chanX = true) => {
-    const observer = new MutationObserver((mutations) => {
-      if (document.body.textContent.startsWith("Please disable")) {
-        (async () => {
-          const k = await GM_fetch(location.href);
-          const src = await k.text();
-          const ndom = new DOMParser().parseFromString(src, "text/html");
-          [...ndom.head.children].filter((e) => e.tagName == "SCRIPT" && e.textContent?.includes("-0x")).forEach((e) => e.remove());
-          unsafeWindow.document.documentElement.innerHTML = ndom.documentElement.innerHTML;
-          startup(is4chanX);
-        })();
+  var cleanupHTML = async (s) => {
+    const ndom = new _DOMParser().parseFromString(s, "text/html");
+    const evalWhenReady = [];
+    const addFromSource = async (elem, url) => {
+      try {
+        const code = await (await GM_fetch(url)).text();
+        evalWhenReady.push(code);
+      } catch (e) {
+        console.error(e);
+        debugger;
       }
+    };
+    const addFromCode = (elem, sr) => {
+      evalWhenReady.push(sr);
+    };
+    [...ndom.head.children].filter((e) => e.tagName == "SCRIPT").forEach((e) => e.remove());
+    [...ndom.body.children].filter((e) => e.tagName == "SCRIPT").forEach((e) => e.remove());
+    unsafeWindow["isEventSupported"] = () => false;
+    await addFromSource(ndom.body, "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js");
+    await addFromSource(ndom.head, "https://based.coom.tech/highlight.pack.js");
+    addFromCode(ndom.body, `
+    document.documentElement.className = "";
+    document.documentElement.lang = "en";
+    document.documentElement.dataset.site = "arch.b4k.co";`);
+    addFromCode(ndom.body, `
+    hljs.configure({
+        tableReplace: '  '
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    observer.observe(document.head, { childList: true, subtree: true });
-    const meta2 = document.querySelector('meta[name="referrer"]');
-    if (meta2) {
-      meta2.setAttribute("name", "referrer");
-      meta2.setAttribute("content", "no-referrer");
+    $('pre,code').each(function(i, block) {
+        hljs.highlightBlock(block);
+    });
+
+    var backend_vars = {"user_name":false,"user_email":false,"user_pass":"9fOK4K8","site_url":"https://arch.b4k.co/","default_url":"https://arch.b4k.co/","archive_url":"https://arch.b4k.co/","system_url":"https://arch.b4k.co/","api_url":"https://arch.b4k.co/","cookie_domain":null,"cookie_prefix":"foolfuuka_a2e7d4_","selected_theme":"foolz/foolfuuka-theme-foolfuuka","csrf_token_key":"csrf_token","images":{"banned_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/banned-image.png","banned_image_width":150,"banned_image_height":150,"missing_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/missing-image.jpg","missing_image_width":150,"missing_image_height":150},"gettext":{"submit_state":"Submitting","thread_is_real_time":"This thread is being displayed in real time.","update_now":"Update now","ghost_mode":"This thread has entered ghost mode. Your reply will be marked as a ghost post and will only affect the ghost index."},"board_shortname":"v"};`);
+    {
+      await addFromSource(ndom.body, "https://based.coom.tech/bootstrap.min.js");
+      await addFromSource(ndom.body, "https://based.coom.tech/plugins.js");
+      await addFromSource(ndom.body, "https://based.coom.tech/board.js");
+      await addFromSource(ndom.body, "https://based.coom.tech/fuuka.js");
+      await addFromSource(ndom.body, "https://based.coom.tech/lazyload.js");
+    }
+    return [ndom.documentElement.innerHTML, evalWhenReady];
+  };
+  var gmo;
+  var ispostreload = false;
+  var earlystartup = async () => {
+    if (location.host == "arch.b4k.co") {
+      if (GM.info.version == "2.13.0") {
+        alert(`Due to b4k's admin being a faggot, PEE will get you banned if you're not using Greasemonkey Beta and enabled "Synchronous page mode" or TamperMonkey with Instant Injection`);
+        alert("Because you use the regular GM, PEE will disable itself on this domain");
+        return false;
+      }
+      if (!GM_getValue("warning_seen", false)) {
+        alert(`Due to b4k's admin being a faggot, PEE will get you banned if you're not using Greasemonkey Beta and enabled "Synchronous page mode" or TamperMonkey with Instant Injection`);
+        alert('Make sure you have enabled "Synchronous page mode" on VM Beta or Instant Injection on TM');
+        if (!confirm("Proceed?")) {
+          return false;
+        }
+        GM_setValue("warning_seen", true);
+      }
+      document.documentElement.innerHTML = "";
+      const k = await GM_fetch(location.href);
+      const src = await k.text();
+      gmo.disconnect();
+      ispostreload = true;
+      const [code, scripts] = await cleanupHTML(src);
+      unsafeWindow.document.documentElement.innerHTML = code;
+      await new Promise((r) => setTimeout(r, 500));
+      for (const s of scripts)
+        unsafeWindow.eval(s);
+      unsafeWindow.dispatchEvent(new CustomEvent("load"));
+      document.querySelectorAll("img[data-src]").forEach((i) => {
+        i.src = i.getAttribute("data-src");
+      });
+      return true;
+    }
+  };
+  var startup = async (is4chanX = true) => {
+    const meta = document.querySelector('meta[name="referrer"]');
+    const customStyles = document.createElement("style");
+    customStyles.appendChild(document.createTextNode(global_default));
+    document.documentElement.insertBefore(customStyles, null);
+    if (meta) {
+      meta.setAttribute("name", "referrer");
+      meta.setAttribute("content", "no-referrer");
     }
     appState.set({ ...cappState, is4chanX });
     const lqp = getQueryProcessor(is4chanX);
@@ -23557,8 +23627,25 @@
   document.addEventListener("4chanXInitFinished", () => startup(true));
   document.addEventListener("4chanParsingDone", () => startup(false), { once: true });
   if (supportedAltDomain(location.host)) {
-    window.addEventListener("load", () => {
-      startup(false);
+    if (location.host == "arch.b4k.co") {
+      gmo = new MutationObserver((m) => {
+        for (const r of m) {
+          if (ispostreload)
+            debugger;
+          r.addedNodes.forEach((e) => {
+            if (e.tagName == "SCRIPT") {
+              if (e.parentElement?.tagName == "HEAD" || e.parentElement?.tagName == "BODY")
+                e.parentElement?.removeChild(e);
+            }
+          });
+        }
+      });
+      gmo.observe(document.documentElement, { subtree: true, childList: true });
+    }
+    const proceed = earlystartup();
+    window.addEventListener("load", async () => {
+      if (await proceed)
+        startup(false);
     }, { once: true });
   }
   document.addEventListener("4chanThreadUpdated", (e) => {
@@ -23604,14 +23691,6 @@
       obs.observe(filesinp, { attributes: true });
     }
   }, { once: !cappState.is4chanX });
-  var customStyles = document.createElement("style");
-  customStyles.appendChild(document.createTextNode(global_default));
-  document.documentElement.insertBefore(customStyles, null);
-  var meta = document.querySelector('meta[name="referrer"]');
-  if (meta) {
-    meta.setAttribute("name", "referrer");
-    meta.setAttribute("content", "no-referrer");
-  }
   function processAttachments(post, ress) {
     if (ress.length == 0)
       return;

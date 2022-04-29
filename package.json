@@ -21,6 +21,7 @@
     "file-type": "^17.0.2",
     "image-hash": "^5.0.1",
     "jpeg-js": "^0.4.3",
+    "jsdom": "^19.0.0",
     "linkify-string": "^3.0.4",
     "lodash": "^4.17.21",
     "png-js": "^1.0.0",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@tsconfig/svelte": "^3.0.0",
+    "@types/jsdom": "^16.2.14",
     "@types/lodash": "^4.14.181",
     "@types/tampermonkey": "^4.0.5",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
