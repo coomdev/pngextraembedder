@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.205
+// @version      0.206
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -88,7 +88,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 205];
+      define_BUILD_VERSION_default = [0, 206];
     }
   });
 
@@ -22180,7 +22180,9 @@ const _DOMParser = DOMParser;
     postsWithFiles: (h) => [...(h || document).querySelectorAll(".file")].map((e) => e.closest(".postContainer")),
     settingsHost: () => document.getElementById("navtopright"),
     catalogControlHost: () => document.getElementById("settings"),
-    getImageLink: (post) => post.querySelector('a[target="_blank"]')?.getAttribute("href") || "",
+    getImageLink: async function* (post) {
+      yield post.querySelector('a[target="_blank"]')?.getAttribute("href") || "";
+    },
     getFilename: (post) => {
       const a = post.querySelector('a[target="_blank"]');
       if (a && a.title)
@@ -22199,7 +22201,9 @@ const _DOMParser = DOMParser;
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.postContainer:not([class*="noFile"])')],
     settingsHost: () => document.getElementById("shortcuts"),
     catalogControlHost: () => document.getElementById("index-options"),
-    getImageLink: (post) => post.querySelector('a[target="_blank"]')?.getAttribute("href") || "",
+    getImageLink: async function* (post) {
+      yield post.querySelector('a[target="_blank"]')?.getAttribute("href") || "";
+    },
     getFilename: (post) => {
       const a = post.querySelector('a[target="_blank"]');
       const origlink = post.querySelector('.file-info > a[target*="_blank"]');
@@ -22217,7 +22221,16 @@ const _DOMParser = DOMParser;
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')],
     settingsHost: () => document.querySelector(".letters"),
     catalogControlHost: () => document.getElementById("index-options"),
-    getImageLink: (post) => post.querySelector("a[rel]")?.getAttribute("href") || "",
+    getImageLink: async function* (post) {
+      yield post.querySelector("a[rel]")?.getAttribute("href") || "";
+      if (location.host == "arch.b4k.co") {
+        const pid = post.id.match(/\d+/)[0];
+        const board = location.pathname.match(/\/(..?.?)\//)[1];
+        const res = await GM_fetch(`https://archive.wakarimasen.moe/_/api/chan/post/?board=${board}&num=${pid}`);
+        const data = await res.json();
+        yield data.media.media_link;
+      }
+    },
     getFilename: (post) => {
       const opfn = post.querySelector("a.post_file_filename")?.textContent;
       if (opfn)
@@ -23249,7 +23262,7 @@ const _DOMParser = DOMParser;
   appState.subscribe((v) => {
     cappState = v;
   });
-  var processImage = async (src, fn, hex, prevurl, onfound) => {
+  var processImage = async (srcs, fn, hex, prevurl, onfound) => {
     return Promise.all(processors.filter((e) => e.match(fn)).map(async (proc) => {
       if (proc.skip) {
         const md5 = import_buffer11.Buffer.from(hex, "base64");
@@ -23259,28 +23272,39 @@ const _DOMParser = DOMParser;
         }
         return;
       }
-      const iter = streamRemote(src);
-      if (!iter)
-        return;
-      let cumul = import_buffer11.Buffer.alloc(0);
-      let found;
-      let chunk = { done: true };
+      let succ = false;
+      let cumul;
       do {
-        const { value, done } = await iter.next(typeof found === "boolean");
-        if (done) {
-          chunk = { done: true };
-        } else {
-          chunk = { done: false, value };
-          cumul = import_buffer11.Buffer.concat([cumul, value]);
-          found = await proc.has_embed(cumul);
+        try {
+          const n = await srcs.next();
+          if (n.done)
+            return;
+          const iter = streamRemote(n.value);
+          if (!iter)
+            return;
+          cumul = import_buffer11.Buffer.alloc(0);
+          let found;
+          let chunk = { done: true };
+          do {
+            const { value, done } = await iter.next(typeof found === "boolean");
+            if (done) {
+              chunk = { done: true };
+            } else {
+              chunk = { done: false, value };
+              cumul = import_buffer11.Buffer.concat([cumul, value]);
+              found = await proc.has_embed(cumul);
+            }
+          } while (found !== false && !chunk.done);
+          succ = true;
+          await iter.next(true);
+          if (found === false) {
+            return;
+          }
+          onfound();
+          return [await proc.extract(cumul), false];
+        } catch {
         }
-      } while (found !== false && !chunk.done);
-      await iter.next(true);
-      if (found === false) {
-        return;
-      }
-      onfound();
-      return [await proc.extract(cumul), false];
+      } while (!succ);
     }));
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];

@@ -1,10 +1,12 @@
+import { GM_fetch } from "../requests";
+
 export type QueryProcessor = {
     getPost: (post: HTMLElement) => HTMLElement;
     getFileThumbnail: (post: HTMLElement) => HTMLElement;
     postsWithFiles: (host?: HTMLElement) => HTMLElement[];
     settingsHost: () => HTMLSpanElement;
     catalogControlHost: () => HTMLDivElement;
-    getImageLink: (post: HTMLElement) => string;
+    getImageLink:(post: HTMLElement) => AsyncGenerator<string, void, void>;
     getThumbnailLink: (post: HTMLElement) => string;
     getFilename: (post: HTMLElement) => string;
     getMD5: (post: HTMLElement) => string;
@@ -19,7 +21,11 @@ export const V4chan: QueryProcessor = {
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.file')].map(e => e.closest('.postContainer')) as any,
     settingsHost: () => document.getElementById("navtopright") as any,
     catalogControlHost: () => document.getElementById("settings") as HTMLDivElement,
-    getImageLink: (post: HTMLElement) => post.querySelector('a[target="_blank"]')?.getAttribute('href') || '',
+    getImageLink: async function *(post: HTMLElement) {
+        yield post.querySelector('a[target="_blank"]')?.getAttribute('href') || '';
+    },
+    
+    //(post: HTMLElement) => post.querySelector('a[target="_blank"]')?.getAttribute('href') || '',
     getFilename: (post: HTMLElement) => {
         const a = post.querySelector('a[target="_blank"]') as (HTMLAnchorElement | null);
         if (a && a.title)
@@ -39,7 +45,9 @@ export const X4chan: QueryProcessor = {
     postsWithFiles: (h) => [...(h || document).querySelectorAll('.postContainer:not([class*="noFile"])')] as HTMLElement[],
     settingsHost: () => document.getElementById("shortcuts") as any,
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
-    getImageLink: (post: HTMLElement) => post.querySelector('a[target="_blank"]')?.getAttribute('href') || '',
+    getImageLink: async function *(post: HTMLElement) {
+        yield post.querySelector('a[target="_blank"]')?.getAttribute('href') || '';
+    },
     getFilename: (post: HTMLElement) => {
         const a = post.querySelector('a[target="_blank"]') as (HTMLAnchorElement | null);
         const origlink = post.querySelector('.file-info > a[target*="_blank"]') as HTMLAnchorElement;
@@ -58,7 +66,16 @@ export const FoolFuuka: QueryProcessor = {
     postsWithFiles: (h) => [...(h || document).querySelectorAll('article[class*="has_image"]')] as HTMLElement[],
     settingsHost: () => document.querySelector(".letters") as any,
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
-    getImageLink: (post: HTMLElement) => post.querySelector('a[rel]')?.getAttribute('href') || '',
+    getImageLink: async function *(post: HTMLElement) {
+        yield post.querySelector('a[rel]')?.getAttribute('href') || '';
+        if (location.host == "arch.b4k.co") { //get fucked
+            const pid = post.id.match(/\d+/)![0];
+            const board = location.pathname.match(/\/(..?.?)\//)![1];
+            const res = await GM_fetch(`https://archive.wakarimasen.moe/_/api/chan/post/?board=${board}&num=${pid}`);
+            const data = await res.json();
+            yield data.media.media_link;
+        }
+    },
     getFilename: (post: HTMLElement) => {
         const opfn = post.querySelector('a.post_file_filename')?.textContent;
         if (opfn)

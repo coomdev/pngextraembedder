@@ -87,7 +87,7 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (src: string, fn: string, hex: string, prevurl: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
+const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string, hex: string, prevurl: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
     return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
         if (proc.skip) {
             // skip file downloading, file is referenced from the filename
@@ -98,30 +98,41 @@ const processImage = async (src: string, fn: string, hex: string, prevurl: strin
                 return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
             } return;
         }
-        // TODO: Move this outside the loop?
-        const iter = streamRemote(src);
-        if (!iter)
-            return;
-        let cumul = Buffer.alloc(0);
-        let found: boolean | undefined;
-        let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
+        let succ = false;
+        let cumul: Buffer;
         do {
-            const { value, done } = await iter.next(typeof found === "boolean");
-            if (done) {
-                chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
-            } else {
-                chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
-                cumul = Buffer.concat([cumul, value!]);
-                found = await proc.has_embed(cumul);
+            try {
+                const n = await srcs.next();
+                if (n.done)
+                    return; // no more links to try
+                const iter = streamRemote(n.value);
+                if (!iter)
+                    return;
+                cumul = Buffer.alloc(0);
+                let found: boolean | undefined;
+                let chunk: ReadableStreamDefaultReadResult<Buffer> = { done: true };
+                do {
+                    const { value, done } = await iter.next(typeof found === "boolean");
+                    if (done) {
+                        chunk = { done: true } as ReadableStreamDefaultReadDoneResult;
+                    } else {
+                        chunk = { done: false, value } as ReadableStreamDefaultReadValueResult<Buffer>;
+                        cumul = Buffer.concat([cumul, value!]);
+                        found = await proc.has_embed(cumul);
+                    }
+                } while (found !== false && !chunk.done /* Because we only embed links now, it's safe to assume we get everything we need in the first chunk */);
+                succ = true;
+                await iter.next(true);
+                if (found === false) {
+                    //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
+                    return;
+                }
+                onfound();
+                return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
+            } catch {
+                // ignore error and retry with another link
             }
-        } while (found !== false && !chunk.done /* Because we only embed links now, it's safe to assume we get everything we need in the first chunk */);
-        await iter.next(true);
-        if (found === false) {
-            //console.log(`Gave up on ${src} after downloading ${cumul.byteLength} bytes...`);
-            return;
-        }
-        onfound();
-        return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
+        } while (!succ);
     }));
 };
 
