@@ -74,13 +74,6 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
                     reject(new Error("Server Error: " + resp.status));
                     return;
                 }
-                if (resp.status == 429) {
-                    //retrying... fuck you
-                    setTimeout(() => {
-                        GM_fetch(url, opt, lisn).then(resolve);
-                    }, 1000 + ~~(Math.random() * 5000));
-                    return;
-                }
                 const blob = resp.response as Blob;
                 const ref = resp as any as Awaited<ReturnType<typeof fetch>>;
                 ref.blob = () => Promise.resolve(blob);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.206
+// @version      0.207
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -88,7 +88,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 206];
+      define_BUILD_VERSION_default = [0, 207];
     }
   });
 
@@ -13677,12 +13677,6 @@ const _DOMParser = DOMParser;
         onload: (resp) => {
           if (resp.status / 100 >= 4) {
             reject(new Error("Server Error: " + resp.status));
-            return;
-          }
-          if (resp.status == 429) {
-            setTimeout(() => {
-              GM_fetch(url, opt, lisn).then(resolve2);
-            }, 1e3 + ~~(Math.random() * 5e3));
             return;
           }
           const blob = resp.response;
