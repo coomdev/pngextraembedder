@@ -11,12 +11,19 @@ Also supports desuarchive.
 How to Install
 ==============
 
+Note: 4chanX isn't a hard requirement, just recommended because it's overall a nicer experience. If you don't want to use 4chanX, make sure the native 4chan extension is enabled in your settings.
+
+## Teh olde way
+
 - Make sure you're using a decent Webkit-based browser (Chromium derivatives) or Firefox.
 - [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit)), use [ViolentMonkey Beta](https://violentmonkey.github.io/get-it/#beta-release) if you want to spite the b4kuck nigger admin (based & redpilled). Be sure to read the trouble shooting section to know how to set this up.
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
 - Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
 
-Note: 4chanX isn't a hard requirement, just recommended because it's overall a nicer experience. If you don't want to use 4chanX, make sure the native 4chan extension is enabled in your settings.
+## The newer way (WIP)
+
+- [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.208-an+fx.xpi) or [Chrome-based](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx))
 
 How to Build 
 ============

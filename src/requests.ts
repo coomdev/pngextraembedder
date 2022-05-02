@@ -1,5 +1,3 @@
-import { localLoad, settings } from "./stores";
-
 const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
     GM_xmlhttpRequest :
     (typeof GM != "undefined" ?
@@ -114,10 +112,10 @@ const makePoolable = <T extends any[], U>(fun: (...args: T) => Promise<U>, getPo
     };
 };
 
-let csettings: Parameters<typeof settings['set']>[0] = localLoad('settingsv2', {} as any);
+// let csettings: Parameters<typeof settings['set']>[0] = localLoad('settingsv2', {} as any);
 
-settings.subscribe(s => {
-    csettings = s;
-});
+// settings.subscribe(s => {
+//     csettings = s;
+// });
 
-const poolFetch = makePoolable(GM_fetch, () => csettings.conc);
+// const poolFetch = makePoolable(GM_fetch, () => csettings.conc);

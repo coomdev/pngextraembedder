@@ -1,3 +1,5 @@
+import { ifetch } from "./platform";
+
 type TagList = (string | TagList)[];
 
 export interface MyTags {
@@ -62,7 +64,7 @@ export class HydrusClient {
     }
 
     async get(params: string) {
-        return await fetch(this.baseUrl + params, {
+        return await ifetch(this.baseUrl + params, {
             headers: {
                 'Hydrus-Client-API-Access-Key': this.ak
             }

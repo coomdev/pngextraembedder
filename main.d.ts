@@ -60,3 +60,4 @@ declare const execution_mode: 'userscript' | 'chrome_api' | 'ff_api';
 declare const isBackground: boolean;
 declare const chrome: typeof browser;
 declare const _DOMParser: typeof DOMParser;
+declare function GM_addElement(parent: HTMLElement, tagname: string, attrs: Record<string, string>)

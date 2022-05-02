@@ -1,4 +1,4 @@
-import { GM_fetch } from "../requests";
+import { ifetch } from "../platform";
 
 export type QueryProcessor = {
     getPost: (post: HTMLElement) => HTMLElement;
@@ -71,7 +71,7 @@ export const FoolFuuka: QueryProcessor = {
         if (location.host == "arch.b4k.co") { //get fucked
             const pid = post.id.match(/\d+/)![0];
             const board = location.pathname.match(/\/(..?.?)\//)![1];
-            const res = await GM_fetch(`https://archive.wakarimasen.moe/_/api/chan/post/?board=${board}&num=${pid}`);
+            const res = await ifetch(`https://archive.wakarimasen.moe/_/api/chan/post/?board=${board}&num=${pid}`);
             const data = await res.json();
             yield data.media.media_link;
         }

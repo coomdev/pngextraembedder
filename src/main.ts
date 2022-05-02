@@ -20,11 +20,10 @@ import NotificationsHandler from './Components/NotificationsHandler.svelte';
 
 import { fireNotification, getSelectedFile } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
-import { ifetch, streamRemote, supportedAltDomain } from "./platform";
+import { ifetch, Platform, streamRemote, supportedAltDomain } from "./platform";
 import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
 import { HydrusClient } from "./hydrus";
 import { registerPlugin } from 'linkifyjs';
-import { GM_fetch } from "./requests";
 
 export interface ImageProcessor {
     skip?: true;
@@ -130,6 +129,7 @@ const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string
                 onfound();
                 return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
             } catch {
+                debugger;
                 // ignore error and retry with another link
             }
         } while (!succ);
@@ -151,7 +151,7 @@ const signalNewEmbeds = debounce(async () => {
         const reshaped = Object.fromEntries([...new Set(pendingPosts.map(e => e.op))].map(e => [e, pendingPosts.filter(p => p.op == e).map(e => e.id)]));
         console.log(reshaped);
 
-        const res = await fetch("https://shoujo.coom.tech/listing/" + boardname, {
+        const res = await ifetch("https://shoujo.coom.tech/listing/" + boardname, {
             method: "POST",
             body: JSON.stringify(reshaped),
             headers: {
@@ -195,12 +195,11 @@ const processPost = async (post: HTMLDivElement) => {
 };
 
 const versionCheck = async () => {
-    const [lmajor, lminor] =
-        (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js"))
-            .text())
-            .split('\n')
-            .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
-            .map(e => +e);
+    const txt = (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
+    debugger;
+    const [lmajor, lminor] = txt.split('\n')
+        .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
+        .map(e => +e);
     const [major, minor] = BUILD_VERSION;
     if (major < lmajor || (major == lmajor && minor < lminor)) {
         fireNotification("info", `Last PEE version is ${lmajor}.${lminor}, you're on ${major}.${minor}`);
@@ -328,102 +327,54 @@ const scrapeBoard = async (self: HTMLButtonElement) => {
     };
 };
 
-const cleanupHTML = async (s: string) => {
-    const ndom = new _DOMParser().parseFromString(s, "text/html");
+const __DOMParser = execution_mode == "userscript" ? _DOMParser : DOMParser;
+const cleanupHTML = (ndom: Document) => {
     const evalWhenReady: string[] = [];
-    const addFromSource = async (elem: HTMLElement, url: string) => {
-        /* const scr = document.createElement('script');
-         scr.type = 'text/javascript';
-         scr.src = url;
-         scr.addEventListener("load", e => console.log('url loaded', e));
-         elem.append(scr);*/
-        try {
-            const code = await (await GM_fetch(url)).text();
-            evalWhenReady.push(code);
-        } catch (e) {
-            console.error(e);
-            debugger;
-
-        }
+    const addFromSource = (elem: HTMLElement, url: string) => {
+        const scr = document.createElement('script');
+        scr.type = 'text/javascript';
+        scr.src = url;
+        elem.append(scr);
     };
 
     const addFromCode = (elem: HTMLElement, sr: string) => {
-        /*        const scr = document.createElement('script');
-                scr.type = 'text/javascript';
-                scr.innerText = sr;
-                scr.addEventListener("load", e => console.log('code loaded', e));
-                elem.append(scr);*/
-        //eval(sr);
-        evalWhenReady.push(sr);
+        const scr = document.createElement('script');
+        scr.type = 'text/javascript';
+        scr.innerText = sr;
+        elem.append(scr);
     };
 
-    [...ndom.head.children].filter(e => e.tagName == "SCRIPT").forEach(e => e.remove());
-    [...ndom.body.children].filter(e => e.tagName == "SCRIPT").forEach(e => e.remove());
+    const rm = (e: any) => e.remove();
+    [...ndom.head.children].filter(e => e.tagName == "SCRIPT").forEach(rm);
+    [...ndom.body.children].filter(e => e.tagName == "SCRIPT").forEach(rm);
 
-    unsafeWindow['isEventSupported'] = () => false;
-
-    await addFromSource(ndom.body, "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js");
-    await addFromSource(ndom.head, "https://based.coom.tech/highlight.pack.js");
-    addFromCode(ndom.body, `
-    document.documentElement.className = "";
-    document.documentElement.lang = "en";
-    document.documentElement.dataset.site = "arch.b4k.co";`);
-    addFromCode(ndom.body, `
-    hljs.configure({
-        tableReplace: '  '
-    });
-    $('pre,code').each(function(i, block) {
-        hljs.highlightBlock(block);
-    });
-
-    var backend_vars = {"user_name":false,"user_email":false,"user_pass":"9fOK4K8","site_url":"https://arch.b4k.co/","default_url":"https://arch.b4k.co/","archive_url":"https://arch.b4k.co/","system_url":"https://arch.b4k.co/","api_url":"https://arch.b4k.co/","cookie_domain":null,"cookie_prefix":"foolfuuka_a2e7d4_","selected_theme":"foolz/foolfuuka-theme-foolfuuka","csrf_token_key":"csrf_token","images":{"banned_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/banned-image.png","banned_image_width":150,"banned_image_height":150,"missing_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/missing-image.jpg","missing_image_width":150,"missing_image_height":150},"gettext":{"submit_state":"Submitting","thread_is_real_time":"This thread is being displayed in real time.","update_now":"Update now","ghost_mode":"This thread has entered ghost mode. Your reply will be marked as a ghost post and will only affect the ghost index."},"board_shortname":"v"};`);
-    // head
-    //body
-    {
-        await addFromSource(ndom.body, "https://based.coom.tech/bootstrap.min.js");
-        await addFromSource(ndom.body, "https://based.coom.tech/plugins.js");
-
-        await addFromSource(ndom.body, "https://based.coom.tech/board.js");
-        await addFromSource(ndom.body, "https://based.coom.tech/fuuka.js");
-        await addFromSource(ndom.body, "https://based.coom.tech/lazyload.js");
-    }
+    addFromSource(ndom.body, "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js");
+    addFromSource(ndom.head, "https://based.coom.tech/highlight.pack.js");
+    /*
+        addFromCode(ndom.body, `document.documentElement.className = "";document.documentElement.lang = "en";document.documentElement.dataset.site = "arch.b4k.co";`);
+        addFromCode(ndom.body, `hljs.configure({        tableReplace: '  '    });    $('pre,code').each(function(i, block) {        hljs.highlightBlock(block);    });    var backend_vars = {"user_name":false,"user_email":false,"user_pass":"9fOK4K8","site_url":"https://arch.b4k.co/","default_url":"https://arch.b4k.co/","archive_url":"https://arch.b4k.co/","system_url":"https://arch.b4k.co/","api_url":"https://arch.b4k.co/","cookie_domain":null,"cookie_prefix":"foolfuuka_a2e7d4_","selected_theme":"foolz/foolfuuka-theme-foolfuuka","csrf_token_key":"csrf_token","images":{"banned_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/banned-image.png","banned_image_width":150,"banned_image_height":150,"missing_image":"https://arch.b4k.co/foolfuuka/foolz/foolfuuka-theme-foolfuuka/assets-1.2.28/images/missing-image.jpg","missing_image_width":150,"missing_image_height":150},"gettext":{"submit_state":"Submitting","thread_is_real_time":"This thread is being displayed in real time.","update_now":"Update now","ghost_mode":"This thread has entered ghost mode. Your reply will be marked as a ghost post and will only affect the ghost index."},"board_shortname":"v"};`);
+        // head
+        //body
+            await addFromSource(ndom.body, "https://based.coom.tech/bootstrap.min.js");
+            await addFromSource(ndom.body, "https://based.coom.tech/plugins.js");
+    
+            await addFromSource(ndom.body, "https://based.coom.tech/board.js");
+            await addFromSource(ndom.body, "https://based.coom.tech/fuuka.js");
+            await addFromSource(ndom.body, "https://based.coom.tech/lazyload.js");
+        */
     return [ndom.documentElement.innerHTML, evalWhenReady] as [string, string[]];
 };
 
 let gmo: MutationObserver;
-let ispostreload = false;
 
 const earlystartup = async () => {
-    if (location.host == 'arch.b4k.co') {
-        if (GM.info.version == "2.13.0") {
-            alert(`Due to b4k's admin being a faggot, PEE will get you banned if you're not using Greasemonkey Beta and enabled "Synchronous page mode" or TamperMonkey with Instant Injection`);
-            alert("Because you use the regular GM, PEE will disable itself on this domain");
+    if (location.host == 'arch.b4k.co' && execution_mode == "userscript") {
+        if (!GM_getValue("warning_seen2", false)) {
+            alert(`Due to b4k's admin being a faggot, PEE will get you banned, so the userscript version is disabled here`);
+            alert("Use the WebExtension version of PEE if you want to use b4k. Cool new features will be coming to it, too!");
+            GM_setValue("warning_seen2", true);
             return false;
         }
-        if (!GM_getValue("warning_seen", false)) {
-            alert(`Due to b4k's admin being a faggot, PEE will get you banned if you're not using Greasemonkey Beta and enabled "Synchronous page mode" or TamperMonkey with Instant Injection`);
-            alert("Make sure you have enabled \"Synchronous page mode\" on VM Beta or Instant Injection on TM");
-            if (!confirm("Proceed?")) {
-                return false;
-            }
-            GM_setValue("warning_seen", true);
-        }
-        document.documentElement.innerHTML = '';
-        const k = await GM_fetch(location.href);
-        const src = await k.text();
-        gmo.disconnect();
-        ispostreload = true;
-        const [code, scripts] = await cleanupHTML(src);
-        unsafeWindow.document.documentElement.innerHTML = code;
-        await new Promise(r => setTimeout(r, 500));
-        //unsafeWindow.document.documentElement.replaceWith(unsafeWindow.document.documentElement.cloneNode(true));
-        for (const s of scripts)
-            unsafeWindow.eval(s);
-        unsafeWindow.dispatchEvent(new CustomEvent("load"));
-        // out of spite:
-        document.querySelectorAll<HTMLImageElement>('img[data-src]').forEach(i => {
-            i.src = i.getAttribute('data-src')!;
-        });
     }
     return true;
 };
@@ -431,7 +382,7 @@ const earlystartup = async () => {
 const startup = async (is4chanX = true) => {
     const meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement;
     const customStyles = document.createElement('style');
-    //return;
+
     customStyles.appendChild(document.createTextNode(globalCss));
     document.documentElement.insertBefore(customStyles, null);
 
@@ -471,14 +422,18 @@ const startup = async (is4chanX = true) => {
     registerPlugin('quote', postQuote);
 
     if (!is4chanX && location.host.startsWith('boards.4chan')) {
-        const qr = QR;
-        const show = qr.show.bind(qr);
-        qr.show = (...args: any[]) => {
-            show(...args);
-            document.dispatchEvent(new CustomEvent("QRDialogCreation", {
-                detail: document.getElementById('quickReply')
-            }));
-        };
+        (async () => {
+            while (!('QR' in window))
+                await new Promise(_ => setTimeout(_, 250));
+            const qr = QR;
+            const show = qr.show.bind(qr);
+            qr.show = (...args: any[]) => {
+                show(...args);
+                document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+                    detail: document.getElementById('quickReply')
+                }));
+            };
+        })();
 
         document.addEventListener("QRGetFile", (e) => {
             const qr = document.getElementById('qrFile') as HTMLInputElement | null;
@@ -492,12 +447,6 @@ const startup = async (is4chanX = true) => {
             dt.items.add(new File([e.detail.file], e.detail.name));
             qr.files = dt.files;
         }) as any);
-
-        const notificationHost = document.createElement('span');
-        new NotificationsHandler({
-            target: notificationHost
-        });
-        document.body.append(notificationHost);
     }
     //await Promise.all([...document.querySelectorAll('.postContainer')].filter(e => e.textContent?.includes("191 KB")).map(e => processPost(e as any)));
 
@@ -520,14 +469,33 @@ const startup = async (is4chanX = true) => {
     document.querySelectorAll('.board').forEach(e => {
         mo.observe(e!, { childList: true, subtree: true });
     });
-    const posts = qp.postsWithFiles();
 
-    const scts = qp.settingsHost();
-    const button = textToElement(`<span></span>`);
-    const settingsButton = new SettingsButton({
-        target: button
-    });
-    scts?.appendChild(button);
+    if (!document.body) {
+        let bodyRes: any;
+        const bodyInit = new Promise(r => bodyRes = r);
+        const mo2 = new MutationObserver(r => {
+            if (document.body) {
+                mo2.disconnect();
+                bodyRes();
+            }
+        });
+        mo2.observe(document.documentElement, { childList: true, subtree: true });
+        await bodyInit;
+    }
+
+    if (!is4chanX && location.host.startsWith('boards.4chan')) {
+        const notificationHost = document.createElement('span');
+        new NotificationsHandler({
+            target: notificationHost
+        });
+        document.body.append(notificationHost);
+    }
+
+    if (location.host == 'arch.b4k.co') {
+        document.querySelectorAll<HTMLImageElement>('img[data-src]').forEach(i => {
+            i.src = i.getAttribute('data-src')!;
+        });
+    }
 
     const appHost = textToElement(`<div class="peee-settings"></div>`);
     const appInstance = new App({ target: appHost });
@@ -536,6 +504,14 @@ const startup = async (is4chanX = true) => {
     const scrollHost = textToElement(`<div></div>`);
     new ScrollHighlighter({ target: scrollHost });
     document.body.append(scrollHost);
+
+    const posts = qp.postsWithFiles();
+    const scts = qp.settingsHost();
+    const button = textToElement(`<span></span>`);
+    const settingsButton = new SettingsButton({
+        target: button
+    });
+    scts?.appendChild(button);
 
     appState.set({
         ...cappState,
@@ -567,16 +543,25 @@ const startup = async (is4chanX = true) => {
     //await Promise.all(posts.map(e => processPost(e as any)));
 };
 document.addEventListener('4chanXInitFinished', () => startup(true));
-document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
+document.addEventListener('4chanMainInit', () => startup(false), { once: true });
 if (supportedAltDomain(location.host)) {
     if (location.host == 'arch.b4k.co') {
         gmo = new MutationObserver(m => {
             for (const r of m) {
-                if (ispostreload) debugger;
                 r.addedNodes.forEach(e => {
                     if ((e as any).tagName == "SCRIPT") {
-                        if (e.parentElement?.tagName == "HEAD" || e.parentElement?.tagName == "BODY")
-                            e.parentElement?.removeChild(e);
+                        const scr = e as HTMLScriptElement;
+                        if (scr.src.startsWith('https://arch.b4k.co/') || scr.src.startsWith('https://b4k.co/')) {
+                            let file = scr.src.slice(scr.src.lastIndexOf('/') + 1);
+                            if (file.includes('?'))
+                                file = file.slice(0, file.lastIndexOf('?'));
+                            scr.src = `https://based.coom.tech/` + file;
+                            return;
+                        }
+                        if ((scr.src && !scr.src.startsWith('https://ajax.googleapis.com/')) || scr.innerHTML.includes('googletagmanager') || scr.src.startsWith("data:")) {
+                            console.log(scr);
+                            scr.parentElement?.removeChild(scr);
+                        }
                     }
                 });
             }

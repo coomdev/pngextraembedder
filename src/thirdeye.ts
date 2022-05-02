@@ -90,7 +90,7 @@ const processQueries = async () => {
     const md5 = reqQueue.map(e => e[0]).filter(e => !(e in queryCache));
     expired = undefined;
     if (md5.length > 0) {
-        const res = await fetch("https://shoujo.coom.tech/api", {
+        const res = await ifetch("https://shoujo.coom.tech/api", {
             method: "POST",
             body: JSON.stringify({ md5 }),
             headers: {
@@ -135,7 +135,8 @@ const findFileFrom = async (b: Booru, hex: string, abort?: EventTarget) => {
             return cache[b.domain][hex] as BooruMatch[];
         const res = await ifetch(`https://${b.domain}${b.endpoint}${hex}`);
         // might throw because some endpoint respond with invalid json when an error occurs
-        const pres = await res.json();
+        const txt = await res.text();
+        const pres = JSON.parse(txt);
         const tran = b.quirks(pres).filter(e => !e.tags.some(e => black.has(e)));
         if (!(b.domain in cache))
             cache[b.domain] = {};

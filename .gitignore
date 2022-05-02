@@ -21,3 +21,5 @@ core.js
 fag
 rollup.config.js
 .vscode/settings.json
+key.pem
+chrome.pem

@@ -12,6 +12,7 @@
   import { settings, appState } from "../stores";
   import { filehosts } from "../filehosts";
   import HydrusSearch from "./HydrusSearch.svelte";
+import { ifetch } from "../platform";
 
   let newbooru: Partial<Omit<Booru, "quirks"> & { view: string }> = {};
   let dial: Dialog;
@@ -50,7 +51,7 @@
     if ($settings.phash) {
       params = "?mdist=" + $settings.mdist;
     }
-    let res = await fetch(
+    let res = await ifetch(
       "https://shoujo.coom.tech/listing/" + boardname + params
     );
     threads = await res.json();
