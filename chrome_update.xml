@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
   <app appid='ilffidhdekahjldemialkgahicnajchb'>
-    <updatecheck codebase='http://localhost:8000/myExtension.crx' version='0.208' prodversionmin='64.0.3242' />
+    <updatecheck codebase='https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx' version='0.209' prodversionmin='64.0.3242' />
   </app>
 </gupdate>

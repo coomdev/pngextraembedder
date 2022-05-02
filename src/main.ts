@@ -543,7 +543,8 @@ const startup = async (is4chanX = true) => {
     //await Promise.all(posts.map(e => processPost(e as any)));
 };
 document.addEventListener('4chanXInitFinished', () => startup(true));
-document.addEventListener('4chanMainInit', () => startup(false), { once: true });
+// 4chanMainInit is fired even if the native extension is disabled, which we don't want
+document.addEventListener('4chanParsingDone', () => startup(false), { once: true });
 if (supportedAltDomain(location.host)) {
     if (location.host == 'arch.b4k.co') {
         gmo = new MutationObserver(m => {

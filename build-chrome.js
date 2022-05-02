@@ -11,7 +11,7 @@ import path from 'path';
 import ChromeExtension from 'crx';
 
 const crx = new ChromeExtension({
-  codebase: 'http://localhost:8000/myExtension.crx',
+  codebase: 'https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx',
   privateKey: readFileSync('./key.pem')
 });
 
