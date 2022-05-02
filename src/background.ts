@@ -142,14 +142,18 @@ const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, i
 
     let buff: Buffer[] = [];
 
+    const ctotal = +headerObj['content-length'] || 0; // content total
+    let ltotal = 0; // loaded total
+
     // sequence number, required to reorder messages client-side
     // if they get processed out of order
     let s = 0;
     const e = {
         write(chunk: Uint8Array) {
+            ltotal += chunk.byteLength;
+            c.postMessage({ id, progress: [ltotal, ctotal] });
             if (!pendingFetches.get(c)![id].fetchFully) {
                 const url = URL.createObjectURL(new Blob([chunk]));
-                console.log('created blob of size', chunk.byteLength);
                 c.postMessage({ id, s: s++, pushData: { data: url } });
             } else {
                 buff.push(Buffer.from(chunk));

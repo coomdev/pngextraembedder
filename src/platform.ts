@@ -69,7 +69,7 @@ const extrBlob = async (url: string) => {
     return new Uint8Array(ret);
 };
 
-export const corsFetch = async (input: string, init?: RequestInit) => {
+export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTarget) => {
     const id = gid++;
 
     /*    if (init) {
@@ -106,6 +106,12 @@ export const corsFetch = async (input: string, init?: RequestInit) => {
         const cmdbuff: any[] = [];
 
         lqueue[id] = (async (e: any) => {
+            // this is computed from the background script because the content script may
+            // request everything to be delivered in one chunk, defeating the purpose
+            if (e.progress) {
+                lsn?.dispatchEvent(new CustomEvent("progress", { detail: e.progress }));
+            }
+
             if (e.pushData) {
                 if (e.s > s) {
                     // insert before an hypothetical cmd with a higher seq number
@@ -125,8 +131,10 @@ export const corsFetch = async (input: string, init?: RequestInit) => {
                 // this also  means that cmdbuff must contain 0 or more ordered commands that must be processed
                 // afterward until discontinuity 
                 const processCmd = async (e: any) => {
+
                     if (e.pushData.data) {
                         const data = await extrBlob(e.pushData.data);
+
                         if (gcontroller)
                             gcontroller.enqueue(data);
                         else
@@ -169,17 +177,9 @@ export const corsFetch = async (input: string, init?: RequestInit) => {
                     return ret;
                 };
 
-                const blob = async () => {
-                    return new Blob([await arrayBuffer()]);
-                };
-
-                const text = async () => {
-                    return new TextDecoder().decode(await arrayBuffer());
-                };
-
-                const json = async () => {
-                    return JSON.parse(await text());
-                };
+                const blob = async () => new Blob([await arrayBuffer()]);
+                const text = async () => new TextDecoder().decode(await arrayBuffer());
+                const json = async () => JSON.parse(await text());
 
                 if (e.ok)
                     _({
@@ -227,7 +227,7 @@ export async function getHeaders(s: string) {
 
 export async function ifetch(...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]): ReturnType<typeof fetch> {
     if (execution_mode != "userscript")
-        return corsFetch(url.toString(), opt);
+        return corsFetch(url.toString(), opt, lisn);
     return GM_fetch(url, opt, lisn);
 }
 

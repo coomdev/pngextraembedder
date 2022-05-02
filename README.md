@@ -23,7 +23,7 @@ Note: 4chanX isn't a hard requirement, just recommended because it's overall a n
 ## The newer way (WIP)
 
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.208-an+fx.xpi) or [Chrome-based](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx))
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.210-an+fx.xpi) or [Chrome-based](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx))
 
 How to Build 
 ============
