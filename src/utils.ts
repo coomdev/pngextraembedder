@@ -63,7 +63,37 @@ const generateThumbnail = async (f: File): Promise<Buffer> => {
     return Buffer.from(await blob.arrayBuffer());
 };
 
+export const buildPeeFileFF = async (f: File) => {
+    let thumbnail = new Uint8Array();
+    const te = new TextEncoder();
+    thumbnail = await generateThumbnail(f);
+    const namebuf = te.encode(f.name);
+    const ret = new Uint8Array(4 /* Magic */ +
+        1 /* Flags */ + namebuf.byteLength + 1 +
+        (thumbnail.byteLength != 0 ? (4 + thumbnail.byteLength) : 0) /* TSize + Thumbnail */ +
+        f.size /*Teh file*/);
+    const ret32 = new DataView(ret.buffer);
+    let ptr = 0;
+    ret.set(te.encode('PEE\0'), 0);
+    ptr += 4;
+    ret[ptr++] = 1 | ((+(thumbnail.length != 0)) << 2);
+    ret.set(namebuf, ptr);
+    ptr += namebuf.byteLength;
+    ret[ptr++] = 0;
+    if (thumbnail.length > 0) {
+        ret32.setUint32(ptr, thumbnail.byteLength, true);
+        ptr += 4;
+        ret.set(thumbnail, ptr);
+        ptr += thumbnail.byteLength;
+    }
+    const content = await f.arrayBuffer();
+    ret.set(new Uint8Array(content), ptr);
+    return new Blob([ret]);
+};
+
 export const buildPeeFile = async (f: File) => {
+    if (execution_mode == "ff_api")
+        return buildPeeFileFF(f);
     //const isMemeBrowser = navigator.userAgent.indexOf("Chrome") == -1;
     let thumbnail = Buffer.alloc(0);
     thumbnail = await generateThumbnail(f);
@@ -85,7 +115,8 @@ export const buildPeeFile = async (f: File) => {
         thumbnail.copy(ret, ptr);
         ptr += thumbnail.byteLength;
     }
-    Buffer.from(await f.arrayBuffer()).copy(ret, ptr);
+    const content = await f.arrayBuffer();
+    Buffer.from(content).copy(ret, ptr);
     return new Blob([ret]);
 };
 
@@ -200,7 +231,8 @@ export const uploadFiles = async (injs: File[]) => {
     let total = 0;
     fireNotification('info', `Uploading ${injs.length} files...`);
     return await Promise.all(injs.map(async inj => {
-        const ret = await filehosts[csettings.fhost || 0].uploadFile(await buildPeeFile(inj));
+        const peefile = await buildPeeFile(inj);
+        const ret = await filehosts[csettings.fhost || 0].uploadFile(peefile);
         fireNotification('info', `Uploaded files [${++total}/${injs.length}] ${ret}`);
         return ret;
     }));

@@ -32,9 +32,10 @@
   }
 
   // This is an event to signal a change in the container file
+  let inhibit = false;
   document.addEventListener("PEEFile", async (e) => {
     let file = (e as any).detail as File;
-    if (currentEmbed?.file != file) {
+    if (currentEmbed?.file != file && !inhibit) {
       original = file;
       if ($settings.auto_embed && $appState.client) {
         const tags = $settings.auto_tags
@@ -49,6 +50,8 @@
         const nlinks = await uploadFiles(files);
         links = [...links, ...nlinks];
       }
+      inhibit = true;
+      setTimeout(() => inhibit = false, 500); // hack around 4chan(X)(?) inconsistent getFile
       embedContent(e);
     }
   });

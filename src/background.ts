@@ -102,6 +102,38 @@ obj.webRequest.onBeforeRequest.addListener((details) => {
 }, filts, ['blocking']);
 */
 
+async function deserialize(src: any): Promise<any> {
+    switch (src.cls) {
+        case 'FormData': {
+            const ret = new FormData();
+            for (const [key, items] of src.value) {
+                for (const item of items) {
+                    ret.append(key, await deserialize(item));
+                }
+            }
+            return ret;
+        }
+        case 'File': {
+            return new File([await (await fetch(src.value)).blob()], src.name, {
+                lastModified: src.lastModified,
+                type: src.type
+            });
+        }
+        case 'Blob': {
+            return new Blob([await (await fetch(src.value)).blob()], {
+                type: src.type
+            });
+        }
+        case 'Object': {
+            const ret = {} as any;
+            for (const prop in src.value) {
+                ret[prop] = await deserialize(src.value[prop]);
+            }
+            return ret;
+        }
+    }
+}
+
 const pendingFetches = new Map<browser.runtime.Port, { [id in number]: { fetchFully: boolean } }>();
 
 const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, init?: RequestInit) => {
@@ -113,6 +145,8 @@ const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, i
 
     if (input.startsWith('//')) // wtf fireshit??
         input = 'https:' + input;
+    if (init?.body && execution_mode == "chrome_api")
+        init.body = await deserialize(init.body);
     const k = await fetch(input, init);
     let headersStr = '';
     const headerObj = {} as any;

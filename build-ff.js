@@ -132,7 +132,7 @@ const manif = {
       define: {
         global: 'window',
         execution_mode: '"ff_api"',
-        isBackground: 'false',
+        isBackground: 'true',
         BUILD_VERSION: JSON.stringify([0, rev])
       },
       inject: ['./esbuild.inject.js'],

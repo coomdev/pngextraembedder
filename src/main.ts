@@ -422,18 +422,20 @@ const startup = async (is4chanX = true) => {
     registerPlugin('quote', postQuote);
 
     if (!is4chanX && location.host.startsWith('boards.4chan')) {
-        (async () => {
-            while (!('QR' in window))
-                await new Promise(_ => setTimeout(_, 250));
-            const qr = QR;
-            const show = qr.show.bind(qr);
-            qr.show = (...args: any[]) => {
-                show(...args);
-                document.dispatchEvent(new CustomEvent("QRDialogCreation", {
-                    detail: document.getElementById('quickReply')
-                }));
-            };
-        })();
+        const QRObs = new MutationObserver(rec => {
+            rec.forEach(m => {
+                m.addedNodes.forEach(no => {
+                    if ((no as HTMLElement).id != "quickReply") {
+                        return;
+                    }
+                    document.dispatchEvent(new CustomEvent("QRDialogCreation", {
+                        detail: no
+                    }));
+                });
+            });
+        });
+        // only need immediate children of body
+        QRObs.observe(document.body, { childList: true });
 
         document.addEventListener("QRGetFile", (e) => {
             const qr = document.getElementById('qrFile') as HTMLInputElement | null;

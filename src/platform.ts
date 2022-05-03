@@ -69,6 +69,42 @@ const extrBlob = async (url: string) => {
     return new Uint8Array(ret);
 };
 
+async function serialize(src: any): Promise<any> {
+    if (src instanceof FormData) {
+        const value = [];
+        for (const kv of src)
+            value.push([kv[0], await Promise.all(src.getAll(kv[0]).map(serialize))]);
+        return {
+            cls: 'FormData', value,
+        };
+    }
+    if (src instanceof File) {
+        const { name, type, lastModified } = src;
+        const value = URL.createObjectURL(src);
+        return {
+            cls: 'File',
+            name, type, lastModified, value,
+        };
+    }
+    if (src instanceof Blob) {
+        const { type } = src;
+        const value = URL.createObjectURL(src);
+        return {
+            cls: 'Blob', type, value,
+        };
+    }
+    if (src === null || src === undefined || typeof src != "object")
+        return src;
+    const ret = {
+        cls: 'Object',
+        value: {}
+    } as any;
+    for (const prop in src) {
+        ret.value[prop] = await serialize(src[prop]);
+    }
+    return ret;
+}
+
 export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTarget) => {
     const id = gid++;
 
@@ -81,6 +117,13 @@ export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTa
                 (init as any).signal = sid as any;
             }
         }*/
+
+    if (init?.body) {
+        // Chrom* can't pass around FormData and File/Blobs between 
+        // the content and bg scripts, so the data is passed through bloburls
+        if (execution_mode == "chrome_api")
+            init.body = await serialize(init.body);
+    }
 
     const prom = new Promise<Awaited<ReturnType<typeof fetch>>>((_, rej) => {
         let gcontroller: ReadableStreamController<Uint8Array> | undefined;

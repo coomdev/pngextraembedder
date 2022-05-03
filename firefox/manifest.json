@@ -7,7 +7,7 @@
   },
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.210",
+  "version": "0.211",
   "icons": {
     "64": "1449696017588.png"
   },
