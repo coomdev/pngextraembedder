@@ -21,7 +21,7 @@
   };
 
   let original: File | undefined;
-  let currentEmbed: { file: Blob; name: string } | undefined;
+  let currentEmbed: { file: File } | undefined;
 
   function restore() {
     document.dispatchEvent(
@@ -33,9 +33,15 @@
 
   // This is an event to signal a change in the container file
   let inhibit = false;
+
+  const isSame = (a: File | null, b: File | null) => {
+    if (a == null || b == null) return false;
+    (["size", "name", "lastModified"] as const).every((e) => a[e] == b[e]);
+  };
+
   document.addEventListener("PEEFile", async (e) => {
     let file = (e as any).detail as File;
-    if (currentEmbed?.file != file && !inhibit) {
+    if (!currentEmbed || (!isSame(currentEmbed.file, file) && !inhibit)) {
       original = file;
       if ($settings.auto_embed && $appState.client) {
         const tags = $settings.auto_tags
@@ -46,13 +52,13 @@
           tags.concat(["system:limit=" + $settings.auto_embed]),
           { file_sort_type: 4 }
         );
-        const files = await embeddedToBlob(...efs.map(e => e[1]));
+        const files = await embeddedToBlob(...efs.map((e) => e[1]));
         const nlinks = await uploadFiles(files);
         links = [...links, ...nlinks];
       }
       inhibit = true;
-      setTimeout(() => inhibit = false, 500); // hack around 4chan(X)(?) inconsistent getFile
-      embedContent(e);
+      await embedContent(e);
+      setTimeout(() => (inhibit = false), 500); // hack around 4chan(X)(?) inconsistent getFile
     }
   });
 
@@ -100,9 +106,8 @@
       if (!proc) throw new Error("Container filetype not supported");
       const buff = await proc.inject!(file, links.slice(0, $settings.maxe));
       currentEmbed = {
-        file: new Blob([buff], { type }),
-        name: file.name,
-      } as unknown as { file: Blob; name: string };
+        file: new File([buff], file.name, { type }),
+      } as { file: File };
       document.dispatchEvent(
         new CustomEvent("QRSetFile", {
           detail: currentEmbed,
