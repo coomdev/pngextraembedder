@@ -1,0 +1,22 @@
+[{
+    "id": 1,
+    "priority": 1,
+    "action": {
+        "type": "modifyHeaders",
+        "responseHeaders": [
+            {
+                "header": "content-security-policy",
+                "operation": "remove"
+            }
+        ]
+    },
+    "condition": {
+        "urlFilter": "abc",
+        "initiatorDomains": [
+            "arch.b4k.co"
+        ],
+        "resourceTypes": [
+            "main_frame"
+        ]
+    }
+}]

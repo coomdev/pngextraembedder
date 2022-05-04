@@ -21,6 +21,7 @@ const types = [
     "websocket",
     "xmlhttprequest"
 ] as browser.webRequest.ResourceType[];
+
 const filts = {
     urls: ["https://boards.4channel.org/*",
         "https://boards.4chan.org/*",
@@ -35,72 +36,23 @@ const filts = {
         "https://de.catbox.moe/*",
         "https://based.coom.tech/*",
         "https://archiveofsins.com/*"],
-    types
+    types: ["main_frame", "sub_frame", "csp_report", "object", "other", "ping"] as browser.webRequest.ResourceType[]
 };
-/*
-obj.webRequest.onBeforeSendHeaders.addListener(
-    function (details: any) {
-        details.requestHeaders.push({ name: 'x-basldas', value: 'aslkhfqe' });
-        return { requestHeaders: details.requestHeaders };
-    },
-    { urls: ["<all_urls>"], types },
-    ["blocking", "requestHeaders"]
-);
-*/
 
-//const ridh = {
-//} as any;
-
-//obj.webRequest.onCompleted.addListener(details => {
-//    if (details.requestId in ridh)
-//        delete ridh[details.requestId];
-//}, filts);
-
-obj.webRequest.onHeadersReceived.addListener(details => {
-    if (details.url.startsWith('https://arch.b4k.co/') && details.type == "main_frame") {
-        const e = details.responseHeaders!.findIndex(e => e.name.toLowerCase() == "content-security-policy");
-        if (e >= 0)
-            details.responseHeaders![e].value = "";
-        return {
-            responseHeaders: [
-                ...details.responseHeaders!,
-                { name: 'access-control-allow-origin', value: '*' }
-            ]
-        } as browser.webRequest.BlockingResponse;
-    }
-}, filts, ['blocking', 'responseHeaders', ...(execution_mode == "chrome_api" ? ['extraHeaders' as 'blocking'] : [])]);
-
-/*
-obj.webRequest.onBeforeSendHeaders.addListener((details) => {
-    if (ridh[details.requestId]) {
-        const res = ridh[details.requestId];
-        return {
-            requestHeaders: [res]
-        } as browser.webRequest.BlockingResponse;
-    }
-}, filts, ['blocking']);
-
-obj.webRequest.onBeforeRequest.addListener((details) => {
-    const redirectUrl = details.url;
-    let idx: number;
-    if ((idx = redirectUrl.indexOf(spe)) == -1)
-        return;
-    const parts = redirectUrl.slice(idx + spe.length).split('/').filter(e => e);
-    const [domain, path, [start, end]] = [
-        parts[0],
-        parts.slice(1, -2).join('/'),
-        parts.slice(-2)
-    ];
-    ridh[details.requestId] = {
-        name: "range",
-        value: `bytes=${start}-${end}`
-    };
-    return {
-        redirectUrl: `https://${domain}/${path}`,
-        requestHeaders: [{ name: 'x-akjflkd', value: 'qofh3r3' }]
-    } as browser.webRequest.BlockingResponse;
-}, filts, ['blocking']);
-*/
+if (manifest == 2)
+    obj.webRequest.onHeadersReceived.addListener(details => {
+        if (details.url.startsWith('https://arch.b4k.co/') && details.type == "main_frame") {
+            const e = details.responseHeaders!.findIndex(e => e.name.toLowerCase() == "content-security-policy");
+            if (e >= 0)
+                details.responseHeaders![e].value = "";
+            return {
+                responseHeaders: [
+                    ...details.responseHeaders!,
+                    { name: 'access-control-allow-origin', value: '*' }
+                ]
+            } as browser.webRequest.BlockingResponse;
+        }
+    }, filts, ['blocking', 'responseHeaders', ...(execution_mode == "chrome_api" ? ['extraHeaders' as 'blocking'] : [])]);
 
 async function deserialize(src: any): Promise<any> {
     switch (src.cls) {
@@ -134,16 +86,10 @@ async function deserialize(src: any): Promise<any> {
     }
 }
 
-const pendingFetches = new Map<browser.runtime.Port, { [id in number]: { fetchFully: boolean } }>();
+const pendingFetches = new Map<MessagePort, { [id in number]: { fetchFully: boolean } }>();
 
-const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, init?: RequestInit) => {
-    /*if (typeof init?.signal == "number") {
-        const id = init?.signal as any as number;
-        const ab = new AbortController();
-        init.signal = ab.signal;
-    }*/
-
-    if (input.startsWith('//')) // wtf fireshit??
+const bgCorsFetch = async (c: MessagePort, id: number, input: string, init?: RequestInit) => {
+    if (input.startsWith('//')) // firefox??
         input = 'https:' + input;
     if (init?.body && execution_mode == "chrome_api")
         init.body = await deserialize(init.body);
@@ -187,16 +133,16 @@ const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, i
             ltotal += chunk.byteLength;
             c.postMessage({ id, progress: [ltotal, ctotal] });
             if (!pendingFetches.get(c)![id].fetchFully) {
-                const url = URL.createObjectURL(new Blob([chunk]));
-                c.postMessage({ id, s: s++, pushData: { data: url } });
+                //const url = new Blob([chunk]);
+                c.postMessage({ id, s: s++, pushData: { data: chunk } }, [chunk.buffer]);
             } else {
                 buff.push(Buffer.from(chunk));
             }
         },
         close() {
             if (buff.length > 0) {
-                const url = URL.createObjectURL(new Blob([Buffer.concat(buff)]));
-                c.postMessage({ id, s: s++, pushData: { data: url } });
+                const chunk = Buffer.concat(buff);
+                c.postMessage({ id, s: s++, pushData: { data: chunk } }, [chunk.buffer]);
                 buff = [];
             }
             const obj = pendingFetches.get(c)!;
@@ -217,9 +163,28 @@ const bgCorsFetch = async (c: browser.runtime.Port, id: number, input: string, i
     reader?.releaseLock();
 };
 
-obj.runtime.onConnect.addListener((c) => {
-    c.onMessage.addListener(async obj => {
+const meself = new URL(obj.runtime.getURL('')).origin;
+
+const waitConnect = (cb: any) => {
+    window.addEventListener("message", (msg) => {
+        //if (msg.origin === meself) {
+            cb(msg.ports[0]);
+        //}
+    });
+};
+
+const onMessage = (c: MessagePort, cb: any) =>
+    c.onmessage = (e) => {
+        cb(e.data);
+    };
+
+waitConnect((c: any) => {
+    onMessage(c, async (obj: any) => {
         const { id, name, args, sid, fid, url } = obj as { url?: string, fid?: number, sid?: number, id: number, name: string, args: Parameters<typeof Platform[keyof Methods<typeof Platform>]> };
+        if (name == "keepAlive") {
+            console.log('im alive, tho?');
+            return;
+        }
         if (name == "abortCorsFetch") {
             //chrome.runtime.sendMessage({ name, sid });
             return;

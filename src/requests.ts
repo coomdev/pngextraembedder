@@ -1,8 +1,11 @@
-const xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
-    GM_xmlhttpRequest :
-    (typeof GM != "undefined" ?
-        GM.xmlHttpRequest :
-        (window as any)['GM_xmlhttpRequest']);
+let xmlhttprequest: typeof GM['xmlHttpRequest'];
+
+if (!isBackground)
+    xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
+        GM_xmlhttpRequest :
+        (typeof GM != "undefined" ?
+            GM.xmlHttpRequest :
+            (window as any)['GM_xmlhttpRequest']);
 
 export const headerStringToObject = (s: string) =>
     Object.fromEntries(s.split('\n').map(e => {
@@ -31,10 +34,10 @@ export function GM_head(...[url, opt]: Parameters<typeof fetch>) {
     });
 }
 
-export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) => {
+export const GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventTarget?]) => {
     function blobTo(to: string, blob: Blob) {
         if (to == "arrayBuffer" && blob.arrayBuffer) {
-            const ret = blob.arrayBuffer(); // Fuck TM
+            const ret = blob.arrayBuffer(); // Heck TM
             if (ret)
                 return ret;
         }
@@ -89,9 +92,6 @@ export let GM_fetch = (...[url, opt, lisn]: [...Parameters<typeof fetch>, EventT
         xmlhttprequest(gmopt);
     });
 };
-
-if ((window as any)['pagemode'])
-    GM_fetch = fetch as any;
 
 const makePoolable = <T extends any[], U>(fun: (...args: T) => Promise<U>, getPoolSize: () => number) => {
     const pool = [];

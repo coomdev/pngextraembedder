@@ -129,7 +129,6 @@ const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string
                 onfound();
                 return [await proc.extract(cumul), false] as [EmbeddedFile[], boolean];
             } catch {
-                debugger;
                 // ignore error and retry with another link
             }
         } while (!succ);
@@ -196,7 +195,6 @@ const processPost = async (post: HTMLDivElement) => {
 
 const versionCheck = async () => {
     const txt = (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
-    debugger;
     const [lmajor, lminor] = txt.split('\n')
         .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
         .map(e => +e);
@@ -370,8 +368,8 @@ let gmo: MutationObserver;
 const earlystartup = async () => {
     if (location.host == 'arch.b4k.co' && execution_mode == "userscript") {
         if (!GM_getValue("warning_seen2", false)) {
-            alert(`Due to b4k's admin being a faggot, PEE will get you banned, so the userscript version is disabled here`);
-            alert("Use the WebExtension version of PEE if you want to use b4k. Cool new features will be coming to it, too!");
+            alert(`Due to b4k's policies being mean, PEE will get you banned, so the userscript version is disabled here`);
+            alert("Use the WebExtension version of PEE if you want to use b4k!"); // "Cool new features will be coming to it, too", then MV3 happened.
             GM_setValue("warning_seen2", true);
             return false;
         }

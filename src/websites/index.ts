@@ -68,7 +68,7 @@ export const FoolFuuka: QueryProcessor = {
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
     getImageLink: async function *(post: HTMLElement) {
         yield post.querySelector('a[rel]')?.getAttribute('href') || '';
-        if (location.host == "arch.b4k.co") { //get fucked
+        if (location.host == "arch.b4k.co") { //get hecked
             const pid = post.id.match(/\d+/)![0];
             const board = location.pathname.match(/\/(..?.?)\//)![1];
             const res = await ifetch(`https://archive.wakarimasen.moe/_/api/chan/post/?board=${board}&num=${pid}`);

@@ -6,6 +6,7 @@
   import { createEventDispatcher } from "svelte";
   import { Buffer } from "buffer";
   import { getHeaders, Platform } from "../platform";
+import { peeTarget } from "../utils";
 
   export const dispatch = createEventDispatcher();
 
@@ -111,7 +112,7 @@
     let type: FileTypeResult | undefined;
     if (typeof file.data != "string") {
       unzipping = true;
-      let lisn = new EventTarget();
+      let lisn = new peeTarget();
       lisn.addEventListener("progress", (e: any) => {
         progress = e.detail;
       });

@@ -203,7 +203,7 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
                 thumbnail: thumb,
             } as EmbeddedFile;
         } catch (e) {
-            // niggers trying to fuck with bad links
+            // meanies trying to heck with bad links
             console.warn(e);
         }
     }))).filter(e => e);
@@ -290,4 +290,32 @@ export async function getFileFromHydrus(client: HydrusClient,
             ] as [number, EmbeddedFile];
         })
     );
+}
+
+export class peeTarget {
+    targets = {} as { [k in string]: Array<(e: any) => any> };
+
+    addEventListener(ev: string, cb: (e: any) => any) {
+        this.targets[ev] = this.targets[ev] || [];
+        this.targets[ev].push(cb);
+    }
+
+    dispatchEvent(ev: CustomEvent) {
+        const evs = this.targets[ev.type];
+        if (evs)
+            for (const cb of evs)
+                cb(ev);
+        return true;
+    }
+
+    removeEventListener(ev: string, cb: any) {
+        const evs = this.targets[ev];
+        if (!evs) return;
+        for (let i = 0; i < evs.length; ++i) {
+            if (evs[i] == cb) {
+                evs.splice(i, 1);
+                return;
+            }
+        }
+    }
 }

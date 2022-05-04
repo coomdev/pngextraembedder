@@ -92,8 +92,56 @@ const manif = {
   }
 };
 
+
+const manif3 = {
+  "manifest_version": 3,
+  "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
+  "name": "PngExtraEmbedder",
+  "description": "Discover embedded files on 4chan and archives!",
+  "version": "0." + rev,
+  "icons": {
+    "64": "1449696017588.png"
+  },
+  "permissions": [
+    "notifications",
+    "clipboardWrite",
+    "activeTab",
+    "declarativeNetRequestWithHostAccess",
+    "contextMenus",
+  ],
+  host_permissions: domains,
+  //"host_permissions":["<all_urls>"],
+  "web_accessible_resources": [{
+    "resources": ["*.html", "*.js"],
+    "matches": ["<all_urls>"]
+  }],
+  "content_scripts": [
+    {
+      "matches": domains,
+      "css": [],
+      "run_at": "document_start",
+      "js": ["dist/main.js"],
+    }
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        id: 'rule1',
+        enabled: true,
+        path: 'b4k-csp.json'
+      }
+    ]
+  },
+  //"background": {
+    // hope I won't need that polyfill...
+    //"service_worker": "dist/background.js"
+//  }
+};
+
 (async () => {
   let res;
+
+  const lmanif = manif3;
 
   res = await esbuild
     .build({
@@ -104,6 +152,7 @@ const manif = {
       define: {
         global: 'window',
         execution_mode: '"chrome_api"',
+        manifest: lmanif.version,
         isBackground: 'false',
         BUILD_VERSION: JSON.stringify([0, rev])
       },
@@ -133,6 +182,7 @@ const manif = {
       define: {
         global: 'window',
         execution_mode: '"chrome_api"',
+        manifest: lmanif.version,
         isBackground: 'true',
         BUILD_VERSION: JSON.stringify([0, rev])
       },
@@ -142,8 +192,8 @@ const manif = {
   console.log(res.metafile.inputs);
   console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
 
-  writeFileSync('./chrome/manifest.json', JSON.stringify(manif, null, 2));
-  copyFileSync("./1449696017588.png", "./chrome/1449696017588.png");
+  writeFileSync('./chrome/manifest.json', JSON.stringify(lmanif, null, 2));
+  copyFileSync("./logo.png", "./chrome/1449696017588.png");
 
   const ext = await crx.load('./chrome');
   const crxBuffer = await ext.pack();

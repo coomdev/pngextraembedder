@@ -1,20 +1,20 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.211",
+  "version": "0.213",
   "icons": {
     "64": "1449696017588.png"
   },
   "permissions": [
     "notifications",
     "clipboardWrite",
-    "menus",
     "activeTab",
-    "webRequest",
-    "webRequestBlocking",
-    "contextMenus",
+    "declarativeNetRequestWithHostAccess",
+    "contextMenus"
+  ],
+  "host_permissions": [
     "https://*.coom.tech/*",
     "https://boards.4channel.org/*",
     "https://boards.4chan.org/*",
@@ -50,6 +50,17 @@
     "https://*.donmai.us/*",
     "https://*.lolibooru.moe/*",
     "https://*.allthefallen.moe/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*.html",
+        "*.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
   ],
   "content_scripts": [
     {
@@ -97,11 +108,13 @@
       ]
     }
   ],
-  "background": {
-    "persistent": true,
-    "scripts": [
-      "browser-polyfill.min.js",
-      "dist/background.js"
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rule1",
+        "enabled": true,
+        "path": "b4k-csp.json"
+      }
     ]
   }
 }

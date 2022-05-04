@@ -81,14 +81,16 @@ const manif = {
       "js": ["polyfill.min.js", "dist/main.js"],
     }
   ],
-  "background": {
-    persistent: true,
-    "scripts": [
-      "polyfill.min.js",
-      "browser-polyfill.min.js",
-      "dist/background.js"
-    ]
-  }
+  "web_accessible_resources": ["*.html", "*.js",],
+
+//  "background": {
+//    persistent: true,
+//    "scripts": [
+//      "polyfill.min.js",
+//      "browser-polyfill.min.js",
+//      "dist/background.js"
+//    ]
+//  }
 };
 
 (async () => {
@@ -103,6 +105,7 @@ const manif = {
       define: {
         global: 'window',
         execution_mode: '"ff_api"',
+        manifest: manif.version,
         isBackground: 'false',
         BUILD_VERSION: JSON.stringify([0, rev])
       },
@@ -132,6 +135,7 @@ const manif = {
       define: {
         global: 'window',
         execution_mode: '"ff_api"',
+        manifest: manif.version,
         isBackground: 'true',
         BUILD_VERSION: JSON.stringify([0, rev])
       },
@@ -142,7 +146,7 @@ const manif = {
   console.log(Object.entries(res.metafile.inputs).sort((a, b) => a[1].bytes - b[1].bytes).map(e => `${e[0]} -> ${e[1].bytes}`).join('\n'));
 
   writeFileSync('./firefox/manifest.json', JSON.stringify(manif, null, 2));
-  copyFileSync("./1449696017588.png", "./firefox/1449696017588.png");
+  copyFileSync("./logo.png", "./chrome/1449696017588.png");
 
   res = await webExt.cmd.build({
     sourceDir: './firefox/',

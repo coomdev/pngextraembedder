@@ -1,27 +1,47 @@
 import { GM_fetch, GM_head, headerStringToObject } from './requests';
 
-let port: browser.runtime.Port;
 const lqueue = {} as any;
 
+const { port1, port2 } = new MessageChannel();
 console.log(execution_mode, isBackground);
 if (execution_mode != 'userscript' && !isBackground) {
     // It has to be a content script
-    port = (chrome || browser).runtime.connect();
-    port.onMessage.addListener((e: any) => {
-        lqueue[e.id](e);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = location.origin;
+    const iframeloaded = new Promise(_ => {
+        iframe.onload = _;
     });
+    iframe.src = `${chrome.runtime.getURL('')}options.html`;
+    const meself = new URL(chrome.runtime.getURL('')).origin;
+    document.documentElement.appendChild(iframe);
+    iframeloaded.then(() => {
+        iframe.contentWindow?.postMessage('', '*', [port2]);
+    });
+    port1.onmessage = (ev) => {
+        lqueue[ev.data.id](ev.data);
+    };
 }
 
 let gid = 0;
 
-const sendCmd = <V>(cmd: any) => {
+const visit = (e: any, cb: (e: any) => true | undefined) => {
+    if (typeof e == "object") {
+        if (!cb(e)) // true if we don't want to visit deeper
+            for (const p in e)
+                visit(e[p], cb);
+    } else
+        cb(e);
+};
+
+const sendCmd = <V>(cmd: any, tr?: Transferable[]) => {
     const prom = new Promise<V>(_ => {
         const id = gid++;
         lqueue[id] = (e: any) => {
             _(e.res);
             delete lqueue[id];
         };
-        port.postMessage({ id, ...cmd });
+        port1.postMessage({ id, ...cmd }, tr || []);
     });
     return prom;
 };
@@ -63,12 +83,6 @@ export class Platform {
     }
 }
 
-const extrBlob = async (url: string) => {
-    const ret = await (await fetch(url)).arrayBuffer();
-    await sendCmd({ name: 'revoke', url });
-    return new Uint8Array(ret);
-};
-
 async function serialize(src: any): Promise<any> {
     if (src instanceof FormData) {
         const value = [];
@@ -108,16 +122,6 @@ async function serialize(src: any): Promise<any> {
 export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTarget) => {
     const id = gid++;
 
-    /*    if (init) {
-            if (init.signal) {
-                const sid = gid++;
-                init.signal.addEventListener("abort", () => {
-                    port.postMessage({ name: 'abortCorsFetch', sid });
-                });
-                (init as any).signal = sid as any;
-            }
-        }*/
-
     if (init?.body) {
         // Chrom* can't pass around FormData and File/Blobs between 
         // the content and bg scripts, so the data is passed through bloburls
@@ -152,7 +156,8 @@ export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTa
             // this is computed from the background script because the content script may
             // request everything to be delivered in one chunk, defeating the purpose
             if (e.progress) {
-                lsn?.dispatchEvent(new CustomEvent("progress", { detail: e.progress }));
+                if (lsn)
+                    lsn.dispatchEvent(new CustomEvent("progress", { detail: e.progress }));
             }
 
             if (e.pushData) {
@@ -173,10 +178,10 @@ export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTa
                 // then these must be equal
                 // this also  means that cmdbuff must contain 0 or more ordered commands that must be processed
                 // afterward until discontinuity 
-                const processCmd = async (e: any) => {
+                const processCmd = (e: any) => {
 
                     if (e.pushData.data) {
-                        const data = await extrBlob(e.pushData.data);
+                        const data = new Uint8Array(e.pushData.data);
 
                         if (gcontroller)
                             gcontroller.enqueue(data);
@@ -252,7 +257,7 @@ export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTa
             }
         });
 
-        port.postMessage({
+        port1.postMessage({
             id, name: 'corsFetch', args: [input, init]
         });
     });

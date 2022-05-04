@@ -7,7 +7,7 @@
   },
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.211",
+  "version": "0.213",
   "icons": {
     "64": "1449696017588.png"
   },
@@ -102,12 +102,8 @@
       ]
     }
   ],
-  "background": {
-    "persistent": true,
-    "scripts": [
-      "polyfill.min.js",
-      "browser-polyfill.min.js",
-      "dist/background.js"
-    ]
-  }
+  "web_accessible_resources": [
+    "*.html",
+    "*.js"
+  ]
 }

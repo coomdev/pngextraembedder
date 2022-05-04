@@ -18,7 +18,6 @@ out
 *.data
 ext.js
 core.js
-fag
 rollup.config.js
 .vscode/settings.json
 key.pem
