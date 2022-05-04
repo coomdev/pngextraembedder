@@ -1,7 +1,5 @@
 dist
 node_modules
-*.png
-*.html
 *.c
 *~
 *.jpg

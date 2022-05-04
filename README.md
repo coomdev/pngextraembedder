@@ -16,7 +16,7 @@ Note: 4chanX isn't a hard requirement, just recommended because it's overall a n
 ## Teh olde way
 
 - Make sure you're using a decent Webkit-based browser (Chromium derivatives) or Firefox.
-- [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit)), use [ViolentMonkey Beta](https://violentmonkey.github.io/get-it/#beta-release) if you want to spite the b4kuck nigger admin (based & redpilled). Be sure to read the trouble shooting section to know how to set this up.
+- [Install ViolentMonkey](https://violentmonkey.github.io/get-it/) (it is preferable to TamperMonkey(closed source) and GreaseMonkey(abandonned shit)), use [ViolentMonkey Beta](https://violentmonkey.github.io/get-it/#beta-release) if you want to spite the b4k meanie admin (based & redpilled). Be sure to read the trouble shooting section to know how to set this up.
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
 - Use the prebuilt [main.user.js](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/main.user.js)
 
@@ -62,11 +62,11 @@ The "Contribute" checkbox makes your browser report posts with embeds you come a
 
 ## [NEW] b4k
 
-b4k is a cuck, i disabled lazyloading of thumbnails, fuck you nigger.
+b4k is a meanie, i disabled lazyloading of thumbnails, heck you person of african american descent.
 
-![ack](ACK.webp)
+**ACK!**
 
-If you want to use b4k, you will get warning prompts. I added a ton of warning screen so it should happen to you.
+If you want to use b4k, you will get warning prompts. I added a ton of warning screen so it shouldn't happen to you.
 Switch to the beta and enable this setting. If you're using TamperMonkey, it has something similar called "Instant Injection"
 
 ![ack](spm.png)
@@ -88,7 +88,7 @@ Open an issue on this repository, you need an account but email verification is 
 
 The slowest machine I have available is an 8GB 2011 Sandy Bridge i5 with a 1660Ti, the only way I can tell something is slow is if you post a performance profile for me to study. (DevTools > Performance > Reload and Start Profiler > Save Profiler).
 
-There are parts where slowness is unavoidable, for example if you have a slow internet connection and enabled preloading (wtf are you doing?).
+There are parts where slowness is unavoidable, for example if you have a slow internet connection and enabled preloading (what the h*ck are you doing?).
 
 Even without preloading enabled, PEE still makes many requests at the start of a page as it fetches a small initial chunk of png/webm/gif files to know if something is embedded in there, only progressing further when something is detected. It also does boorus/catbox requests for the corresponding filenames.
 
@@ -100,33 +100,17 @@ The file-type detection package is huge as it detect many file types, but also d
 
 You're free to audit the code. You don't have to audit the 18000 loc file, you just need to audit the 2000-something lines of typescript code in the `src` folder, build it as instructed, and compare it to the one distributed. If you're incapable of doing that, chances are you're already using unauditable extensions with backdoors anyway? dumb schizoposter.
 
-## I heard about [Bad thing]
-
-Disingenuous misinformation, probably a covert seething janny.
-
-1 - Embedding files is not possible in a practical way anymore, so what is embedded are simply links, which are outside 4chan's juridiction (not my problem if they decide to make it theirs)
-
-2 - No CP was ever posted, the worst it got were clothed children posing and a fatty pig-faced kid dancing. 4chan is an [NCMEC](https://www.missingkids.org/) partner, so even if you don't post CP directly to 4chan, you can (and will) still get reported to local authorities, as they have basically a direct communication line with them. That's why no one posted CP even when embedding was a thing, it's just a retarded thing to do. People telling you CP was posted are either purposefully lying, or are confusing drawn images (loli) with actual child porn. Guess which one is the most likely on 4chan of all places?
-
-3 - The virus in a png thing happened once, it was created just to trigger antivirus alerts on windows, it can't do anything unless you explicitly saved the file and renamed it as a .exe and double-clicked on it. Good luck with that.
-
-4 - It's not steganography, it's embedding in file metadata, it doesn't touch the original pixels. Older method appended data in critical pixel chunks that wasn't interpreted by decoders.
-
-5 - PEE is not malicious, but don't take my word for it, you have the source code (2000loc) to build it yourself, and builds are binary-replicable.
-
 ## But embedding is a bannable offense!!!11
 
-Yeah, well use at your own risk, you dumb nigger cattle. 
+Yeah, well use at your own risk, you double baka. 
 
 While it is true PEE used to allow you to embed complete files in your uploads, recent changes have made it much less practical (limited to really small files), so it's falling back to linking external content hosted on pomf-clones such as catbox.
 
 Links are much smaller and as some PNG editing software injects their own metadata, 4chan is basically required to allow some little amount of it to go through, lest they inconvenience a lot of their users, so a link-embedding detection method cannot be generalized, meaning they rely on unpaid janny labor to moderate this kind of content.
 
-Embedding is banned because it can be used to make 4chan host illegal content, but in its present form, this extension only LINKS external content, but it seems like jannies can't get this through their thick skulls and make the world's problems their own, truly worthy of an hero.
-
 Just be discreet about it and you won't get into trouble.
 
-# Fuck jannies
+# H*ck jannies
 
 /cumg/ threads are still banned despite being tolerated for over a year and the current ones being made not breaking any rule or even daring to thread on a grey line.
 
