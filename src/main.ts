@@ -194,7 +194,7 @@ const processPost = async (post: HTMLDivElement) => {
 };
 
 const versionCheck = async () => {
-    const txt = (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
+    const txt = (await (await ifetch("https://github.com/coomdev/pngextraembedder/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
     const [lmajor, lminor] = txt.split('\n')
         .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
         .map(e => +e);

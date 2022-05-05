@@ -11,7 +11,7 @@ import path from 'path';
 import ChromeExtension from 'crx';
 
 const crx = new ChromeExtension({
-  codebase: 'https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx',
+  codebase: 'https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx',
   privateKey: readFileSync('./key.pem')
 });
 
@@ -95,7 +95,7 @@ const manif = {
 
 const manif3 = {
   "manifest_version": 3,
-  "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
+  "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
   "version": "0." + rev,
