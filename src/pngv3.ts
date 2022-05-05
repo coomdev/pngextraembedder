@@ -2,7 +2,13 @@ import { Buffer } from "buffer";
 import type { EmbeddedFile, ImageProcessor } from "./main";
 import { PNGDecoder, PNGEncoder } from "./png";
 import { decodeCoom3Payload } from "./utils";
+import { settings } from "./stores";
 
+export let csettings: Parameters<typeof settings['set']>[0];
+
+settings.subscribe(b => {
+    csettings = b;
+});
 const CUM3 = Buffer.from("doo\0" + "m");
 
 const BufferReadStream = (b: Buffer) => {
@@ -35,7 +41,7 @@ const extract = async (png: Buffer) => {
                 case 'IDAT':
                 // eslint-disable-next-line no-fallthrough
                 case 'IEND':
-                    return ret;
+                    return ret.slice(0, csettings.maxe);
                 // eslint-disable-next-line no-fallthrough
                 default:
                     break;
