@@ -54,7 +54,7 @@ const manif = {
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
-      "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/firefox_update.json",
+      "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/firefox_update.json",
     }
   },
   "name": "PngExtraEmbedder",

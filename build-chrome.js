@@ -58,7 +58,7 @@ const domains = [
 
 const manif = {
   "manifest_version": 2,
-  "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
+  "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
   "version": "0." + rev,

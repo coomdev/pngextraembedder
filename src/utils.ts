@@ -179,23 +179,16 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             if (hasThumbnail) {
                 thumbsize = header.readInt32LE(ptr);
                 ptr += 4;
-                //                if (execution_mode == 'userscript')
                 thumb = Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
-                //                else
-                //                    thumb = `https://loli.piss/${domain}${file}/${ptr}/${ptr + thumbsize}`;
                 ptr += thumbsize;
             }
             const unzip = async (lsn?: EventTarget) =>
                 Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
             let data;
-            //            if (execution_mode == 'userscript') {
             data = unzip;
             if (size < 3072) {
                 thumb = data = await unzip();
             }
-            //            } else {
-            //                data = `https://loli.piss/${domain}${file}/${ptr}/${size - 1}`;
-            //            }
             return {
                 filename: fn,
                 // if file is small, then just get it fully

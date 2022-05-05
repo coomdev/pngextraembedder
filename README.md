@@ -1,7 +1,5 @@
-PNG Extra Embedder (PEE)
+PNGExtraEmbedder (PEE)
 ========================
-
-*Subsequently 'lolipiss' (**LOL** **I** **p**Want **i**To **s**Kill **s**Jannies)*
 
 Can embed any file in a PNG/WebM/GIF and upload it to a third-party host through 4chan.
 Requires a userscript manager, such as ViolentMonkey.
