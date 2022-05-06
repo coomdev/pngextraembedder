@@ -556,11 +556,13 @@ if (supportedAltDomain(location.host)) {
                             let file = scr.src.slice(scr.src.lastIndexOf('/') + 1);
                             if (file.includes('?'))
                                 file = file.slice(0, file.lastIndexOf('?'));
-                            scr.src = `https://based.coom.tech/` + file;
+                            if (execution_mode == "userscript")
+                                scr.src = `https://based.coom.tech/` + file;
+                            else
+                                scr.src = chrome.runtime.getURL('b4k/' + file);
                             return;
                         }
                         if ((scr.src && !scr.src.startsWith('https://ajax.googleapis.com/')) || scr.innerHTML.includes('googletagmanager') || scr.src.startsWith("data:")) {
-                            console.log(scr);
                             scr.parentElement?.removeChild(scr);
                         }
                     }
