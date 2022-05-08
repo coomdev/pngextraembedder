@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.221",
+  "version": "0.222",
   "icons": {
     "64": "1449696017588.png"
   },
