@@ -36,7 +36,7 @@
 
   const isSame = (a: File | null, b: File | null) => {
     if (a == null || b == null) return false;
-    (["size", "name", "lastModified"] as const).every((e) => a[e] == b[e]);
+    return (["size", "name", "lastModified"] as const).every((e) => a[e] == b[e]);
   };
 
   document.addEventListener("PEEFile", async (e) => {

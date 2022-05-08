@@ -6,14 +6,14 @@ import { writeFileSync, readFileSync, copyFileSync } from 'fs'
 import esbuild from "esbuild";
 import esbuildSvelte from "esbuild-svelte";
 import sveltePreprocess from "svelte-preprocess";
-import path from 'path';
+//import path from 'path';
 
-import ChromeExtension from 'crx';
+//import ChromeExtension from 'crx';
 
-const crx = new ChromeExtension({
-  codebase: 'https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx',
-  privateKey: readFileSync('./key.pem')
-});
+//const crx = new ChromeExtension({
+//  codebase: 'https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx',
+//  privateKey: readFileSync('./key.pem')
+//});
 
 let res = spawnSync("git", ["rev-list", "--count", "HEAD"]);
 let rev = +res.stdout;
@@ -58,7 +58,7 @@ const domains = [
 
 const manif = {
   "manifest_version": 2,
-  "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
+//  "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
   "version": "0." + rev,
@@ -95,7 +95,7 @@ const manif = {
 
 const manif3 = {
   "manifest_version": 3,
-  "update_url": "https://git.coom.tech/fuckjannies/lolipiss/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
+//  "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
   "version": "0." + rev,
@@ -103,11 +103,11 @@ const manif3 = {
     "64": "1449696017588.png"
   },
   "permissions": [
-    "notifications",
-    "clipboardWrite",
-    "activeTab",
+    //"notifications",
+    //"clipboardWrite",
+    //"activeTab",
     "declarativeNetRequestWithHostAccess",
-    "contextMenus",
+    //"contextMenus",
   ],
   host_permissions: domains,
   //"host_permissions":["<all_urls>"],
@@ -195,9 +195,9 @@ const manif3 = {
   writeFileSync('./chrome/manifest.json', JSON.stringify(lmanif, null, 2));
   copyFileSync("./logo.png", "./chrome/1449696017588.png");
 
-  const ext = await crx.load('./chrome');
-  const crxBuffer = await ext.pack();
-  const updateXML = crx.generateUpdateXML();
-  writeFileSync('./chrome_update.xml', updateXML);
-  writeFileSync('./PEE-chrome.crx', crxBuffer);
+  //const ext = await crx.load('./chrome');
+  //const crxBuffer = await ext.pack();
+  //const updateXML = crx.generateUpdateXML();
+  //writeFileSync('./chrome_update.xml', updateXML);
+  //writeFileSync('./PEE-chrome.crx', crxBuffer);
 })();

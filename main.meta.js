@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.207
+// @version      0.222
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -23,6 +23,7 @@
 // @grant        GM.setValue
 // @grant        GM_openInTab
 // @grant        GM.openInTab
+// @grant        GM_addElement
 // @grant        unsafeWindow
 // @run-at       document-start
 // @connect      4chan.org

@@ -1,7 +1,5 @@
-PNG Extra Embedder (PEE)
+PNGExtraEmbedder (PEE)
 ========================
-
-*Subsequently 'lolipiss' (**LOL** **I** **p**Want **i**To **s**Kill **s**Jannies)*
 
 Can embed any file in a PNG/WebM/GIF and upload it to a third-party host through 4chan.
 Requires a userscript manager, such as ViolentMonkey.
@@ -27,7 +25,7 @@ Please report any issue you have with those (only for mainstream browsers)
 Also, use this if you plan to use b4k's archive.
 
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.213-an+fx.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.222-an+fx.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
 
 For FF users, the extension is signed so you can just drag and drop it on your about:addons tab.
 
@@ -38,8 +36,11 @@ How to Build
 
 (You only need to care about this section if you're auditing the code or contributing to development)
 
-`npm i` and `npm run build`
-then install the generated main.user.js
+`npm i` and
+
+`npm run build` to build the userscript version.
+`npm run build_chrome` to build the chromium webextension.
+`npm run build_ff` to build the firefox webextension. (You'll have to do the signing yourself, though)
 
 How to use
 ==========
@@ -70,11 +71,11 @@ The "Contribute" checkbox makes your browser report posts with embeds you come a
 
 ## [NEW] b4k
 
-b4k is a meanie, i disabled lazyloading of thumbnails, heck you person of african american descent.
+b4k is a meanie, i disabled lazyloading of thumbnails, heck.
 
 **ACK!**
 
-If you want to use b4k, you will get warning prompts. I added a ton of warning screen so it shouldn't happen to you.
+If you want to use b4k, you will get warning prompts. I added a ton of warning screens so it shouldn't happen to you.
 Switch to the beta and enable this setting. If you're using TamperMonkey, it has something similar called "Instant Injection"
 
 ![ack](spm.png)
@@ -106,13 +107,13 @@ The file-type detection package is huge as it detect many file types, but also d
 
 ## How do I know it's not a botnet???
 
-You're free to audit the code. You don't have to audit the 18000 loc file, you just need to audit the 2000-something lines of typescript code in the `src` folder, build it as instructed, and compare it to the one distributed. If you're incapable of doing that, chances are you're already using unauditable extensions with backdoors anyway? dumb schizoposter.
+You're free to audit the code. You don't have to audit the 22000 loc file, you just need to audit the 3000-something lines of typescript code in the `src` folder, build it as instructed, and compare it to the one distributed.
 
 ## But embedding is a bannable offense!!!11
 
 Yeah, well use at your own risk, you double baka. 
 
-While it is true PEE used to allow you to embed complete files in your uploads, recent changes have made it much less practical (limited to really small files), so it's falling back to linking external content hosted on pomf-clones such as catbox.
+While it is true PEE used to allow you to embed complete files in your uploads, recent changes to 4chans have made it much less practical (limited to really small files), so it's falling back to linking external content hosted on pomf-clones such as catbox.
 
 Links are much smaller and as some PNG editing software injects their own metadata, 4chan is basically required to allow some little amount of it to go through, lest they inconvenience a lot of their users, so a link-embedding detection method cannot be generalized, meaning they rely on unpaid janny labor to moderate this kind of content.
 

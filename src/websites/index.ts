@@ -67,7 +67,6 @@ export const FoolFuuka: QueryProcessor = {
     settingsHost: () => document.querySelector(".letters") as any,
     catalogControlHost: () => document.getElementById("index-options") as HTMLDivElement,
     getImageLink: async function *(post: HTMLElement) {
-        yield post.querySelector('a[rel]')?.getAttribute('href') || '';
         if (location.host == "arch.b4k.co") { //get hecked
             const pid = post.id.match(/\d+/)![0];
             const board = location.pathname.match(/\/(..?.?)\//)![1];
@@ -75,6 +74,7 @@ export const FoolFuuka: QueryProcessor = {
             const data = await res.json();
             yield data.media.media_link;
         }
+        yield post.querySelector('a[rel]')?.getAttribute('href') || '';
     },
     getFilename: (post: HTMLElement) => {
         const opfn = post.querySelector('a.post_file_filename')?.textContent;

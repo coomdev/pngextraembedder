@@ -194,7 +194,7 @@ const processPost = async (post: HTMLDivElement) => {
 };
 
 const versionCheck = async () => {
-    const txt = (await (await ifetch("https://git.coom.tech/coomdev/PEE/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
+    const txt = (await (await ifetch("https://github.com/coomdev/pngextraembedder/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text());
     const [lmajor, lminor] = txt.split('\n')
         .filter(e => e.includes("// @version"))[0].match(/.*version\s+(.*)/)![1].split('.')
         .map(e => +e);
@@ -556,11 +556,13 @@ if (supportedAltDomain(location.host)) {
                             let file = scr.src.slice(scr.src.lastIndexOf('/') + 1);
                             if (file.includes('?'))
                                 file = file.slice(0, file.lastIndexOf('?'));
-                            scr.src = `https://based.coom.tech/` + file;
+                            if (execution_mode == "userscript")
+                                scr.src = `https://based.coom.tech/` + file;
+                            else
+                                scr.src = chrome.runtime.getURL('b4k/' + file);
                             return;
                         }
                         if ((scr.src && !scr.src.startsWith('https://ajax.googleapis.com/')) || scr.innerHTML.includes('googletagmanager') || scr.src.startsWith("data:")) {
-                            console.log(scr);
                             scr.parentElement?.removeChild(scr);
                         }
                     }
