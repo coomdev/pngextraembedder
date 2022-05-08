@@ -23,9 +23,7 @@ Note: 4chanX isn't a hard requirement, just recommended because it's overall a n
 Hint: WIP means it's not for you if you don't know what you're doing!
 
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.213-an+fx.xpi) or [Chrome-based](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx))
-
-If you're a chr*me/\*dge user, unzip the crx somewhere, go to `chrome/edge]://extensions`, enable dev mode, and "load unpacked" the extracted thing.
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.222-an+fx.xpi) or [Chrome-based](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/PEE-chrome.crx))
 
 For FF users, the extension is signed so you can just drag and drop it on your `about:addons` tab.
 
