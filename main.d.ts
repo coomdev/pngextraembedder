@@ -61,4 +61,5 @@ declare const isBackground: boolean;
 declare const chrome: typeof browser;
 declare const _DOMParser: typeof DOMParser;
 declare const manifest: 2 | 3;
-declare function GM_addElement(parent: HTMLElement, tagname: string, attrs: Record<string, string>)
+declare function GM_addElement(parent: HTMLElement, tagname: string, attrs: Record<string, string>);
+declare function cloneInto<T>(e: T, where: Window & typeof globalThis | null): T;

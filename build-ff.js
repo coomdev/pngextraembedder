@@ -64,13 +64,10 @@ const manif = {
     "64": "1449696017588.png"
   },
   "permissions": [
-    "notifications",
     "clipboardWrite",
-    "menus",
-    "activeTab",
     "webRequest",
     "webRequestBlocking",
-    "contextMenus",
+    "storage",
     ...domains
   ],
   "content_scripts": [

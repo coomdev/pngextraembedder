@@ -7,18 +7,15 @@
   },
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.222",
+  "version": "0.226",
   "icons": {
     "64": "1449696017588.png"
   },
   "permissions": [
-    "notifications",
     "clipboardWrite",
-    "menus",
-    "activeTab",
     "webRequest",
     "webRequestBlocking",
-    "contextMenus",
+    "storage",
     "https://*.coom.tech/*",
     "https://boards.4channel.org/*",
     "https://boards.4chan.org/*",

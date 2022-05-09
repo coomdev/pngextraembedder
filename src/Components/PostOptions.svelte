@@ -5,6 +5,7 @@
   import {
     addToEmbeds,
     embeddedToBlob,
+    externalDispatch,
     fireNotification,
     getFileFromHydrus,
     uploadFiles,
@@ -24,11 +25,7 @@
   let currentEmbed: { file: File } | undefined;
 
   function restore() {
-    document.dispatchEvent(
-      new CustomEvent("QRSetFile", {
-        detail: { file: original },
-      })
-    );
+    externalDispatch("QRSetFile", { file: original });
   }
 
   // This is an event to signal a change in the container file
@@ -36,7 +33,9 @@
 
   const isSame = (a: File | null, b: File | null) => {
     if (a == null || b == null) return false;
-    return (["size", "name", "lastModified"] as const).every((e) => a[e] == b[e]);
+    return (["size", "name", "lastModified"] as const).every(
+      (e) => a[e] == b[e]
+    );
   };
 
   document.addEventListener("PEEFile", async (e) => {
@@ -108,11 +107,7 @@
       currentEmbed = {
         file: new File([buff], file.name, { type }),
       } as { file: File };
-      document.dispatchEvent(
-        new CustomEvent("QRSetFile", {
-          detail: currentEmbed,
-        })
-      );
+      externalDispatch("QRSetFile", currentEmbed);
       fireNotification(
         "success",
         `File${links.length > 1 ? "s" : ""} successfully embedded!`

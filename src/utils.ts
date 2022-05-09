@@ -203,11 +203,9 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
 };
 
 export const fireNotification = (type: 'success' | 'error' | 'info' | 'warning', content: string, lifetime = 3) => {
-    document.dispatchEvent(new CustomEvent("CreateNotification", {
-        detail: {
-            type, content, lifetime
-        }
-    }));
+    externalDispatch("CreateNotification", {
+        type, content, lifetime
+    });
 };
 
 function parseForm(data: object) {
@@ -283,6 +281,17 @@ export async function getFileFromHydrus(client: HydrusClient,
             ] as [number, EmbeddedFile];
         })
     );
+}
+
+export function externalDispatch(name: string, data: any) {
+    let event: Event;
+    if (execution_mode == "ff_api") { 
+        const clonedDetail = cloneInto(data, document.defaultView);
+        event = new CustomEvent(name, { detail: clonedDetail });
+    } else {
+        event = new CustomEvent(name, { detail: data });
+    }
+    document.dispatchEvent(event);
 }
 
 export class peeTarget {
