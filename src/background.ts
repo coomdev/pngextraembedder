@@ -55,6 +55,8 @@ if (manifest == 2)
     }, filts, ['blocking', 'responseHeaders', ...(execution_mode == "chrome_api" ? ['extraHeaders' as 'blocking'] : [])]);
 
 async function deserialize(src: any): Promise<any> {
+    if (typeof src != "object")
+        return src;
     switch (src.cls) {
         case 'FormData': {
             const ret = new FormData();

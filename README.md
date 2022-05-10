@@ -25,11 +25,18 @@ Please report any issue you have with those (only for mainstream browsers)
 Also, use this if you plan to use b4k's archive.
 
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.227-an+fx.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.228-an+fx.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
 
 For FF users, the extension is signed so you can just drag and drop it on your about:addons tab.
 
 Chrom* users can now install directly from the chrome webstore.
+
+Known bugs:
+- Catbox upload is broken on the published chrome version, so switch to another host in your options (zz.ht)
+- A couple anons reported embeds not loading at all, with no clear fix, I'll update this as workarounds until the cause is found and fixed. 
+    - One reported that he had somehow disabled some permissions and turning them back on fixed the issue.
+
+If none of the above works for you, switch back to the userscript version.
 
 How to Build 
 ============
