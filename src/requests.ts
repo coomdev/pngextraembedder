@@ -1,6 +1,6 @@
 let xmlhttprequest: typeof GM['xmlHttpRequest'];
 
-if (!isBackground)
+if (execution_mode == "userscript")
     xmlhttprequest = typeof GM_xmlhttpRequest != 'undefined' ?
         GM_xmlhttpRequest :
         (typeof GM != "undefined" ?

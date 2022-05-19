@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.222
+// @version      0.229
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -89,7 +89,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 222];
+      define_BUILD_VERSION_default = [0, 229];
     }
   });
 
@@ -13611,7 +13611,7 @@ const _DOMParser = DOMParser;
   init_define_BUILD_VERSION();
   init_esbuild_inject();
   var xmlhttprequest;
-  if (false)
+  if (true)
     xmlhttprequest = typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : typeof GM != "undefined" ? GM.xmlHttpRequest : window["GM_xmlhttpRequest"];
   var headerStringToObject = (s) => Object.fromEntries(s.split("\n").map((e) => {
     const [name, ...rest] = e.split(":");
@@ -15831,13 +15831,11 @@ const _DOMParser = DOMParser;
     }))).filter((e) => e);
   };
   var fireNotification = (type, content, lifetime = 3) => {
-    document.dispatchEvent(new CustomEvent("CreateNotification", {
-      detail: {
-        type,
-        content,
-        lifetime
-      }
-    }));
+    externalDispatch("CreateNotification", {
+      type,
+      content,
+      lifetime
+    });
   };
   var uploadFiles = async (injs) => {
     let total = 0;
@@ -15888,6 +15886,16 @@ const _DOMParser = DOMParser;
         }
       ];
     }));
+  }
+  function externalDispatch(name, data) {
+    let event;
+    if (false) {
+      const clonedDetail = cloneInto(data, document.defaultView);
+      event = new CustomEvent(name, { detail: clonedDetail });
+    } else {
+      event = new CustomEvent(name, { detail: data });
+    }
+    document.dispatchEvent(event);
   }
   var peeTarget = class {
     constructor() {
@@ -21251,7 +21259,7 @@ const _DOMParser = DOMParser;
     let original;
     let currentEmbed;
     function restore() {
-      document.dispatchEvent(new CustomEvent("QRSetFile", { detail: { file: original } }));
+      externalDispatch("QRSetFile", { file: original });
     }
     let inhibit = false;
     const isSame = (a, b) => {
@@ -21312,7 +21320,7 @@ const _DOMParser = DOMParser;
         currentEmbed = {
           file: new File([buff], file.name, { type })
         };
-        document.dispatchEvent(new CustomEvent("QRSetFile", { detail: currentEmbed }));
+        externalDispatch("QRSetFile", currentEmbed);
         fireNotification("success", `File${links.length > 1 ? "s" : ""} successfully embedded!`);
       } catch (err) {
         const e2 = err;
@@ -23349,7 +23357,7 @@ const _DOMParser = DOMParser;
     processAttachments(post, res2?.flatMap((e) => e[0].map((k) => [k, e[1]])));
   };
   var versionCheck = async () => {
-    const txt = await (await ifetch("https://github.com/coomdev/pngextraembedder/raw/branch/%e4%b8%ad%e5%87%ba%e3%81%97/main.meta.js")).text();
+    const txt = await (await ifetch("https://raw.githubusercontent.com/coomdev/pngextraembedder/main/main.meta.js")).text();
     const [lmajor, lminor] = txt.split("\n").filter((e) => e.includes("// @version"))[0].match(/.*version\s+(.*)/)[1].split(".").map((e) => +e);
     const [major, minor] = define_BUILD_VERSION_default;
     if (major < lmajor || major == lmajor && minor < lminor) {
