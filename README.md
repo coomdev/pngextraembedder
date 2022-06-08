@@ -25,7 +25,7 @@ Please report any issue you have with those (only for mainstream browsers)
 Also, use this if you plan to use b4k's archive.
 
 - [Install 4chanX (recommended)](https://www.4chan-x.net/builds/4chan-X.user.js)
-- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.228-an+fx.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
+- Install the correct WebExtension for your Browser ([Firefox](https://git.coom.tech/coomdev/PEE/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/pngextraembedder-0.233.xpi) or [Chrome-based](https://chrome.google.com/webstore/detail/pngextraembedder/bfhpobiikighljcapcfmfganodihbicj))
 
 For FF users, the extension is signed so you can just drag and drop it on your about:addons tab.
 

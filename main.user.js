@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.232
+// @version      0.233
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -89,7 +89,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 232];
+      define_BUILD_VERSION_default = [0, 233];
     }
   });
 
