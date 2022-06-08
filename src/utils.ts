@@ -123,7 +123,7 @@ export const buildPeeFile = async (f: File) => {
 };
 
 const getThreadInfo = async (board: string, op: number) => {
-    const res = await ((await fetch(`http://shoujo.coom.tech/data/${board}/${op}`)).json() as Promise<{
+    const res = await ((await fetch(`https://shoujo.coom.tech/data/${board}/${op}`)).json() as Promise<{
         id: number;
         cnt: number;
         data: {

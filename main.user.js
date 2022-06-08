@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.231
+// @version      0.232
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -89,7 +89,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 231];
+      define_BUILD_VERSION_default = [0, 232];
     }
   });
 
@@ -15769,7 +15769,7 @@ const _DOMParser = DOMParser;
     return new Blob([ret]);
   };
   var getThreadInfo = async (board, op) => {
-    const res = await (await fetch(`http://shoujo.coom.tech/data/${board}/${op}`)).json();
+    const res = await (await fetch(`https://shoujo.coom.tech/data/${board}/${op}`)).json();
     return Object.fromEntries(res.map((e) => [e.id, e]));
   };
   var threadDataCache = writable();
