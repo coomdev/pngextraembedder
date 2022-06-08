@@ -6,6 +6,8 @@ import { filehosts } from "./filehosts";
 import { getHeaders, ifetch, Platform } from "./platform";
 import type { HydrusClient } from "./hydrus";
 import { fileTypeFromBuffer } from "file-type";
+import { writable } from "svelte/store";
+import { init } from "svelte/internal";
 
 export let csettings: Parameters<typeof settings['set']>[0];
 
@@ -120,6 +122,89 @@ export const buildPeeFile = async (f: File) => {
     return new Blob([ret]);
 };
 
+const getThreadInfo = async (board: string, op: number) => {
+    const res = await ((await fetch(`http://127.0.0.1:1488/data/${board}/${op}`)).json() as Promise<{
+        id: number;
+        cnt: number;
+        data: {
+            pee: string[]
+        } | {
+            third: any;
+        }
+    }[]>);
+    return Object.fromEntries(res.map(e => [e.id, e]));
+};
+
+export const threadDataCache = writable<undefined | {
+    [k in number]: {
+        id: number;
+        cnt: number;
+        mdist?: number;
+        data: {
+            pee: string[];
+        } | {
+            third: any;
+        };
+    }
+}>();
+
+let cthreadDataCache: Parameters<typeof threadDataCache['set']>[0];
+
+threadDataCache.subscribe(newval => {
+    cthreadDataCache = newval;
+});
+
+export const refreshThreadDataCache = async (board: string, op: number) => {
+    threadDataCache.set(await getThreadInfo(board, op));
+};
+
+export const getThreadDataCache = async (board: string, op: number) => {
+    if (!cthreadDataCache)
+        await refreshThreadDataCache(board, op);
+    return threadDataCache;
+};
+
+export const getEmbedsFromCache = async (board: string, op: number, pid: string): Promise<[EmbeddedFile[], boolean][]> => {
+    await getThreadDataCache(board, op);
+    const target = +pid.slice(pid.match(/\d/)!.index);
+    const cachedData = cthreadDataCache![target];
+    if (!cachedData)
+        return [];
+    const ret: [EmbeddedFile[], boolean][] = [];
+    if ('pee' in cachedData.data) {
+        const files = await decodeCoom3Payload(Buffer.from(cachedData.data.pee.join(' ')));
+        ret.push([files, false]);
+    }
+    if ('third' in cachedData.data) {
+        if (csettings.phash) {
+            // if mdist is unknown (happens when no thumbnail was found, assume they are different)
+            if ((cachedData.mdist || Number.POSITIVE_INFINITY) < (csettings.mdist || 5))
+                return ret;
+        }
+        let cachedFile: ArrayBuffer;
+        const data = cachedData.data.third;
+        const prev = data.preview_url;
+        const full = data.full_url;
+        const fn = new URL(full).pathname.split('/').slice(-1)[0];
+        const end = [{
+            source: data.source,
+            page: {
+                title: 'PEE Cache',
+                url: data.page
+            },
+            filename: fn,
+            thumbnail: csettings.hotlink ? (prev || full) : Buffer.from(await (await ifetch(prev || full)).arrayBuffer()),
+            data: csettings.hotlink ? (full || prev) : (async (lsn) => {
+                if (!cachedFile)
+                    cachedFile = (await (await ifetch(full || prev, undefined, lsn)).arrayBuffer());
+                return Buffer.from(cachedFile);
+            })
+        } as EmbeddedFile];
+        ret.push([end, true]);
+    }
+    return ret;
+};
+
 /*
 header (must be < 2k): [1 byte bitfield](if hasfilename: null terminated string)(if has tags: [X null terminated string, tags are whitespace-separated])
 (if has thumbnail: [thumbnail size X]
@@ -145,7 +230,7 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             const { domain, file } = m.groups!;
             const headers = await getHeaders(pee);
             const res = await ifetch(pee, {
-                headers: { range: 'bytes=0-2048', 'user-agent': '' },
+                headers: { range: 'bytes=0-16383', 'user-agent': '' },
                 mode: 'cors',
                 referrerPolicy: 'no-referrer',
             });
@@ -179,7 +264,10 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             if (hasThumbnail) {
                 thumbsize = header.readInt32LE(ptr);
                 ptr += 4;
-                thumb = Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
+                if (header.byteLength < ptr + thumbsize)
+                    thumb = header.slice(ptr, ptr + thumbsize);
+                else
+                    thumb = Buffer.from(await (await ifetch(pee, { headers: { 'user-agent': '', range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
                 ptr += thumbsize;
             }
             const unzip = async (lsn?: EventTarget) =>
@@ -199,7 +287,7 @@ export const decodeCoom3Payload = async (buff: Buffer) => {
             // meanies trying to heck with bad links
             console.warn(e);
         }
-    }))).filter(e => e);
+    }))).filter(e => e).map(e => e!);
 };
 
 export const fireNotification = (type: 'success' | 'error' | 'info' | 'warning', content: string, lifetime = 3) => {
@@ -285,7 +373,7 @@ export async function getFileFromHydrus(client: HydrusClient,
 
 export function externalDispatch(name: string, data: any) {
     let event: Event;
-    if (execution_mode == "ff_api") { 
+    if (execution_mode == "ff_api") {
         const clonedDetail = cloneInto(data, document.defaultView);
         event = new CustomEvent(name, { detail: clonedDetail });
     } else {

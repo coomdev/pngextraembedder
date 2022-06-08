@@ -48,6 +48,7 @@ const domains = [
   "https://*.donmai.us/*",
   "https://*.lolibooru.moe/*",
   "https://*.allthefallen.moe/*",
+  "https://desu-usergeneratedcontent.xyz/*"
 ];
 
 const manif = {

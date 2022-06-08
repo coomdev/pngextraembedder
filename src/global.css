@@ -104,3 +104,7 @@ div.hasmultiple .catalog-host img {
 .theme_default .post_wrapper > .thread_image_box > a {
     margin-right: 20px;
 }
+
+div.post {
+    overflow: auto;
+}

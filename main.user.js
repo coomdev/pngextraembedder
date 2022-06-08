@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PNGExtraEmbed
 // @namespace    https://coom.tech/
-// @version      0.229
+// @version      0.230
 // @description  uhh
 // @author       You
 // @match        https://boards.4channel.org/*
@@ -89,7 +89,7 @@ const _DOMParser = DOMParser;
   var define_BUILD_VERSION_default;
   var init_define_BUILD_VERSION = __esm({
     "<define:BUILD_VERSION>"() {
-      define_BUILD_VERSION_default = [0, 229];
+      define_BUILD_VERSION_default = [0, 230];
     }
   });
 
@@ -2468,8 +2468,8 @@ const _DOMParser = DOMParser;
         }
         return obj;
       }
-      function _classCallCheck(instance17, Constructor) {
-        if (!(instance17 instanceof Constructor)) {
+      function _classCallCheck(instance18, Constructor) {
+        if (!(instance18 instanceof Constructor)) {
           throw new TypeError("Cannot call a class as a function");
         }
       }
@@ -5302,12 +5302,12 @@ const _DOMParser = DOMParser;
           function Int64(buffer, offset, value, raddix) {
             if (!(this instanceof Int64))
               return new Int64(buffer, offset, value, raddix);
-            return init3(this, buffer, offset, value, raddix);
+            return init4(this, buffer, offset, value, raddix);
           }
           function isInt64(b) {
             return !!(b && b[_isInt64]);
           }
-          function init3(that, buffer, offset, value, raddix) {
+          function init4(that, buffer, offset, value, raddix) {
             if (UINT8ARRAY && ARRAYBUFFER) {
               if (buffer instanceof ARRAYBUFFER)
                 buffer = new UINT8ARRAY(buffer);
@@ -11595,7 +11595,7 @@ const _DOMParser = DOMParser;
           initQuantTables(sf);
           currentQuality = quality2;
         }
-        function init3() {
+        function init4() {
           var time_start = new Date().getTime();
           if (!quality)
             quality = 50;
@@ -11606,7 +11606,7 @@ const _DOMParser = DOMParser;
           setQuality(quality);
           var duration = new Date().getTime() - time_start;
         }
-        init3();
+        init4();
       }
       if (typeof module !== "undefined") {
         module.exports = encode;
@@ -13167,7 +13167,7 @@ const _DOMParser = DOMParser;
     }
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
-  function init(component, options, instance17, create_fragment17, not_equal, props, append_styles2, dirty = [-1]) {
+  function init(component, options, instance18, create_fragment18, not_equal, props, append_styles2, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -13190,7 +13190,7 @@ const _DOMParser = DOMParser;
     };
     append_styles2 && append_styles2($$.root);
     let ready = false;
-    $$.ctx = instance17 ? instance17(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance18 ? instance18(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -13203,7 +13203,7 @@ const _DOMParser = DOMParser;
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment17 ? create_fragment17($$.ctx) : false;
+    $$.fragment = create_fragment18 ? create_fragment18($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -13351,11 +13351,13 @@ const _DOMParser = DOMParser;
     sh: false,
     ep: false,
     tm: false,
+    dvc: false,
     expte: false,
     mdist: -1,
     phash: false,
     hotlink: false,
     vercheck: false,
+    cache: void 0,
     fhost: 0,
     maxe: 5,
     conc: 8,
@@ -13505,7 +13507,7 @@ const _DOMParser = DOMParser;
   }
 
   // src/global.css
-  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.post_wrapper.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n.post_wrapper.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.post_wrapper.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.post_wrapper.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.peee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.fiilehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n";
+  var global_default = ".pee-hidden {\n    display: none;\n}\n\n.extractedImg {\n    width: auto;\n    height: auto;\n    max-width: 125px;\n    max-height: 125px;\n    cursor: pointer;\n}\n\n#delform .postContainer>div.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n#delform .postContainer>div.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.hasembed.catalog-post {\n    border: 3px dashed deeppink !important;\n}\n\n#delform .postContainer>div.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n#delform .postContainer>div.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.post_wrapper.embedfound {\n    border-right: 3px dashed green !important;\n}\n\n.post_wrapper.hasembed {\n    border-right: 3px dashed deeppink !important;\n}\n\n.post_wrapper.hasext {\n    border-right: 3px dashed goldenrod !important;\n}\n\n.post_wrapper.hasmultiple {\n    border-right: 3px dashed cornflowerblue !important;\n}\n\n.hasext.catalog-post {\n    border: 3px dashed goldenrod !important;\n}\n\n.expanded-image>.post>.file .fileThumb>img[data-md5] {\n    display: none;\n}\n\n.expanded-image>.post>.file .fileThumb .full-image {\n    display: inline;\n}\n\n.peee-settings {\n    position: fixed;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    pointer-events: none;\n}\n\ndiv.hasemb .catalog-host img {\n    border: 1px solid deeppink;\n}\n\ndiv.hasext .catalog-host img {\n    border: 1px solid goldenrod;\n}\n\ndiv.hasmultiple .catalog-host img {\n    border: 1px solid cornflowerblue;\n}\n\n.catalog-host img {\n    position: absolute;\n    top: -5px;\n    right: 0px;\n    max-width: 80px;\n    max-height: 80px;\n    box-shadow: 0px 0px 4px 2px #00000090;\n}\n\n.fileThumb.fiilehost {\n    margin-left: 0 !important;\n    display: flex;\n    gap: 20px;\n}\n\n#qr > form {\n    overflow: visible !important;\n}\n\n.theme_default .post_wrapper > .thread_image_box {\n    display: flex;\n}\n\n.theme_default .post_wrapper > .thread_image_box > a {\n    margin-right: 20px;\n}\n\ndiv.post {\n    overflow: auto;\n}";
 
   // src/pngv3.ts
   init_define_BUILD_VERSION();
@@ -13848,9 +13850,9 @@ const _DOMParser = DOMParser;
   });
   var filehosts = [
     catbox("catbox.moe", "files.catbox.moe"),
-    lolisafe("zz.ht", "z.zz.fo"),
-    lolisafe("imouto.kawaii.su"),
-    lolisafe("take-me-to.space")
+    catbox("pomf.moe", "a.pomf.cat"),
+    lolisafe("take-me-to.space"),
+    lolisafe("zz.ht", "z.zz.fo")
   ];
 
   // node_modules/file-type/browser.js
@@ -15766,6 +15768,62 @@ const _DOMParser = DOMParser;
     import_buffer2.Buffer.from(content).copy(ret, ptr);
     return new Blob([ret]);
   };
+  var getThreadInfo = async (board, op) => {
+    const res = await (await fetch(`http://127.0.0.1:1488/data/${board}/${op}`)).json();
+    return Object.fromEntries(res.map((e) => [e.id, e]));
+  };
+  var threadDataCache = writable();
+  var cthreadDataCache;
+  threadDataCache.subscribe((newval) => {
+    cthreadDataCache = newval;
+  });
+  var refreshThreadDataCache = async (board, op) => {
+    threadDataCache.set(await getThreadInfo(board, op));
+  };
+  var getThreadDataCache = async (board, op) => {
+    if (!cthreadDataCache)
+      await refreshThreadDataCache(board, op);
+    return threadDataCache;
+  };
+  var getEmbedsFromCache = async (board, op, pid) => {
+    await getThreadDataCache(board, op);
+    const target = +pid.slice(pid.match(/\d/).index);
+    const cachedData = cthreadDataCache[target];
+    if (!cachedData)
+      return [];
+    const ret = [];
+    if ("pee" in cachedData.data) {
+      const files = await decodeCoom3Payload(import_buffer2.Buffer.from(cachedData.data.pee.join(" ")));
+      ret.push([files, false]);
+    }
+    if ("third" in cachedData.data) {
+      if (csettings.phash) {
+        if ((cachedData.mdist || Number.POSITIVE_INFINITY) < (csettings.mdist || 5))
+          return ret;
+      }
+      let cachedFile;
+      const data = cachedData.data.third;
+      const prev = data.preview_url;
+      const full = data.full_url;
+      const fn = new URL(full).pathname.split("/").slice(-1)[0];
+      const end = [{
+        source: data.source,
+        page: {
+          title: "PEE Cache",
+          url: data.page
+        },
+        filename: fn,
+        thumbnail: csettings.hotlink ? prev || full : import_buffer2.Buffer.from(await (await ifetch(prev || full)).arrayBuffer()),
+        data: csettings.hotlink ? full || prev : async (lsn) => {
+          if (!cachedFile)
+            cachedFile = await (await ifetch(full || prev, void 0, lsn)).arrayBuffer();
+          return import_buffer2.Buffer.from(cachedFile);
+        }
+      }];
+      ret.push([end, true]);
+    }
+    return ret;
+  };
   var decodeCoom3Payload = async (buff) => {
     const allowed_domains = filehosts.map((e) => e.serving.replaceAll(".", "\\."));
     const pees = buff.toString().split(" ").slice(0, csettings.maxe).filter((e) => allowed_domains.some((v) => e.match(`https://(.*\\.)?${v}/`)));
@@ -15777,7 +15835,7 @@ const _DOMParser = DOMParser;
         const { domain, file } = m.groups;
         const headers = await getHeaders(pee);
         const res = await ifetch(pee, {
-          headers: { range: "bytes=0-2048", "user-agent": "" },
+          headers: { range: "bytes=0-16383", "user-agent": "" },
           mode: "cors",
           referrerPolicy: "no-referrer"
         });
@@ -15811,7 +15869,10 @@ const _DOMParser = DOMParser;
         if (hasThumbnail) {
           thumbsize = header.readInt32LE(ptr);
           ptr += 4;
-          thumb = import_buffer2.Buffer.from(await (await ifetch(pee, { headers: { "user-agent": "", range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
+          if (header.byteLength < ptr + thumbsize)
+            thumb = header.slice(ptr, ptr + thumbsize);
+          else
+            thumb = import_buffer2.Buffer.from(await (await ifetch(pee, { headers: { "user-agent": "", range: `bytes=${ptr}-${ptr + thumbsize}` } })).arrayBuffer());
           ptr += thumbsize;
         }
         const unzip = async (lsn) => import_buffer2.Buffer.from(await (await ifetch(pee, { headers: { "user-agent": "", range: `bytes=${ptr}-${size - 1}` } }, lsn)).arrayBuffer());
@@ -15828,7 +15889,7 @@ const _DOMParser = DOMParser;
       } catch (e) {
         console.warn(e);
       }
-    }))).filter((e) => e);
+    }))).filter((e) => e).map((e) => e);
   };
   var fireNotification = (type, content, lifetime = 3) => {
     externalDispatch("CreateNotification", {
@@ -18562,25 +18623,25 @@ const _DOMParser = DOMParser;
   }
   function get_each_context2(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[48] = list[i];
+    child_ctx[52] = list[i];
     return child_ctx;
   }
   function get_each_context_12(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[51] = list[i];
-    child_ctx[53] = i;
+    child_ctx[55] = list[i];
+    child_ctx[57] = i;
     return child_ctx;
   }
   function get_each_context_2(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[54] = list[i];
-    child_ctx[53] = i;
+    child_ctx[58] = list[i];
+    child_ctx[57] = i;
     return child_ctx;
   }
   function get_each_context_3(ctx, list, i) {
     const child_ctx = ctx.slice();
-    child_ctx[56] = list[i];
-    child_ctx[53] = i;
+    child_ctx[60] = list[i];
+    child_ctx[57] = i;
     return child_ctx;
   }
   function create_default_slot_12(ctx) {
@@ -18756,22 +18817,22 @@ const _DOMParser = DOMParser;
       },
       p(ctx2, dirty) {
         const tab0_changes = {};
-        if (dirty[1] & 134217728) {
+        if (dirty[2] & 1) {
           tab0_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tab0.$set(tab0_changes);
         const tab1_changes = {};
-        if (dirty[1] & 134217728) {
+        if (dirty[2] & 1) {
           tab1_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tab1.$set(tab1_changes);
         const tab2_changes = {};
-        if (dirty[1] & 134217728) {
+        if (dirty[2] & 1) {
           tab2_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tab2.$set(tab2_changes);
         const tab3_changes = {};
-        if (dirty[1] & 134217728) {
+        if (dirty[2] & 1) {
           tab3_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tab3.$set(tab3_changes);
@@ -18851,7 +18912,7 @@ const _DOMParser = DOMParser;
         input.checked = ctx[5].ho;
         append(label, t);
         if (!mounted) {
-          dispose = listen(input, "change", ctx[19]);
+          dispose = listen(input, "change", ctx[23]);
           mounted = true;
         }
       },
@@ -18916,7 +18977,7 @@ const _DOMParser = DOMParser;
           if_block1.m(target, anchor);
         insert(target, if_block1_anchor, anchor);
         if (!mounted) {
-          dispose = listen(input, "input", ctx[27]);
+          dispose = listen(input, "input", ctx[31]);
           mounted = true;
         }
       },
@@ -19031,8 +19092,8 @@ const _DOMParser = DOMParser;
         set_input_value(input1, ctx[5].auto_tags);
         if (!mounted) {
           dispose = [
-            listen(input0, "input", ctx[28]),
-            listen(input1, "input", ctx[29])
+            listen(input0, "input", ctx[32]),
+            listen(input1, "input", ctx[33])
           ];
           mounted = true;
         }
@@ -19082,13 +19143,13 @@ const _DOMParser = DOMParser;
     let input5;
     let t10;
     let t11;
-    let t12;
     let label6;
     let input6;
+    let t12;
     let t13;
-    let t14;
     let label7;
     let input7;
+    let t14;
     let t15;
     let t16;
     let label8;
@@ -19106,12 +19167,20 @@ const _DOMParser = DOMParser;
     let label11;
     let input11;
     let t23;
-    let a;
-    let t25;
+    let t24;
     let label12;
     let input12;
+    let t25;
     let t26;
+    let label13;
+    let input13;
     let t27;
+    let a;
+    let t29;
+    let label14;
+    let input14;
+    let t30;
+    let t31;
     let if_block1_anchor;
     let mounted;
     let dispose;
@@ -19121,61 +19190,69 @@ const _DOMParser = DOMParser;
       c() {
         label0 = element("label");
         input0 = element("input");
-        t0 = text("\n          Check for new versions at startup.");
+        t0 = text("\n          Try to load embeds from server cache");
         t1 = space();
         label1 = element("label");
         input1 = element("input");
-        t2 = text("\n          Autoexpand Images on opening.");
+        t2 = text("\n          Display view counts");
         t3 = space();
         label2 = element("label");
         input2 = element("input");
-        t4 = text("\n          Autoexpand Videos on opening.");
+        t4 = text("\n          Check for new versions at startup.");
         t5 = space();
         label3 = element("label");
         input3 = element("input");
-        t6 = text("\n          Loop media content.");
+        t6 = text("\n          Autoexpand Images on opening.");
         t7 = space();
         label4 = element("label");
         input4 = element("input");
-        t8 = text("\n          Disable hover preview.");
+        t8 = text("\n          Autoexpand Videos on opening.");
         t9 = space();
         label5 = element("label");
         input5 = element("input");
-        t10 = text("\n          Hide embedded content behind an eye.");
+        t10 = text("\n          Loop media content.");
         t11 = space();
-        if (if_block0)
-          if_block0.c();
-        t12 = space();
         label6 = element("label");
         input6 = element("input");
-        t13 = text("\n          Preload external files.");
-        t14 = space();
+        t12 = text("\n          Disable hover preview.");
+        t13 = space();
         label7 = element("label");
         input7 = element("input");
-        t15 = text("\n          Preload external files when they are in view.");
+        t14 = text("\n          Hide embedded content behind an eye.");
+        t15 = space();
+        if (if_block0)
+          if_block0.c();
         t16 = space();
         label8 = element("label");
         input8 = element("input");
-        t17 = text("\n          Hotlink content.");
+        t17 = text("\n          Preload external files.");
         t18 = space();
         label9 = element("label");
         input9 = element("input");
-        t19 = text("\n          Control audio on videos with mouse wheel.");
+        t19 = text("\n          Preload external files when they are in view.");
         t20 = space();
         label10 = element("label");
         input10 = element("input");
-        t21 = text("\n          Show Minimap");
+        t21 = text("\n          Hotlink content.");
         t22 = space();
         label11 = element("label");
         input11 = element("input");
-        t23 = text("\n          \n          Disable embedded file preloading");
-        a = element("a");
-        a.textContent = "?";
-        t25 = space();
+        t23 = text("\n          Control audio on videos with mouse wheel.");
+        t24 = space();
         label12 = element("label");
         input12 = element("input");
-        t26 = text("\n          \n          Enable Hydrus Integration");
-        t27 = space();
+        t25 = text("\n          Show Minimap");
+        t26 = space();
+        label13 = element("label");
+        input13 = element("input");
+        t27 = text("\n          \n          Disable embedded file preloading");
+        a = element("a");
+        a.textContent = "?";
+        t29 = space();
+        label14 = element("label");
+        input14 = element("input");
+        t30 = text("\n          \n          Enable Hydrus Integration");
+        t31 = space();
         if (if_block1)
           if_block1.c();
         if_block1_anchor = empty();
@@ -19191,119 +19268,139 @@ const _DOMParser = DOMParser;
         attr(input9, "type", "checkbox");
         attr(input10, "type", "checkbox");
         attr(input11, "type", "checkbox");
-        attr(a, "title", "You might still want to enable 'preload external files'");
         attr(input12, "type", "checkbox");
+        attr(input13, "type", "checkbox");
+        attr(a, "title", "You might still want to enable 'preload external files'");
+        attr(input14, "type", "checkbox");
       },
       m(target, anchor) {
         insert(target, label0, anchor);
         append(label0, input0);
-        input0.checked = ctx[5].vercheck;
+        input0.checked = ctx[7];
         append(label0, t0);
         insert(target, t1, anchor);
         insert(target, label1, anchor);
         append(label1, input1);
-        input1.checked = ctx[5].xpi;
+        input1.checked = ctx[5].dvc;
         append(label1, t2);
         insert(target, t3, anchor);
         insert(target, label2, anchor);
         append(label2, input2);
-        input2.checked = ctx[5].xpv;
+        input2.checked = ctx[5].vercheck;
         append(label2, t4);
         insert(target, t5, anchor);
         insert(target, label3, anchor);
         append(label3, input3);
-        input3.checked = ctx[5].loop;
+        input3.checked = ctx[5].xpi;
         append(label3, t6);
         insert(target, t7, anchor);
         insert(target, label4, anchor);
         append(label4, input4);
-        input4.checked = ctx[5].dh;
+        input4.checked = ctx[5].xpv;
         append(label4, t8);
         insert(target, t9, anchor);
         insert(target, label5, anchor);
         append(label5, input5);
-        input5.checked = ctx[5].eye;
+        input5.checked = ctx[5].loop;
         append(label5, t10);
         insert(target, t11, anchor);
-        if (if_block0)
-          if_block0.m(target, anchor);
-        insert(target, t12, anchor);
         insert(target, label6, anchor);
         append(label6, input6);
-        input6.checked = ctx[5].pre;
-        append(label6, t13);
-        insert(target, t14, anchor);
+        input6.checked = ctx[5].dh;
+        append(label6, t12);
+        insert(target, t13, anchor);
         insert(target, label7, anchor);
         append(label7, input7);
-        input7.checked = ctx[5].prev;
-        append(label7, t15);
+        input7.checked = ctx[5].eye;
+        append(label7, t14);
+        insert(target, t15, anchor);
+        if (if_block0)
+          if_block0.m(target, anchor);
         insert(target, t16, anchor);
         insert(target, label8, anchor);
         append(label8, input8);
-        input8.checked = ctx[5].hotlink;
+        input8.checked = ctx[5].pre;
         append(label8, t17);
         insert(target, t18, anchor);
         insert(target, label9, anchor);
         append(label9, input9);
-        input9.checked = ctx[5].ca;
+        input9.checked = ctx[5].prev;
         append(label9, t19);
         insert(target, t20, anchor);
         insert(target, label10, anchor);
         append(label10, input10);
-        input10.checked = ctx[5].sh;
+        input10.checked = ctx[5].hotlink;
         append(label10, t21);
         insert(target, t22, anchor);
         insert(target, label11, anchor);
         append(label11, input11);
-        input11.checked = ctx[5].ep;
+        input11.checked = ctx[5].ca;
         append(label11, t23);
-        append(label11, a);
-        insert(target, t25, anchor);
+        insert(target, t24, anchor);
         insert(target, label12, anchor);
         append(label12, input12);
-        input12.checked = ctx[5].hyd;
-        append(label12, t26);
-        insert(target, t27, anchor);
+        input12.checked = ctx[5].sh;
+        append(label12, t25);
+        insert(target, t26, anchor);
+        insert(target, label13, anchor);
+        append(label13, input13);
+        input13.checked = ctx[5].ep;
+        append(label13, t27);
+        append(label13, a);
+        insert(target, t29, anchor);
+        insert(target, label14, anchor);
+        append(label14, input14);
+        input14.checked = ctx[5].hyd;
+        append(label14, t30);
+        insert(target, t31, anchor);
         if (if_block1)
           if_block1.m(target, anchor);
         insert(target, if_block1_anchor, anchor);
         if (!mounted) {
           dispose = [
-            listen(input0, "change", ctx[13]),
-            listen(input1, "change", ctx[14]),
-            listen(input2, "change", ctx[15]),
-            listen(input3, "change", ctx[16]),
-            listen(input4, "change", ctx[17]),
-            listen(input5, "change", ctx[18]),
-            listen(input6, "change", ctx[20]),
-            listen(input7, "change", ctx[21]),
-            listen(input8, "change", ctx[22]),
-            listen(input9, "change", ctx[23]),
-            listen(input10, "change", ctx[24]),
-            listen(input11, "change", ctx[25]),
-            listen(input12, "change", ctx[26])
+            listen(input0, "change", ctx[15]),
+            listen(input1, "change", ctx[16]),
+            listen(input2, "change", ctx[17]),
+            listen(input3, "change", ctx[18]),
+            listen(input4, "change", ctx[19]),
+            listen(input5, "change", ctx[20]),
+            listen(input6, "change", ctx[21]),
+            listen(input7, "change", ctx[22]),
+            listen(input8, "change", ctx[24]),
+            listen(input9, "change", ctx[25]),
+            listen(input10, "change", ctx[26]),
+            listen(input11, "change", ctx[27]),
+            listen(input12, "change", ctx[28]),
+            listen(input13, "change", ctx[29]),
+            listen(input14, "change", ctx[30])
           ];
           mounted = true;
         }
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 32) {
-          input0.checked = ctx2[5].vercheck;
+        if (dirty[0] & 128) {
+          input0.checked = ctx2[7];
         }
         if (dirty[0] & 32) {
-          input1.checked = ctx2[5].xpi;
+          input1.checked = ctx2[5].dvc;
         }
         if (dirty[0] & 32) {
-          input2.checked = ctx2[5].xpv;
+          input2.checked = ctx2[5].vercheck;
         }
         if (dirty[0] & 32) {
-          input3.checked = ctx2[5].loop;
+          input3.checked = ctx2[5].xpi;
         }
         if (dirty[0] & 32) {
-          input4.checked = ctx2[5].dh;
+          input4.checked = ctx2[5].xpv;
         }
         if (dirty[0] & 32) {
-          input5.checked = ctx2[5].eye;
+          input5.checked = ctx2[5].loop;
+        }
+        if (dirty[0] & 32) {
+          input6.checked = ctx2[5].dh;
+        }
+        if (dirty[0] & 32) {
+          input7.checked = ctx2[5].eye;
         }
         if (ctx2[5].eye) {
           if (if_block0) {
@@ -19311,32 +19408,32 @@ const _DOMParser = DOMParser;
           } else {
             if_block0 = create_if_block_72(ctx2);
             if_block0.c();
-            if_block0.m(t12.parentNode, t12);
+            if_block0.m(t16.parentNode, t16);
           }
         } else if (if_block0) {
           if_block0.d(1);
           if_block0 = null;
         }
         if (dirty[0] & 32) {
-          input6.checked = ctx2[5].pre;
+          input8.checked = ctx2[5].pre;
         }
         if (dirty[0] & 32) {
-          input7.checked = ctx2[5].prev;
+          input9.checked = ctx2[5].prev;
         }
         if (dirty[0] & 32) {
-          input8.checked = ctx2[5].hotlink;
+          input10.checked = ctx2[5].hotlink;
         }
         if (dirty[0] & 32) {
-          input9.checked = ctx2[5].ca;
+          input11.checked = ctx2[5].ca;
         }
         if (dirty[0] & 32) {
-          input10.checked = ctx2[5].sh;
+          input12.checked = ctx2[5].sh;
         }
         if (dirty[0] & 32) {
-          input11.checked = ctx2[5].ep;
+          input13.checked = ctx2[5].ep;
         }
         if (dirty[0] & 32) {
-          input12.checked = ctx2[5].hyd;
+          input14.checked = ctx2[5].hyd;
         }
         if (ctx2[5].hyd) {
           if (if_block1) {
@@ -19376,16 +19473,16 @@ const _DOMParser = DOMParser;
           detach(label5);
         if (detaching)
           detach(t11);
-        if (if_block0)
-          if_block0.d(detaching);
-        if (detaching)
-          detach(t12);
         if (detaching)
           detach(label6);
         if (detaching)
-          detach(t14);
+          detach(t13);
         if (detaching)
           detach(label7);
+        if (detaching)
+          detach(t15);
+        if (if_block0)
+          if_block0.d(detaching);
         if (detaching)
           detach(t16);
         if (detaching)
@@ -19403,11 +19500,19 @@ const _DOMParser = DOMParser;
         if (detaching)
           detach(label11);
         if (detaching)
-          detach(t25);
+          detach(t24);
         if (detaching)
           detach(label12);
         if (detaching)
-          detach(t27);
+          detach(t26);
+        if (detaching)
+          detach(label13);
+        if (detaching)
+          detach(t29);
+        if (detaching)
+          detach(label14);
+        if (detaching)
+          detach(t31);
         if (if_block1)
           if_block1.d(detaching);
         if (detaching)
@@ -19455,7 +19560,7 @@ const _DOMParser = DOMParser;
       $$scope: { ctx }
     };
     dialog = new Dialog_default({ props: dialog_props });
-    ctx[41](dialog);
+    ctx[45](dialog);
     let each_value_2 = ctx[5].blacklist;
     let each_blocks = [];
     for (let i = 0; i < each_value_2.length; i += 1) {
@@ -19536,9 +19641,9 @@ const _DOMParser = DOMParser;
         current = true;
         if (!mounted) {
           dispose = [
-            listen(input0, "change", ctx[31]),
-            listen(button, "click", ctx[36]),
-            listen(input1, "keydown", ctx[43])
+            listen(input0, "change", ctx[35]),
+            listen(button, "click", ctx[40]),
+            listen(input1, "keydown", ctx[47])
           ];
           mounted = true;
         }
@@ -19559,7 +19664,7 @@ const _DOMParser = DOMParser;
           if_block.d(1);
           if_block = null;
         }
-        if (dirty[0] & 4640) {
+        if (dirty[0] & 9248) {
           each_value_3 = ctx2[5].rsources;
           let i;
           for (i = 0; i < each_value_3.length; i += 1) {
@@ -19581,11 +19686,11 @@ const _DOMParser = DOMParser;
           check_outros();
         }
         const dialog_changes = {};
-        if (dirty[0] & 1 | dirty[1] & 134217728) {
+        if (dirty[0] & 1 | dirty[2] & 1) {
           dialog_changes.$$scope = { dirty, ctx: ctx2 };
         }
         dialog.$set(dialog_changes);
-        if (dirty[0] & 288) {
+        if (dirty[0] & 544) {
           each_value_2 = ctx2[5].blacklist;
           let i;
           for (i = 0; i < each_value_2.length; i += 1) {
@@ -19653,7 +19758,7 @@ const _DOMParser = DOMParser;
           detach(button);
         if (detaching)
           detach(t7);
-        ctx[41](null);
+        ctx[45](null);
         destroy_component(dialog, detaching);
         if (detaching)
           detach(t8);
@@ -19703,7 +19808,7 @@ const _DOMParser = DOMParser;
         append(label, t0);
         append(label, a);
         if (!mounted) {
-          dispose = listen(input, "input", ctx[32]);
+          dispose = listen(input, "input", ctx[36]);
           mounted = true;
         }
       },
@@ -19724,17 +19829,17 @@ const _DOMParser = DOMParser;
     let tag;
     let current;
     function func(...args) {
-      return ctx[33](ctx[56], ...args);
+      return ctx[37](ctx[60], ...args);
     }
     function remove_handler() {
-      return ctx[34](ctx[56]);
+      return ctx[38](ctx[60]);
     }
     function toggle_handler() {
-      return ctx[35](ctx[56]);
+      return ctx[39](ctx[60]);
     }
     tag = new Tag_default({
       props: {
-        tag: ctx[56].name,
+        tag: ctx[60].name,
         toggleable: true,
         toggled: !ctx[5].rsources.find(func)?.disabled
       }
@@ -19753,7 +19858,7 @@ const _DOMParser = DOMParser;
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 32)
-          tag_changes.tag = ctx[56].name;
+          tag_changes.tag = ctx[60].name;
         if (dirty[0] & 32)
           tag_changes.toggled = !ctx[5].rsources.find(func)?.disabled;
         tag.$set(tag_changes);
@@ -19858,11 +19963,11 @@ const _DOMParser = DOMParser;
         append(div, button);
         if (!mounted) {
           dispose = [
-            listen(input0, "input", ctx[37]),
-            listen(input1, "input", ctx[38]),
-            listen(input2, "input", ctx[39]),
-            listen(input3, "input", ctx[40]),
-            listen(button, "click", ctx[7])
+            listen(input0, "input", ctx[41]),
+            listen(input1, "input", ctx[42]),
+            listen(input2, "input", ctx[43]),
+            listen(input3, "input", ctx[44]),
+            listen(button, "click", ctx[8])
           ];
           mounted = true;
         }
@@ -19893,9 +19998,9 @@ const _DOMParser = DOMParser;
     let tag;
     let current;
     function toggle_handler_1() {
-      return ctx[42](ctx[54]);
+      return ctx[46](ctx[58]);
     }
-    tag = new Tag_default({ props: { tag: ctx[54] } });
+    tag = new Tag_default({ props: { tag: ctx[58] } });
     tag.$on("toggle", toggle_handler_1);
     return {
       c() {
@@ -19909,7 +20014,7 @@ const _DOMParser = DOMParser;
         ctx = new_ctx;
         const tag_changes = {};
         if (dirty[0] & 32)
-          tag_changes.tag = ctx[54];
+          tag_changes.tag = ctx[58];
         tag.$set(tag_changes);
       },
       i(local) {
@@ -19959,7 +20064,7 @@ const _DOMParser = DOMParser;
         insert(target, if_block_anchor, anchor);
         current = true;
         if (!mounted) {
-          dispose = listen(input, "change", ctx[30]);
+          dispose = listen(input, "change", ctx[34]);
           mounted = true;
         }
       },
@@ -20013,14 +20118,14 @@ const _DOMParser = DOMParser;
   }
   function create_each_block_12(ctx) {
     let option;
-    let t_value = ctx[51].domain + "";
+    let t_value = ctx[55].domain + "";
     let t;
     let option_value_value;
     return {
       c() {
         option = element("option");
         t = text(t_value);
-        option.__value = option_value_value = ctx[53];
+        option.__value = option_value_value = ctx[57];
         option.value = option.__value;
       },
       m(target, anchor) {
@@ -20063,7 +20168,7 @@ const _DOMParser = DOMParser;
         t3 = text("Maximum number of embedded links to display\n          ");
         input = element("input");
         if (ctx[5].fhost === void 0)
-          add_render_callback(() => ctx[44].call(select));
+          add_render_callback(() => ctx[48].call(select));
         attr(input, "type", "number");
         attr(input, "class", "svelte-1epvqgf");
         attr(label, "class", "svelte-1epvqgf");
@@ -20083,8 +20188,8 @@ const _DOMParser = DOMParser;
         set_input_value(input, ctx[5].maxe);
         if (!mounted) {
           dispose = [
-            listen(select, "change", ctx[44]),
-            listen(input, "input", ctx[45])
+            listen(select, "change", ctx[48]),
+            listen(input, "input", ctx[49])
           ];
           mounted = true;
         }
@@ -20171,7 +20276,7 @@ const _DOMParser = DOMParser;
         }
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 1040) {
+        if (dirty[0] & 2064) {
           each_value = ctx2[4];
           let i;
           for (i = 0; i < each_value.length; i += 1) {
@@ -20201,11 +20306,11 @@ const _DOMParser = DOMParser;
     let div;
     let a;
     let t0;
-    let t1_value = ctx[48].id + "";
+    let t1_value = ctx[52].id + "";
     let t1;
     let a_href_value;
     let t2;
-    let t3_value = ctx[48].cnt + "";
+    let t3_value = ctx[52].cnt + "";
     let t3;
     let t4;
     return {
@@ -20217,7 +20322,7 @@ const _DOMParser = DOMParser;
         t2 = text("\n                (");
         t3 = text(t3_value);
         t4 = text(" embeds)\n              ");
-        attr(a, "href", a_href_value = "https://boards.4chan.org/" + ctx[10] + "/thread/" + ctx[48].id);
+        attr(a, "href", a_href_value = "https://boards.4chan.org/" + ctx[11] + "/thread/" + ctx[52].id);
         attr(div, "class", "mbepis");
       },
       m(target, anchor) {
@@ -20230,12 +20335,12 @@ const _DOMParser = DOMParser;
         append(div, t4);
       },
       p(ctx2, dirty) {
-        if (dirty[0] & 16 && t1_value !== (t1_value = ctx2[48].id + ""))
+        if (dirty[0] & 16 && t1_value !== (t1_value = ctx2[52].id + ""))
           set_data(t1, t1_value);
-        if (dirty[0] & 16 && a_href_value !== (a_href_value = "https://boards.4chan.org/" + ctx2[10] + "/thread/" + ctx2[48].id)) {
+        if (dirty[0] & 16 && a_href_value !== (a_href_value = "https://boards.4chan.org/" + ctx2[11] + "/thread/" + ctx2[52].id)) {
           attr(a, "href", a_href_value);
         }
-        if (dirty[0] & 16 && t3_value !== (t3_value = ctx2[48].cnt + ""))
+        if (dirty[0] & 16 && t3_value !== (t3_value = ctx2[52].cnt + ""))
           set_data(t3, t3_value);
       },
       d(detaching) {
@@ -20262,7 +20367,7 @@ const _DOMParser = DOMParser;
         return create_if_block_12;
       return create_else_block2;
     }
-    let current_block_type = select_block_type(ctx, [-1, -1]);
+    let current_block_type = select_block_type(ctx, [-1, -1, -1]);
     let if_block = current_block_type(ctx);
     return {
       c() {
@@ -20297,8 +20402,8 @@ const _DOMParser = DOMParser;
         insert(target, if_block_anchor, anchor);
         if (!mounted) {
           dispose = [
-            listen(input, "change", ctx[46]),
-            listen(button, "click", ctx[11])
+            listen(input, "change", ctx[50]),
+            listen(button, "click", ctx[12])
           ];
           mounted = true;
         }
@@ -20475,27 +20580,27 @@ const _DOMParser = DOMParser;
       },
       p(ctx2, dirty) {
         const tablist_changes = {};
-        if (dirty[0] & 64 | dirty[1] & 134217728) {
+        if (dirty[0] & 64 | dirty[2] & 1) {
           tablist_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tablist.$set(tablist_changes);
         const tabpanel0_changes = {};
-        if (dirty[0] & 96 | dirty[1] & 134217728) {
+        if (dirty[0] & 224 | dirty[2] & 1) {
           tabpanel0_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tabpanel0.$set(tabpanel0_changes);
         const tabpanel1_changes = {};
-        if (dirty[0] & 35 | dirty[1] & 134217728) {
+        if (dirty[0] & 35 | dirty[2] & 1) {
           tabpanel1_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tabpanel1.$set(tabpanel1_changes);
         const tabpanel2_changes = {};
-        if (dirty[0] & 32 | dirty[1] & 134217728) {
+        if (dirty[0] & 32 | dirty[2] & 1) {
           tabpanel2_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tabpanel2.$set(tabpanel2_changes);
         const tabpanel3_changes = {};
-        if (dirty[0] & 56 | dirty[1] & 134217728) {
+        if (dirty[0] & 56 | dirty[2] & 1) {
           tabpanel3_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tabpanel3.$set(tabpanel3_changes);
@@ -20605,7 +20710,7 @@ const _DOMParser = DOMParser;
       },
       p(ctx2, dirty) {
         const tabs_changes = {};
-        if (dirty[0] & 123 | dirty[1] & 134217728) {
+        if (dirty[0] & 251 | dirty[2] & 1) {
           tabs_changes.$$scope = { dirty, ctx: ctx2 };
         }
         tabs.$set(tabs_changes);
@@ -20636,6 +20741,7 @@ const _DOMParser = DOMParser;
   function instance9($$self, $$props, $$invalidate) {
     let $settings;
     let $appState;
+    let $cached;
     component_subscribe($$self, settings, ($$value) => $$invalidate(5, $settings = $$value));
     component_subscribe($$self, appState, ($$value) => $$invalidate(6, $appState = $$value));
     let newbooru = {};
@@ -20685,27 +20791,43 @@ const _DOMParser = DOMParser;
     onDestroy(() => {
       document.removeEventListener("penis", penisEvent);
     });
+    let cached = writable(false);
+    component_subscribe($$self, cached, (value) => $$invalidate(7, $cached = value));
+    settings.subscribe((val) => {
+      cached.set(typeof val.cache == "boolean" ? val.cache : location.host.includes("b4k"));
+    });
+    cached.subscribe((v) => {
+      set_store_value(settings, $settings.cache = v, $settings);
+    });
     function input0_change_handler() {
-      $settings.vercheck = this.checked;
-      settings.set($settings);
+      $cached = this.checked;
+      cached.set($cached);
     }
     function input1_change_handler() {
-      $settings.xpi = this.checked;
+      $settings.dvc = this.checked;
       settings.set($settings);
     }
     function input2_change_handler() {
-      $settings.xpv = this.checked;
+      $settings.vercheck = this.checked;
       settings.set($settings);
     }
     function input3_change_handler() {
-      $settings.loop = this.checked;
+      $settings.xpi = this.checked;
       settings.set($settings);
     }
     function input4_change_handler() {
-      $settings.dh = this.checked;
+      $settings.xpv = this.checked;
       settings.set($settings);
     }
     function input5_change_handler() {
+      $settings.loop = this.checked;
+      settings.set($settings);
+    }
+    function input6_change_handler() {
+      $settings.dh = this.checked;
+      settings.set($settings);
+    }
+    function input7_change_handler() {
       $settings.eye = this.checked;
       settings.set($settings);
     }
@@ -20713,31 +20835,31 @@ const _DOMParser = DOMParser;
       $settings.ho = this.checked;
       settings.set($settings);
     }
-    function input6_change_handler() {
+    function input8_change_handler() {
       $settings.pre = this.checked;
       settings.set($settings);
     }
-    function input7_change_handler() {
+    function input9_change_handler() {
       $settings.prev = this.checked;
       settings.set($settings);
     }
-    function input8_change_handler() {
+    function input10_change_handler() {
       $settings.hotlink = this.checked;
       settings.set($settings);
     }
-    function input9_change_handler() {
+    function input11_change_handler() {
       $settings.ca = this.checked;
       settings.set($settings);
     }
-    function input10_change_handler() {
+    function input12_change_handler() {
       $settings.sh = this.checked;
       settings.set($settings);
     }
-    function input11_change_handler() {
+    function input13_change_handler() {
       $settings.ep = this.checked;
       settings.set($settings);
     }
-    function input12_change_handler() {
+    function input14_change_handler() {
       $settings.hyd = this.checked;
       settings.set($settings);
     }
@@ -20821,26 +20943,30 @@ const _DOMParser = DOMParser;
       threads,
       $settings,
       $appState,
+      $cached,
       appendBooru,
       removeTag,
       removeBooru,
       boardname,
       updateThreads,
       toggleBooru,
+      cached,
       input0_change_handler,
       input1_change_handler,
       input2_change_handler,
       input3_change_handler,
       input4_change_handler,
       input5_change_handler,
-      input_change_handler,
       input6_change_handler,
       input7_change_handler,
+      input_change_handler,
       input8_change_handler,
       input9_change_handler,
       input10_change_handler,
       input11_change_handler,
       input12_change_handler,
+      input13_change_handler,
+      input14_change_handler,
       input_input_handler,
       input0_input_handler,
       input1_input_handler,
@@ -20866,7 +20992,7 @@ const _DOMParser = DOMParser;
   var App = class extends SvelteComponent {
     constructor(options) {
       super();
-      init(this, options, instance9, create_fragment9, safe_not_equal, {}, add_css8, [-1, -1]);
+      init(this, options, instance9, create_fragment9, safe_not_equal, {}, add_css8, [-1, -1, -1]);
     }
   };
   var App_default = App;
@@ -22196,7 +22322,9 @@ const _DOMParser = DOMParser;
     getThumbnailLink: (post) => post.querySelector("img[data-md5]")?.getAttribute("src") || "",
     getInfoBox: (post) => post.querySelector("div.fileText"),
     getPostIdPrefix: () => "p",
-    getTextBox: (post) => post.querySelector("blockquote")
+    getTextBox: (post) => post.querySelector("blockquote"),
+    getCurrentBoard: () => location.pathname.split("/")[1],
+    getCurrentThread: () => +location.pathname.split("/")[3]
   };
   var X4chan = {
     getFileThumbnail: (post) => post.querySelector("div.file"),
@@ -22216,7 +22344,9 @@ const _DOMParser = DOMParser;
     getThumbnailLink: (post) => post.querySelector("img[data-md5]")?.getAttribute("src") || "",
     getInfoBox: (post) => post.querySelector("span.file-info"),
     getPostIdPrefix: V4chan.getPostIdPrefix,
-    getTextBox: V4chan.getTextBox
+    getTextBox: V4chan.getTextBox,
+    getCurrentBoard: V4chan.getCurrentBoard,
+    getCurrentThread: V4chan.getCurrentThread
   };
   var FoolFuuka = {
     getFileThumbnail: (post) => post.classList.contains("post_is_op") ? post.querySelector(".thread_image_link") : post.querySelector(".thread_image_box"),
@@ -22248,7 +22378,9 @@ const _DOMParser = DOMParser;
     },
     getInfoBox: (post) => post.querySelector("span.post_controls"),
     getPostIdPrefix: () => "",
-    getTextBox: (post) => post.querySelector(".text")
+    getTextBox: (post) => post.querySelector(".text"),
+    getCurrentBoard: V4chan.getCurrentBoard,
+    getCurrentThread: V4chan.getCurrentThread
   };
   var getQueryProcessor = (is4chanX) => {
     if (["boards.4chan.org", "boards.4channel.org"].includes(location.host))
@@ -22990,7 +23122,7 @@ const _DOMParser = DOMParser;
       warn('linkifyjs: already initialized - will not register plugin "'.concat(name, '" until you manually call linkify.init(). To avoid this warning, please register all plugins before invoking linkify the first time.'));
     }
   }
-  function init2() {
+  function init3() {
     INIT.scanner = {
       start: init$2(INIT.customProtocols),
       tokens: text2
@@ -23013,7 +23145,7 @@ const _DOMParser = DOMParser;
   }
   function tokenize(str) {
     if (!INIT.initialized) {
-      init2();
+      init3();
     }
     return run2(INIT.parser.start, str, run$1(INIT.scanner.start, str));
   }
@@ -23230,6 +23362,232 @@ const _DOMParser = DOMParser;
     }
   };
 
+  // src/Components/ViewCount.svelte
+  init_define_BUILD_VERSION();
+  init_esbuild_inject();
+  function add_css15(target) {
+    append_styles(target, "svelte-15vwgmz", ".tag.svelte-15vwgmz{padding:5px;border:1px solid;border-radius:55px;cursor:pointer;display:inline-flex}");
+  }
+  function create_if_block10(ctx) {
+    let span;
+    let mounted;
+    let dispose;
+    function select_block_type(ctx2, dirty) {
+      if (ctx2[1])
+        return create_if_block_14;
+      if ((ctx2[3] || {})[ctx2[0]])
+        return create_if_block_24;
+      return create_else_block3;
+    }
+    let current_block_type = select_block_type(ctx, -1);
+    let if_block = current_block_type(ctx);
+    return {
+      c() {
+        span = element("span");
+        if_block.c();
+        attr(span, "title", "click to refresh");
+        attr(span, "class", "tag svelte-15vwgmz");
+      },
+      m(target, anchor) {
+        insert(target, span, anchor);
+        if_block.m(span, null);
+        if (!mounted) {
+          dispose = listen(span, "click", ctx[7]);
+          mounted = true;
+        }
+      },
+      p(ctx2, dirty) {
+        if (current_block_type === (current_block_type = select_block_type(ctx2, dirty)) && if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block.d(1);
+          if_block = current_block_type(ctx2);
+          if (if_block) {
+            if_block.c();
+            if_block.m(span, null);
+          }
+        }
+      },
+      d(detaching) {
+        if (detaching)
+          detach(span);
+        if_block.d();
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  function create_else_block3(ctx) {
+    let t;
+    return {
+      c() {
+        t = text("smth wrong...");
+      },
+      m(target, anchor) {
+        insert(target, t, anchor);
+      },
+      p: noop,
+      d(detaching) {
+        if (detaching)
+          detach(t);
+      }
+    };
+  }
+  function create_if_block_24(ctx) {
+    let t0_value = (ctx[3] || {})[ctx[0]].cnt + "";
+    let t0;
+    let t1;
+    return {
+      c() {
+        t0 = text(t0_value);
+        t1 = text(" views");
+      },
+      m(target, anchor) {
+        insert(target, t0, anchor);
+        insert(target, t1, anchor);
+      },
+      p(ctx2, dirty) {
+        if (dirty & 9 && t0_value !== (t0_value = (ctx2[3] || {})[ctx2[0]].cnt + ""))
+          set_data(t0, t0_value);
+      },
+      d(detaching) {
+        if (detaching)
+          detach(t0);
+        if (detaching)
+          detach(t1);
+      }
+    };
+  }
+  function create_if_block_14(ctx) {
+    let t;
+    return {
+      c() {
+        t = text("...");
+      },
+      m(target, anchor) {
+        insert(target, t, anchor);
+      },
+      p: noop,
+      d(detaching) {
+        if (detaching)
+          detach(t);
+      }
+    };
+  }
+  function create_fragment17(ctx) {
+    let if_block_anchor;
+    let if_block = ctx[2].dvc && create_if_block10(ctx);
+    return {
+      c() {
+        if (if_block)
+          if_block.c();
+        if_block_anchor = empty();
+      },
+      m(target, anchor) {
+        if (if_block)
+          if_block.m(target, anchor);
+        insert(target, if_block_anchor, anchor);
+      },
+      p(ctx2, [dirty]) {
+        if (ctx2[2].dvc) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block10(ctx2);
+            if_block.c();
+            if_block.m(if_block_anchor.parentNode, if_block_anchor);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (if_block)
+          if_block.d(detaching);
+        if (detaching)
+          detach(if_block_anchor);
+      }
+    };
+  }
+  function instance17($$self, $$props, $$invalidate) {
+    let $settings;
+    let $threadDataCache;
+    component_subscribe($$self, settings, ($$value) => $$invalidate(2, $settings = $$value));
+    component_subscribe($$self, threadDataCache, ($$value) => $$invalidate(3, $threadDataCache = $$value));
+    let { board } = $$props;
+    let { op } = $$props;
+    let loading = false;
+    let { pid } = $$props;
+    const snooze = (n) => new Promise((_) => setTimeout(_, n));
+    const execRefresh = async (trueRefresh) => {
+      $$invalidate(1, loading = true);
+      let p = [];
+      if (trueRefresh) {
+        p.push(snooze(250));
+        p.push(refreshThreadDataCache(board, op));
+      } else
+        p.push((async () => {
+          await getThreadDataCache(board, op);
+        })());
+      await Promise.all(p);
+      $$invalidate(1, loading = false);
+    };
+    settings.subscribe((newsetting) => {
+      if (newsetting.dvc)
+        execRefresh(false);
+    });
+    const click_handler2 = () => execRefresh(true);
+    $$self.$$set = ($$props2) => {
+      if ("board" in $$props2)
+        $$invalidate(5, board = $$props2.board);
+      if ("op" in $$props2)
+        $$invalidate(6, op = $$props2.op);
+      if ("pid" in $$props2)
+        $$invalidate(0, pid = $$props2.pid);
+    };
+    return [
+      pid,
+      loading,
+      $settings,
+      $threadDataCache,
+      execRefresh,
+      board,
+      op,
+      click_handler2
+    ];
+  }
+  var ViewCount = class extends SvelteComponent {
+    constructor(options) {
+      super();
+      init(this, options, instance17, create_fragment17, safe_not_equal, { board: 5, op: 6, pid: 0 }, add_css15);
+    }
+    get board() {
+      return this.$$.ctx[5];
+    }
+    set board(board) {
+      this.$$set({ board });
+      flush();
+    }
+    get op() {
+      return this.$$.ctx[6];
+    }
+    set op(op) {
+      this.$$set({ op });
+      flush();
+    }
+    get pid() {
+      return this.$$.ctx[0];
+    }
+    set pid(pid) {
+      this.$$set({ pid });
+      flush();
+    }
+  };
+  var ViewCount_default = ViewCount;
+
   // src/main.ts
   var qp;
   var csettings5 = initial_settings;
@@ -23266,7 +23624,7 @@ const _DOMParser = DOMParser;
     cappState = v;
   });
   var processImage = async (srcs, fn, hex, prevurl, onfound) => {
-    return Promise.all(processors.filter((e) => e.match(fn)).map(async (proc) => {
+    const ret = await Promise.all(processors.filter((e) => e.match(fn)).map(async (proc) => {
       if (proc.skip) {
         const md5 = import_buffer11.Buffer.from(hex, "base64");
         if (await proc.has_embed(md5, fn, prevurl) === true) {
@@ -23309,6 +23667,7 @@ const _DOMParser = DOMParser;
         }
       } while (!succ);
     }));
+    return ret.filter((e) => e).map((e) => e);
   };
   var textToElement = (s) => document.createRange().createContextualFragment(s).children[0];
   var pendingPosts = [];
@@ -23332,6 +23691,11 @@ const _DOMParser = DOMParser;
       console.error(e);
     }
   }, 5e3, { trailing: true });
+  var shouldUseCache = () => {
+    if (cappState.isCatalog)
+      return false;
+    return typeof csettings5.cache == "boolean" ? csettings5.cache : location.hostname.includes("b4k");
+  };
   var processPost = async (post) => {
     const origlink = qp.getImageLink(post);
     if (!origlink)
@@ -23339,19 +23703,25 @@ const _DOMParser = DOMParser;
     const thumbLink = qp.getThumbnailLink(post);
     if (!thumbLink)
       return;
-    let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink, () => {
-      if (csettings5.tm) {
-        if (["boards.4chan.org", "boards.4channel.org"].includes(location.host)) {
-          if (!cappState.isCatalog) {
-            const op = +location.pathname.match(/\/thread\/(.*)/)[1];
-            pendingPosts.push({ id: +post.id.match(/([0-9]+)/)[1], op });
-            signalNewEmbeds();
+    let res2 = void 0;
+    if (shouldUseCache()) {
+      res2 = await getEmbedsFromCache(qp.getCurrentBoard(), +qp.getCurrentThread(), post.id);
+    }
+    if (!res2) {
+      res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink, () => {
+        if (csettings5.tm) {
+          if (["boards.4chan.org", "boards.4channel.org"].includes(location.host)) {
+            if (!cappState.isCatalog) {
+              const op = +location.pathname.match(/\/thread\/(.*)/)[1];
+              pendingPosts.push({ id: +post.id.match(/([0-9]+)/)[1], op });
+              signalNewEmbeds();
+            }
           }
         }
-      }
-      post.querySelector(".post")?.classList.add("embedfound");
-    });
-    res2 = res2?.filter((e) => e);
+        post.querySelector(".post")?.classList.add("embedfound");
+      });
+      res2 = res2?.filter((e) => e);
+    }
     if (!res2 || res2.length == 0)
       return;
     processAttachments(post, res2?.flatMap((e) => e[0].map((k) => [k, e[1]])));
@@ -23480,10 +23850,8 @@ const _DOMParser = DOMParser;
     const customStyles = document.createElement("style");
     customStyles.appendChild(document.createTextNode(global_default));
     document.documentElement.insertBefore(customStyles, null);
-    if (meta) {
-      meta.setAttribute("name", "referrer");
+    if (!navigator.userAgent.includes("Firefox") && meta)
       meta.setAttribute("content", "no-referrer");
-    }
     appState.set({ ...cappState, is4chanX });
     const lqp = getQueryProcessor(is4chanX);
     if (!lqp)
@@ -23704,6 +24072,29 @@ const _DOMParser = DOMParser;
     if (!cappState.foundPosts.includes(replyBox))
       cappState.foundPosts.push(replyBox);
     appState.set(cappState);
+    (async () => {
+      const viewcounthost = document.createElement("div");
+      const pid = +post.id.slice(post.id.match(/\d/).index);
+      if (pid == qp.getCurrentThread()) {
+        viewcounthost.style.right = "0px";
+        viewcounthost.style.bottom = "0px";
+        viewcounthost.style.position = "absolute";
+      } else {
+        viewcounthost.style.right = "0px";
+        viewcounthost.style.transform = "translateX(calc(100% + 10px))";
+        viewcounthost.style.position = "absolute";
+      }
+      new ViewCount_default({
+        target: viewcounthost,
+        props: {
+          board: qp.getCurrentBoard(),
+          op: cappState.isCatalog ? pid : qp.getCurrentThread(),
+          pid
+        }
+      });
+      replyBox.insertAdjacentElement("afterbegin", viewcounthost);
+      replyBox.style.position = "relative";
+    })();
     const isCatalog = replyBox?.classList.contains("catalog-post");
     if (!isCatalog) {
       const ft = qp.getFileThumbnail(post);

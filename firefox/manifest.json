@@ -7,7 +7,7 @@
   },
   "name": "PngExtraEmbedder",
   "description": "Discover embedded files on 4chan and archives!",
-  "version": "0.228",
+  "version": "0.230",
   "icons": {
     "64": "1449696017588.png"
   },
@@ -50,7 +50,8 @@
     "https://*.rule34.xxx/*",
     "https://*.donmai.us/*",
     "https://*.lolibooru.moe/*",
-    "https://*.allthefallen.moe/*"
+    "https://*.allthefallen.moe/*",
+    "https://desu-usergeneratedcontent.xyz/*"
   ],
   "content_scripts": [
     {
@@ -89,7 +90,8 @@
         "https://*.rule34.xxx/*",
         "https://*.donmai.us/*",
         "https://*.lolibooru.moe/*",
-        "https://*.allthefallen.moe/*"
+        "https://*.allthefallen.moe/*",
+        "https://desu-usergeneratedcontent.xyz/*"
       ],
       "css": [],
       "run_at": "document_start",

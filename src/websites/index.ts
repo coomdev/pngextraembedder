@@ -13,6 +13,8 @@ export type QueryProcessor = {
     getInfoBox: (post: HTMLElement) => HTMLElement;
     getPostIdPrefix: () => string;
     getTextBox: (post: HTMLElement) => HTMLElement;
+    getCurrentBoard: () => string;
+    getCurrentThread: () => number | undefined;
 };
 
 export const V4chan: QueryProcessor = {
@@ -36,7 +38,9 @@ export const V4chan: QueryProcessor = {
     getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
     getInfoBox: post => post.querySelector("div.fileText")!,
     getPostIdPrefix: () => 'p',
-    getTextBox: (post) => post.querySelector('blockquote')!
+    getTextBox: (post) => post.querySelector('blockquote')!,
+    getCurrentBoard: () => location.pathname.split('/')[1],
+    getCurrentThread: () => +location.pathname.split('/')[3]
 };
 
 export const X4chan: QueryProcessor = {
@@ -57,7 +61,9 @@ export const X4chan: QueryProcessor = {
     getThumbnailLink: (post: HTMLElement) => post.querySelector("img[data-md5]")?.getAttribute("src") || '',
     getInfoBox: post => post.querySelector("span.file-info")!,
     getPostIdPrefix: V4chan.getPostIdPrefix,
-    getTextBox: V4chan.getTextBox
+    getTextBox: V4chan.getTextBox,
+    getCurrentBoard: V4chan.getCurrentBoard,
+    getCurrentThread: V4chan.getCurrentThread,
 };
 
 export const FoolFuuka: QueryProcessor = {
@@ -90,8 +96,9 @@ export const FoolFuuka: QueryProcessor = {
     },
     getInfoBox: post => post.querySelector("span.post_controls")!,
     getPostIdPrefix: () => '',
-    getTextBox: post => post.querySelector('.text')!
-
+    getTextBox: post => post.querySelector('.text')!,
+    getCurrentBoard: V4chan.getCurrentBoard,
+    getCurrentThread: V4chan.getCurrentThread,
 };
 
 export const getQueryProcessor = (is4chanX: boolean) => {

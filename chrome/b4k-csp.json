@@ -11,8 +11,7 @@
         ]
     },
     "condition": {
-        "urlFilter": "abc",
-        "initiatorDomains": [
+        "requestDomains": [
             "arch.b4k.co"
         ],
         "resourceTypes": [

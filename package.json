@@ -27,6 +27,7 @@
     "lodash": "^4.17.21",
     "png-js": "^1.0.0",
     "readable-stream": "^3.6.0",
+    "socks-proxy-agent": "^7.0.0",
     "ts-ebml": "^2.0.2"
   },
   "devDependencies": {

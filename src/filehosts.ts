@@ -44,6 +44,21 @@ export const catbox = (domain: string, serving: string) => ({
     }
 });
 
+export const pomf = (domain: string, serving: string) => ({
+    domain,
+    serving,
+    async uploadFile(inj: Blob) {
+        const resp = await ifetch(`https://${domain}/upload.php`, {
+            method: 'POST',
+            body: parseForm({
+                'files[]': inj
+            })
+        });
+        const rfm = (await resp.json()).url;
+        return `https://a.pomf.cat/${rfm}`;
+    }
+});
+
 export type API = {
     domain: string;
     serving: string;
@@ -52,7 +67,7 @@ export type API = {
 
 export const filehosts: API[] = [
     catbox('catbox.moe', 'files.catbox.moe'),
-    lolisafe('zz.ht', 'z.zz.fo'),
-    lolisafe('imouto.kawaii.su'),
+    catbox('pomf.moe', 'a.pomf.cat'),
     lolisafe('take-me-to.space'),
+    lolisafe('zz.ht', 'z.zz.fo'),
 ];

@@ -54,6 +54,7 @@ const domains = [
   "https://*.donmai.us/*",
   "https://*.lolibooru.moe/*",
   "https://*.allthefallen.moe/*",
+  "https://desu-usergeneratedcontent.xyz/*"
 ];
 
 const manif = {
@@ -94,48 +95,45 @@ const manif = {
 
 
 const manif3 = {
-  "manifest_version": 3,
+  manifest_version: 3,
 //  "update_url": "https://github.com/coomdev/pngextraembedder/raw/branch/%E4%B8%AD%E5%87%BA%E3%81%97/chrome_update.xml",
-  "name": "PngExtraEmbedder",
-  "description": "Discover embedded files on 4chan and archives!",
-  "version": "0." + rev,
-  "icons": {
-    "64": "1449696017588.png"
+  name: "PngExtraEmbedder",
+  description: "Discover embedded files on 4chan and archives!",
+  version: "0." + rev,
+  icons: {
+    64: "1449696017588.png"
   },
-  "permissions": [
+  permissions: [
     //"notifications",
     //"clipboardWrite",
     //"activeTab",
     "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequestFeedback"
     //"contextMenus",
   ],
   host_permissions: domains,
   //"host_permissions":["<all_urls>"],
-  "web_accessible_resources": [{
-    "resources": ["*.html", "*.js"],
-    "matches": ["<all_urls>"]
+  web_accessible_resources: [{
+    resources: ["*.html", "*.js"],
+    matches: ["<all_urls>"]
   }],
-  "content_scripts": [
+  content_scripts: [
     {
-      "matches": domains,
-      "css": [],
-      "run_at": "document_start",
-      "js": ["dist/main.js"],
+      matches: domains,
+      css: [],
+      run_at: "document_start",
+      js: ["dist/main.js"],
     }
   ],
-  "declarative_net_request": {
-    "rule_resources": [
+  declarative_net_request: {
+    rule_resources: [
       {
         id: 'rule1',
         enabled: true,
         path: 'b4k-csp.json'
       }
     ]
-  },
-  //"background": {
-    // hope I won't need that polyfill...
-    //"service_worker": "dist/background.js"
-//  }
+  }
 };
 
 (async () => {

@@ -119,6 +119,34 @@ async function serialize(src: any): Promise<any> {
     return ret;
 }
 
+function cleanupSerialized(src: any) {
+    if (typeof src != "object")
+        return src;
+    switch (src.cls) {
+        case 'FormData': {
+            for (const [key, items] of src.value) {
+                for (const item of items) {
+                    cleanupSerialized(item);
+                }
+            }
+            break;
+        }
+        case 'File': {
+            URL.revokeObjectURL(src.value);
+            break;
+        }
+        case 'Blob': {
+            URL.revokeObjectURL(src.value);
+            break;
+        }
+        case 'Object': {
+            for (const prop in src.value) {
+                cleanupSerialized(src.value[prop]);
+            }
+        }
+    }
+}
+
 export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTarget) => {
     const id = gid++;
 
@@ -138,6 +166,10 @@ export const corsFetch = async (input: string, init?: RequestInit, lsn?: EventTa
             start(controller) {
                 // something is finally ready to read
                 gcontroller = controller;
+                // at this point the background script already read all that it needed
+                // so we free up memory allocated for the request
+                if (execution_mode == "chrome_api" && init?.body)
+                    cleanupSerialized(init.body);
                 // flush buffer
                 buffer.forEach(b => gcontroller?.enqueue(b));
                 buffer = [];

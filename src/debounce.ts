@@ -1,6 +1,6 @@
 const nativeMax = Math.max;
 const nativeMin = Math.min;
-export function debounce(func: (...args: any[]) => any, wait: number, options: any) {
+export function debounce<U extends any[], V, T extends (...args: U) => V>(func: T, wait: number, options: any): T {
   let lastArgs : any,
     lastThis: any,
     maxWait: number | undefined,
@@ -123,5 +123,5 @@ export function debounce(func: (...args: any[]) => any, wait: number, options: a
   }
   debounced.cancel = cancel;
   debounced.flush = flush;
-  return debounced;
+  return debounced as any;
 }

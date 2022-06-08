@@ -28,11 +28,13 @@ export const initial_settings = localLoad('settingsv2', {
     sh: false,
     ep: false,
     tm: false,
+    dvc: false,
     expte: false,
     mdist: -1,
     phash: false,
     hotlink: false,
     vercheck: false,
+    cache: undefined as (boolean | undefined), // meaning defaults to false, except on b4k
     fhost: 0,
     maxe: 5,
     conc: 8,

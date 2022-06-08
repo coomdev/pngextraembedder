@@ -12,7 +12,8 @@
   import { settings, appState } from "../stores";
   import { filehosts } from "../filehosts";
   import HydrusSearch from "./HydrusSearch.svelte";
-import { ifetch } from "../platform";
+  import { ifetch } from "../platform";
+  import { writable } from "svelte/store";
 
   let newbooru: Partial<Omit<Booru, "quirks"> & { view: string }> = {};
   let dial: Dialog;
@@ -67,6 +68,18 @@ import { ifetch } from "../platform";
   onDestroy(() => {
     document.removeEventListener("penis", penisEvent);
   });
+
+  let cached = writable<boolean>(false);
+
+  settings.subscribe((val) => {
+    cached.set(
+      typeof val.cache == "boolean" ? val.cache : location.host.includes("b4k")
+    );
+  });
+
+  cached.subscribe((v) => {
+    $settings.cache = v;
+  });
 </script>
 
 <div class="backpanel" class:enabled={visible} class:disabled={!visible}>
@@ -84,6 +97,14 @@ import { ifetch } from "../platform";
         {/if}
       </TabList>
       <TabPanel>
+        <label>
+          <input type="checkbox" bind:checked={$cached} />
+          Try to load embeds from server cache
+        </label>
+        <label>
+          <input type="checkbox" bind:checked={$settings.dvc} />
+          Display view counts
+        </label>
         <label>
           <input type="checkbox" bind:checked={$settings.vercheck} />
           Check for new versions at startup.

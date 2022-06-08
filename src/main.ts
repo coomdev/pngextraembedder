@@ -18,12 +18,13 @@ import Embeddings from './Components/Embeddings.svelte';
 import EyeButton from './Components/EyeButton.svelte';
 import NotificationsHandler from './Components/NotificationsHandler.svelte';
 
-import { fireNotification, getSelectedFile } from "./utils";
+import { decodeCoom3Payload, fireNotification, getEmbedsFromCache, getSelectedFile } from "./utils";
 import { getQueryProcessor, QueryProcessor } from "./websites";
 import { ifetch, Platform, streamRemote, supportedAltDomain } from "./platform";
 import TextEmbeddingsSvelte from "./Components/TextEmbeddings.svelte";
 import { HydrusClient } from "./hydrus";
 import { registerPlugin } from 'linkifyjs';
+import ViewCountSvelte from "./Components/ViewCount.svelte";
 
 export interface ImageProcessor {
     skip?: true;
@@ -86,8 +87,8 @@ type EmbeddedFileWithoutPreview = {
 
 export type EmbeddedFile = EmbeddedFileWithPreview | EmbeddedFileWithoutPreview;
 
-const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string, hex: string, prevurl: string, onfound: () => void): Promise<([EmbeddedFile[], boolean] | undefined)[]> => {
-    return Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
+const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string, hex: string, prevurl: string, onfound: () => void) => {
+    const ret = await Promise.all(processors.filter(e => e.match(fn)).map(async proc => {
         if (proc.skip) {
             // skip file downloading, file is referenced from the filename
             // basically does things like filtering out blacklisted tags
@@ -95,7 +96,8 @@ const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string
             if (await proc.has_embed(md5, fn, prevurl) === true) {
                 onfound();
                 return [await proc.extract(md5, fn), true] as [EmbeddedFile[], boolean];
-            } return;
+            }
+            return;
         }
         let succ = false;
         let cumul: Buffer;
@@ -133,13 +135,28 @@ const processImage = async (srcs: AsyncGenerator<string, void, void>, fn: string
             }
         } while (!succ);
     }));
+    return ret.filter(e => e).map(e => e!);
 };
 
 const textToElement = <T = HTMLElement>(s: string) =>
     document.createRange().createContextualFragment(s).children[0] as any as T;
 
-let pendingPosts: { id: number, op: number }[] = [];
+type ParametersExceptFirst<F> =
+    F extends (arg0: any, ...rest: infer R) => any ? R : never;
+const buildCumFun = <T extends any[], U>(f: (args: T[]) => void, ...r: ParametersExceptFirst<typeof debounce>): (args: T) => void => {
+    let cumul: T[] = [];
+    const debounced = debounce(() => {
+        f(cumul);
+        cumul = [];
+    }, ...r);
+    return (newarg: T) => {
+        cumul.push(newarg);
+        debounced();
+    };
+};
 
+let pendingPosts: { id: number, op: number }[] = [];
+// should be equivalent to buildCumFun(signalNewEmbeds, 5000, {trailing: true})
 const signalNewEmbeds = debounce(async () => {
     // ensure user explicitely enabled telemetry
     if (!csettings.tm)
@@ -165,6 +182,14 @@ const signalNewEmbeds = debounce(async () => {
     }
 }, 5000, { trailing: true });
 
+const shouldUseCache = () => {
+    if (cappState.isCatalog)
+        return false;
+    return typeof csettings.cache == "boolean"
+        ? csettings.cache
+        : location.hostname.includes('b4k');
+};
+
 const processPost = async (post: HTMLDivElement) => {
     const origlink = qp.getImageLink(post);
     if (!origlink)
@@ -172,22 +197,29 @@ const processPost = async (post: HTMLDivElement) => {
     const thumbLink = qp.getThumbnailLink(post);
     if (!thumbLink)
         return;
-    let res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink,
-        () => {
-            if (csettings.tm) {
-                // dont report results from archive, only live threads
-                if (['boards.4chan.org', 'boards.4channel.org'].includes(location.host)) {
-                    if (!cappState.isCatalog) { // only save from within threads
-                        // we must be in a thread, thus the following is valid
-                        const op = +location.pathname.match(/\/thread\/(.*)/)![1];
-                        pendingPosts.push({ id: +(post.id.match(/([0-9]+)/)![1]), op });
-                        signalNewEmbeds(); // let it run async
+    let res2: [EmbeddedFile[], boolean][] | undefined = undefined;
+
+    if (shouldUseCache()) {
+        res2 = await getEmbedsFromCache(qp.getCurrentBoard(), +qp.getCurrentThread()!, post.id);
+    }
+    if (!res2) {
+        res2 = await processImage(origlink, qp.getFilename(post), qp.getMD5(post), thumbLink,
+            () => {
+                if (csettings.tm) {
+                    // dont report results from archive, only live threads
+                    if (['boards.4chan.org', 'boards.4channel.org'].includes(location.host)) {
+                        if (!cappState.isCatalog) { // only save from within threads
+                            // we must be in a thread, thus the following is valid
+                            const op = +location.pathname.match(/\/thread\/(.*)/)![1];
+                            pendingPosts.push({ id: +(post.id.match(/([0-9]+)/)![1]), op });
+                            signalNewEmbeds(); // let it run async
+                        }
                     }
                 }
-            }
-            post.querySelector('.post')?.classList.add("embedfound");
-        });
-    res2 = res2?.filter(e => e);
+                post.querySelector('.post')?.classList.add("embedfound");
+            });
+        res2 = res2?.filter(e => e);
+    }
     if (!res2 || res2.length == 0)
         return;
     processAttachments(post, res2?.flatMap(e => e![0].map(k => [k, e![1]] as [EmbeddedFile, boolean])));
@@ -384,11 +416,8 @@ const startup = async (is4chanX = true) => {
     customStyles.appendChild(document.createTextNode(globalCss));
     document.documentElement.insertBefore(customStyles, null);
 
-    if (meta) {
-        meta.setAttribute('name', 'referrer');
+    if (!navigator.userAgent.includes('Firefox') && meta)
         meta.setAttribute('content', 'no-referrer');
-    }
-
     appState.set({ ...cappState, is4chanX });
     const lqp = getQueryProcessor(is4chanX);
     if (!lqp)
@@ -647,6 +676,31 @@ function processAttachments(post: HTMLDivElement, ress: [EmbeddedFile, boolean][
     if (!cappState.foundPosts.includes(replyBox as HTMLElement))
         cappState.foundPosts.push(replyBox as HTMLElement);
     appState.set(cappState);
+
+    // attempt to load the view count, if it's found, attach it
+    (async () => {
+        const viewcounthost = document.createElement('div');
+        const pid = +post.id.slice(post.id.match(/\d/)!.index);
+        if (pid == qp.getCurrentThread()) {
+            viewcounthost.style.right = '0px';
+            viewcounthost.style.bottom = '0px';
+            viewcounthost.style.position = 'absolute';
+        } else {
+            viewcounthost.style.right = '0px';
+            viewcounthost.style.transform = 'translateX(calc(100% + 10px))';
+            viewcounthost.style.position = 'absolute';
+        }
+        new ViewCountSvelte({
+            target: viewcounthost,
+            props: {
+                board: qp.getCurrentBoard(),
+                op: cappState.isCatalog ? pid : qp.getCurrentThread(),
+                pid
+            }
+        });
+        replyBox.insertAdjacentElement("afterbegin", viewcounthost);
+        replyBox.style.position = 'relative';
+    })();
 
     const isCatalog = replyBox?.classList.contains('catalog-post');
     // add buttons
