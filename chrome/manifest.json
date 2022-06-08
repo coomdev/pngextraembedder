@@ -7,8 +7,7 @@
     "64": "1449696017588.png"
   },
   "permissions": [
-    "declarativeNetRequestWithHostAccess",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "https://*.coom.tech/*",

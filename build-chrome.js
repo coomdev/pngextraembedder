@@ -107,8 +107,7 @@ const manif3 = {
     //"notifications",
     //"clipboardWrite",
     //"activeTab",
-    "declarativeNetRequestWithHostAccess",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestWithHostAccess"
     //"contextMenus",
   ],
   host_permissions: domains,
